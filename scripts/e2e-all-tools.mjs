@@ -2,6 +2,8 @@ import { chromium } from "playwright-core";
 
 const BASE = process.env.BASE_URL ?? "http://localhost:3000";
 const TEST_IMAGE = process.env.TEST_IMAGE ?? "/tmp/test-image.png";
+const TEST_IMAGE_2 = process.env.TEST_IMAGE_2 ?? "/tmp/test-image-2.jpg";
+const PDF_FIXTURE = process.env.PDF_FIXTURE ?? "/tmp/pdf-fixture.pdf";
 let failures = 0;
 const out = [];
 const check = (name, pass, detail = "") => {
@@ -14,7 +16,20 @@ const has = (body, n) => {
 };
 
 const browser = await chromium.launch({ args: ["--no-sandbox"] });
-const page = await browser.newPage();
+const page = await browser.newPage({ acceptDownloads: true });
+
+/** Click something that triggers a download and report what landed. */
+async function grabDownload(action, timeout = 60000) {
+  const [download] = await Promise.all([
+    page.waitForEvent("download", { timeout }),
+    action(),
+  ]).catch(() => [null]);
+  if (!download) return { ok: false, name: "", bytes: 0 };
+  const path = await download.path().catch(() => null);
+  const fs = await import("node:fs/promises");
+  const bytes = path ? (await fs.stat(path)).size : 0;
+  return { ok: true, name: download.suggestedFilename(), bytes };
+}
 const errors = [];
 page.on("pageerror", (e) => errors.push("PAGEERROR: " + e));
 page.on("console", (m) => { if (m.type() === "error") errors.push("CONSOLE: " + m.text()); });
@@ -176,11 +191,61 @@ check("image-compressor: sizes use Persian digits", /[۰-۹]/.test(body.match(/�
 check("image-compressor: reports a size change verdict", /کوچک‌تر شد|حجم کم نشد/.test(body));
 check("image-compressor: download available", (await m10.getByRole("button", { name: "دانلود تصویر" }).count()) === 1);
 
+// ============ 11. IMAGE → PDF ============
+await open("image-to-pdf");
+const m11 = page.locator("main");
+check("image-to-pdf: page renders upload zone", (await m11.innerText()).includes("تصویرها را اینجا رها کنید"));
+await m11.locator('input[type="file"]').setInputFiles([TEST_IMAGE, TEST_IMAGE_2]);
+await page.waitForTimeout(1500);
+body = await m11.innerText();
+check("image-to-pdf: accepts two images", has(body, 2) && body.includes("تصویر انتخاب شده"));
+
+const pdfDownload = await grabDownload(async () => {
+  await m11.locator('[data-testid="image-to-pdf-build"]').click();
+  await m11.locator('[data-testid="image-to-pdf-download"]').click({ timeout: 90000 });
+});
+check("image-to-pdf: builds a real PDF file", pdfDownload.ok && pdfDownload.bytes > 1000, `${pdfDownload.name} ${pdfDownload.bytes}B`);
+check("image-to-pdf: download has .pdf name", /\.pdf$/i.test(pdfDownload.name), pdfDownload.name);
+check("image-to-pdf: result panel confirms", (await m11.innerText()).includes("PDF آماده است"));
+
+// ============ 12. PDF → IMAGE ============
+await open("pdf-to-image");
+const m12 = page.locator("main");
+check("pdf-to-image: page renders upload zone", (await m12.innerText()).includes("فایل PDF را اینجا رها کنید"));
+await m12.locator('[data-testid="pdf-to-image-input"]').setInputFiles(PDF_FIXTURE);
+await page.waitForTimeout(2500);
+body = await m12.innerText();
+check("pdf-to-image: PDF metadata loads", body.includes("pdf-fixture") && has(body, 2));
+
+await m12.locator('[data-testid="pdf-to-image-convert"]').click();
+await m12.locator('[data-testid="pdf-image-results"]').waitFor({ timeout: 90000 }).catch(() => {});
+await page.waitForTimeout(1000);
+body = await m12.innerText();
+check("pdf-to-image: renders a thumbnail per page", (await m12.locator('[data-testid="pdf-image-results"] img').count()) === 2);
+check("pdf-to-image: offers per-page download", (await m12.getByRole("button", { name: /دانلود صفحهٔ/ }).count()) === 2);
+check("pdf-to-image: offers ZIP for multiple pages", (await m12.locator('[data-testid="pdf-download-zip"]').count()) === 1);
+
+const jpgDownload = await grabDownload(() =>
+  m12.getByRole("button", { name: "دانلود صفحهٔ 1" }).click(),
+);
+check("pdf-to-image: page download is a real image", jpgDownload.ok && jpgDownload.bytes > 500, `${jpgDownload.name} ${jpgDownload.bytes}B`);
+check("pdf-to-image: image name ends in .jpg", /\.jpg$/i.test(jpgDownload.name), jpgDownload.name);
+
+// page range validation
+await m12.locator('[data-testid="pdf-page-range"]').fill("9");
+await page.waitForTimeout(500);
+check("pdf-to-image: rejects out-of-range pages", /۲ صفحه دارد|صفحه دارد/.test(await m12.innerText()));
+await m12.locator('[data-testid="pdf-page-range"]').fill("2");
+await page.waitForTimeout(400);
+await m12.locator('[data-testid="pdf-to-image-convert"]').click();
+await page.waitForTimeout(3000);
+check("pdf-to-image: single-page range renders one page", (await m12.locator('[data-testid="pdf-image-results"] img').count()) === 1);
+
 // ============ registry / SEO ============
 const reg = await page.goto(`${BASE}/tools`, { waitUntil: "domcontentloaded" });
 check("tools page loads", reg?.status() === 200);
 body = await page.locator("body").innerText();
-check("all 10 tools listed, none marked «به‌زودی»", !body.includes("به‌زودی"));
+check("all 12 tools listed, none marked «به‌زودی»", !body.includes("به‌زودی"));
 
 check("no uncaught JS errors", errors.length === 0, errors.slice(0, 4).join(" || "));
 

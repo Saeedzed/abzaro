@@ -2,6 +2,8 @@ import {
   BadgePercent,
   CalendarDays,
   Eraser,
+  FileImage,
+  FileText,
   Hash,
   Languages,
   Minimize2,
@@ -211,6 +213,53 @@ export const tools: Tool[] = [
     status: "live",
     popular: true,
     addedAt: "2025-11-14",
+  },
+  {
+    id: "image-to-pdf",
+    slug: "image-to-pdf",
+    title: "تبدیل عکس به PDF",
+    description:
+      "چند تصویر را انتخاب کنید، ترتیبشان را مشخص کنید و همگی را در یک فایل PDF به‌همراه تنظیم اندازهٔ صفحه و حاشیه دانلود کنید.",
+    category: "images",
+    icon: FileText,
+    seoTitle: "تبدیل عکس به PDF آنلاین رایگان",
+    seoDescription:
+      "تصاویر JPG، PNG و WebP را در مرورگر خود به یک فایل PDF تبدیل کنید؛ انتخاب ترتیب صفحه‌ها، اندازهٔ A4 یا هم‌اندازهٔ تصویر و حاشیهٔ دلخواه، بدون آپلود فایل.",
+    keywords: [
+      "تبدیل عکس به pdf",
+      "تبدیل تصویر به pdf",
+      "عکس به پی دی اف",
+      "jpg to pdf",
+      "image to pdf",
+      "ادغام عکس در pdf",
+    ],
+    status: "live",
+    popular: true,
+    addedAt: "2025-11-15",
+  },
+  {
+    id: "pdf-to-image",
+    slug: "pdf-to-image",
+    title: "تبدیل PDF به عکس",
+    description:
+      "صفحه‌های فایل PDF را به تصویر JPG یا PNG تبدیل کنید؛ انتخاب بازهٔ صفحه‌ها، کیفیت خروجی و دانلود تکی یا ZIP.",
+    category: "images",
+    icon: FileImage,
+    seoTitle: "تبدیل PDF به عکس JPG و PNG آنلاین",
+    seoDescription:
+      "هر صفحه از فایل PDF را به تصویر JPG یا PNG تبدیل کنید و با کیفیت دلخواه (تا ۲۱۶ dpi) دانلود کنید؛ پردازش کاملاً در مرورگر و بدون آپلود فایل.",
+    keywords: [
+      "تبدیل pdf به عکس",
+      "pdf به jpg",
+      "pdf به png",
+      "پی دی اف به تصویر",
+      "pdf to image",
+      "pdf to jpg",
+      "استخراج عکس از pdf",
+    ],
+    status: "live",
+    popular: true,
+    addedAt: "2025-11-15",
   },
 ];
 

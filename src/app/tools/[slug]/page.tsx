@@ -14,6 +14,8 @@ import { DiscountCalculator } from "@/components/tools/DiscountCalculator";
 import { AgeCalculator } from "@/components/tools/AgeCalculator";
 import { ImageResizer } from "@/components/tools/ImageResizer";
 import { ImageCompressor } from "@/components/tools/ImageCompressor";
+import { ImageToPdf } from "@/components/tools/ImageToPdf";
+import { PdfToImage } from "@/components/tools/PdfToImage";
 import { getCategory } from "@/data/categories";
 import { getToolBySlug, tools } from "@/data/tools";
 import { siteConfig } from "@/config/site";
@@ -71,6 +73,10 @@ function ToolImplementation({ slug }: { slug: string }) {
       return <ImageResizer />;
     case "image-compressor":
       return <ImageCompressor />;
+    case "image-to-pdf":
+      return <ImageToPdf />;
+    case "pdf-to-image":
+      return <PdfToImage />;
     default: {
       const tool = getToolBySlug(slug);
       return tool ? <ToolPlaceholder tool={tool} /> : null;
