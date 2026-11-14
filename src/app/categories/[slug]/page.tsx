@@ -33,6 +33,14 @@ export async function generateMetadata({
       siteName: siteConfig.name,
       title: `ابزارهای ${category.title} | ${siteConfig.name}`,
       description: category.description,
+    images: [
+      {
+        url: "/og-default.png",
+        width: 1200,
+        height: 630,
+        alt: `${siteConfig.name} — ${siteConfig.tagline}`,
+      },
+    ],
     },
   };
 }

@@ -6,7 +6,8 @@ import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { Container } from "@/components/layout/Container";
 import { Logo } from "@/components/layout/Logo";
-import { SearchBox } from "@/components/search/SearchBox";
+import { SearchTrigger } from "@/components/search/SearchTrigger";
+import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { siteConfig } from "@/config/site";
 import { cn } from "@/lib/utils";
 
@@ -69,9 +70,14 @@ export function Header() {
             ))}
           </nav>
 
-          {/* Desktop search */}
+          {/* Desktop search → opens the ⌘K palette */}
           <div className="ms-auto hidden w-64 md:block xl:w-80">
-            <SearchBox />
+            <SearchTrigger />
+          </div>
+
+          {/* Theme switch (desktop) */}
+          <div className="hidden md:block">
+            <ThemeToggle />
           </div>
 
           {/* Mobile menu button */}
@@ -99,7 +105,12 @@ export function Header() {
         )}
       >
         <Container className="space-y-4 py-4">
-          <SearchBox />
+          <div className="flex items-center gap-2">
+            <div className="flex-1">
+              <SearchTrigger />
+            </div>
+            <ThemeToggle className="shrink-0 border border-ink-200" />
+          </div>
           <nav aria-label="ناوبری موبایل" className="grid gap-1">
             {NAV_LINKS.map((link) => (
               <Link

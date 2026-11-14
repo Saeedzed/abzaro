@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Container } from "@/components/layout/Container";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { RelatedTools } from "@/components/tools/RelatedTools";
+import { RecentToolsTracker } from "@/components/tools/RecentToolsTracker";
 import { toPersianDigits } from "@/lib/persian";
 import { ToolPlaceholder } from "@/components/tools/ToolPlaceholder";
 import { WordCounter } from "@/components/tools/WordCounter";
@@ -157,6 +158,8 @@ export default async function ToolPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+
+      <RecentToolsTracker slug={tool.slug} />
 
       <Breadcrumbs
         items={[

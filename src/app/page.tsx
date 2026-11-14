@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { Container } from "@/components/layout/Container";
 import { Hero } from "@/components/home/Hero";
+import { RecentTools } from "@/components/tools/RecentTools";
 import { ToolGrid } from "@/components/tools/ToolGrid";
 import { CategoryCard } from "@/components/categories/CategoryCard";
 import { categories } from "@/data/categories";
@@ -90,6 +91,11 @@ export default function HomePage() {
   return (
     <>
       <Hero />
+
+      {/* Recently used — client-only, hidden until localStorage has entries */}
+      <Container>
+        <RecentTools />
+      </Container>
 
       {/* Categories */}
       <section className="bg-ink-50 py-14 sm:py-16" aria-labelledby="categories-heading">

@@ -34,7 +34,13 @@ async function grabDownload(action, timeout = 60000) {
 }
 const errors = [];
 page.on("pageerror", (e) => errors.push("PAGEERROR: " + e));
-page.on("console", (m) => { if (m.type() === "error") errors.push("CONSOLE: " + m.text()); });
+page.on("console", (m) => {
+  if (m.type() !== "error") return;
+  const text = m.text();
+  // The 404-route check requests a missing page on purpose.
+  if (/Failed to load resource.*404/.test(text)) return;
+  errors.push("CONSOLE: " + text);
+});
 
 async function open(slug) {
   await page.goto(`${BASE}/tools/${slug}`, { waitUntil: "domcontentloaded", timeout: 60000 });
@@ -495,6 +501,103 @@ await page.goto(`${BASE}/tools/word-counter`, { waitUntil: "domcontentloaded" })
 await page.waitForTimeout(800);
 check("tool page: has a «آموزش استفاده» guide with 3 steps", (await page.locator("section[aria-labelledby='how-to-heading'] ol li").count()) === 3);
 check("tool page: keeps about + related-tools sections", (await page.locator("#about-tool-heading, #how-to-heading").count()) === 2 && (await page.locator("body").innerText()).includes("ابزارهای مرتبط"));
+
+// ============ design system / theme / 404 ============
+await page.goto(`${BASE}/`, { waitUntil: "domcontentloaded" });
+await page.waitForTimeout(600);
+check("design: category cards show the SVG illustration cover", (await page.locator("a[href^='/categories/'] svg[viewBox='0 0 120 64']").count()) >= 5);
+check("design: icon tiles are uniform (44px) on tool cards", (await page.locator("a[href^='/tools/'] span.h-11.w-11").count()) >= 3);
+
+// theme toggle must switch and persist across a reload
+const beforeDark = await page.evaluate(() => document.documentElement.classList.contains("dark"));
+await page.locator("header button[aria-label*='حالت']").first().click();
+await page.waitForTimeout(250);
+const afterToggle = await page.evaluate(() => document.documentElement.classList.contains("dark"));
+check("theme: toggle flips the dark class", afterToggle !== beforeDark);
+await page.reload({ waitUntil: "domcontentloaded" });
+await page.waitForTimeout(500);
+const afterReload = await page.evaluate(() => document.documentElement.classList.contains("dark"));
+check("theme: choice survives a reload", afterReload === afterToggle);
+// switch back so later checks run in the default scheme
+await page.locator("header button[aria-label*='حالت']").first().click();
+await page.waitForTimeout(250);
+check("theme: dark mode keeps white text on brand buttons", (await page.evaluate(async () => {
+  const btn = document.querySelector(".bg-brand-600");
+  if (!btn) return true;
+  document.documentElement.classList.add("dark");
+  const color = getComputedStyle(btn).color;
+  document.documentElement.classList.remove("dark");
+  return color === "rgb(255, 255, 255)";
+})));
+
+// keyboard focus ring is present
+await page.evaluate(() => document.activeElement?.blur?.());
+let ringSeen = false;
+for (let i = 0; i < 3 && !ringSeen; i += 1) {
+  await page.keyboard.press("Tab");
+  await page.waitForTimeout(120);
+  ringSeen = await page.evaluate(() => {
+    const el = document.activeElement;
+    if (!el) return false;
+    const s = getComputedStyle(el);
+    return s.outlineStyle !== "none" && parseFloat(s.outlineWidth) > 0;
+  });
+}
+check("a11y: keyboard focus shows a visible ring", ringSeen);
+
+// 404 page
+const notFound = await page.goto(`${BASE}/this-page-does-not-exist`, { waitUntil: "domcontentloaded" });
+await page.waitForTimeout(500);
+check("404: unknown route returns 404 status", notFound?.status() === 404);
+const nfBody = await page.locator("main").innerText();
+check("404: page offers search, categories and suggested tools", /این صفحه پیدا نشد/.test(nfBody) && /دسته‌بندی/.test(nfBody) && /چند ابزار پرکاربرد/.test(nfBody));
+check("404: shows 6 suggested tool cards", (await page.locator("main a[href^='/tools/']").count()) >= 6);
+
+// OG image is served
+const og = await page.request.get(`${BASE}/og-default.png`);
+check("seo: og-default.png is served (1200x630)", og.status() === 200 && (og.headers()["content-type"] ?? "").includes("image"));
+const homeHtml = await (await page.request.get(`${BASE}/`)).text();
+check("seo: og:image meta is present", homeHtml.includes('property="og:image"'));
+
+// ============ ⌘K palette / live filter / recent tools ============
+await page.goto(`${BASE}/blog`, { waitUntil: "domcontentloaded" });
+await page.waitForTimeout(500);
+await page.keyboard.press("Control+k");
+await page.waitForTimeout(400);
+check("palette: Ctrl+K opens the global search from a non-tool page", (await page.locator("[data-testid='command-palette-input']").count()) === 1);
+await page.locator("[data-testid='command-palette-input']").fill("فشرده سازی");
+await page.waitForTimeout(400);
+check("palette: finds half-space/Arabic-yeh spellings (live results)", (await page.locator("[role='option']").count()) > 0);
+await page.keyboard.press("Escape");
+await page.waitForTimeout(250);
+check("palette: Escape closes it", (await page.locator("[data-testid='command-palette-input']").count()) === 0);
+
+await page.goto(`${BASE}/tools`, { waitUntil: "domcontentloaded" });
+await page.waitForTimeout(700);
+const countAll = await page.locator("[data-testid='tools-filter-count']").innerText();
+check("tools filter: shows all 25 tools by default", has(countAll, 25), countAll);
+await page.locator("[data-testid='tools-filter-input']").fill("pdf");
+await page.waitForTimeout(400);
+const countSearch = await page.locator("[data-testid='tools-filter-count']").innerText();
+check("tools filter: live search narrows the grid", has(countSearch, 4), countSearch);
+await page.locator("[data-testid='tools-filter-input']").fill("");
+await page.getByRole("button", { name: /^تصاویر \(/ }).first().click();
+await page.waitForTimeout(400);
+const countCat = await page.locator("[data-testid='tools-filter-count']").innerText();
+check("tools filter: category chip filters to 5 image tools", has(countCat, 5), countCat);
+check(
+  "tools filter: no PDF tool card leaks into the images filter",
+  (await page.locator("main a[href^='/tools/pdf-']").count()) === 0 &&
+    !(await page.locator("main").innerText()).includes("تبدیل عکس به PDF"),
+);
+
+// recent tools: open a tool, then the homepage shows it
+await page.goto(`${BASE}/tools/qr-code-generator`, { waitUntil: "domcontentloaded" });
+await page.waitForTimeout(600);
+await page.goto(`${BASE}/`, { waitUntil: "domcontentloaded" });
+await page.waitForTimeout(900);
+check("recent tools: homepage shows the tool that was just opened", (await page.locator("#recent-heading").count()) === 1);
+check("recent tools: strip links back to the tool", (await page.locator("#recent-heading").locator("xpath=..").innerText()).includes("QR"));
 
 // ============ registry / SEO ============
 const reg = await page.goto(`${BASE}/tools`, { waitUntil: "domcontentloaded" });

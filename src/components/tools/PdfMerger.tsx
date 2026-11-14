@@ -1,5 +1,6 @@
 "use client";
 
+import { LoadingState } from "@/components/ui/Feedbacks";
 import { useMemo, useState } from "react";
 import {
   ArrowDown,
@@ -252,6 +253,14 @@ export function PdfMerger() {
             {busy && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
             {busy ? "در حال ادغام…" : `ادغام ${toPersianDigits(items.length)} فایل`}
           </button>
+
+          {busy && (
+            <LoadingState
+              className="mt-3"
+              label="در حال ادغام فایل‌ها…"
+              hint="صفحات به ترتیب فهرست بالا کنار هم قرار می‌گیرند؛ این کار در مرورگر شما انجام می‌شود."
+            />
+          )}
 
           {error && (
             <p role="alert" className="mt-3 text-xs font-medium text-red-600">

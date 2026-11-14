@@ -4,6 +4,8 @@ import "@fontsource-variable/vazirmatn";
 import "./globals.css";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { ThemeScript } from "@/components/layout/ThemeScript";
+import { CommandPalette } from "@/components/search/CommandPalette";
 import { siteConfig } from "@/config/site";
 
 export const metadata: Metadata = {
@@ -34,12 +36,21 @@ export const metadata: Metadata = {
     siteName: siteConfig.name,
     title: `${siteConfig.name} | ${siteConfig.tagline}`,
     description: siteConfig.description,
+    images: [
+      {
+        url: "/og-default.png",
+        width: 1200,
+        height: 630,
+        alt: `${siteConfig.name} — ${siteConfig.tagline}`,
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: `${siteConfig.name} | ${siteConfig.tagline}`,
     description: siteConfig.description,
     creator: siteConfig.twitterHandle,
+    images: ["/og-default.png"],
   },
   robots: {
     index: true,
@@ -61,11 +72,15 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang={siteConfig.language} dir="rtl">
+    <html lang={siteConfig.language} dir="rtl" suppressHydrationWarning>
+      <head>
+        <ThemeScript />
+      </head>
       <body className="flex min-h-screen flex-col">
         <Header />
         <main className="flex-1">{children}</main>
         <Footer />
+        <CommandPalette />
       </body>
     </html>
   );

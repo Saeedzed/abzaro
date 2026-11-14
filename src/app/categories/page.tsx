@@ -19,6 +19,14 @@ export const metadata: Metadata = {
     siteName: siteConfig.name,
     title: `دسته‌بندی ابزارها | ${siteConfig.name}`,
     description: "ابزارهای ابزارو را بر اساس نوع کار مرور کنید.",
+    images: [
+      {
+        url: "/og-default.png",
+        width: 1200,
+        height: 630,
+        alt: `${siteConfig.name} — ${siteConfig.tagline}`,
+      },
+    ],
   },
 };
 
