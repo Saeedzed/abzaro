@@ -12,12 +12,9 @@ import { UnitConverter } from "@/components/tools/UnitConverter";
 import { BankInterestCalculator } from "@/components/tools/BankInterestCalculator";
 import { JwtDecoder } from "@/components/tools/JwtDecoder";
 import { HashGenerator } from "@/components/tools/HashGenerator";
-import { HeicToJpg } from "@/components/tools/HeicToJpg";
-import { PdfPageTool } from "@/components/tools/PdfPageTool";
 import { RelatedTools } from "@/components/tools/RelatedTools";
 import { RecentToolsTracker } from "@/components/tools/RecentToolsTracker";
 import { toPersianDigits } from "@/lib/persian";
-import { ToolPlaceholder } from "@/components/tools/ToolPlaceholder";
 import { WordCounter } from "@/components/tools/WordCounter";
 import { CharacterCounter } from "@/components/tools/CharacterCounter";
 import { PersianNumberConverter } from "@/components/tools/PersianNumberConverter";
@@ -28,10 +25,6 @@ import { DiscountCalculator } from "@/components/tools/DiscountCalculator";
 import { AgeCalculator } from "@/components/tools/AgeCalculator";
 import { ImageResizer } from "@/components/tools/ImageResizer";
 import { ImageCompressor } from "@/components/tools/ImageCompressor";
-import { ImageToPdf } from "@/components/tools/ImageToPdf";
-import { PdfToImage } from "@/components/tools/PdfToImage";
-import { PdfCompressor } from "@/components/tools/PdfCompressor";
-import { PdfMerger } from "@/components/tools/PdfMerger";
 import { ImageFormatConverter } from "@/components/tools/ImageFormatConverter";
 import { ImageToBase64 } from "@/components/tools/ImageToBase64";
 import { ProfilePicture } from "@/components/tools/ProfilePicture";
@@ -39,10 +32,21 @@ import { LoanCalculator } from "@/components/tools/LoanCalculator";
 import { BmiCalculator } from "@/components/tools/BmiCalculator";
 import { DateDiffCalculator } from "@/components/tools/DateDiffCalculator";
 import { ExactAgeCalculator } from "@/components/tools/ExactAgeCalculator";
-import { QrCodeGenerator } from "@/components/tools/QrCodeGenerator";
 import { JsonFormatter } from "@/components/tools/JsonFormatter";
 import { Base64Tool } from "@/components/tools/Base64Tool";
 import { UrlEncoder } from "@/components/tools/UrlEncoder";
+import { SalaryTaxCalculator } from "@/components/tools/SalaryTaxCalculator";
+import { EidiSanavatCalculator } from "@/components/tools/EidiSanavatCalculator";
+import { ImageCropper } from "@/components/tools/ImageCropper";
+import { MonthCalendar } from "@/components/tools/MonthCalendar";
+import { TimestampConverter } from "@/components/tools/TimestampConverter";
+import { CsvJsonConverter } from "@/components/tools/CsvJsonConverter";
+import { ColorPicker } from "@/components/tools/ColorPicker";
+import { FindReplace } from "@/components/tools/FindReplace";
+import { PasswordGenerator } from "@/components/tools/PasswordGenerator";
+import { PersianLorem } from "@/components/tools/PersianLorem";
+import { ToolPlaceholder } from "@/components/tools/ToolPlaceholder";
+import { HeavyTool, PdfPageToolLoader } from "@/components/tools/HeavyTools";
 import { getCategory } from "@/data/categories";
 import { categoriesOf, getToolBySlug, tools } from "@/data/tools";
 import { siteConfig } from "@/config/site";
@@ -101,13 +105,13 @@ function ToolImplementation({ slug }: { slug: string }) {
     case "image-compressor":
       return <ImageCompressor />;
     case "image-to-pdf":
-      return <ImageToPdf />;
+      return <HeavyTool slug="image-to-pdf" />;
     case "pdf-to-image":
-      return <PdfToImage />;
+      return <HeavyTool slug="pdf-to-image" />;
     case "pdf-compressor":
-      return <PdfCompressor />;
+      return <HeavyTool slug="pdf-compressor" />;
     case "pdf-merger":
-      return <PdfMerger />;
+      return <HeavyTool slug="pdf-merger" />;
     case "image-format-converter":
       return <ImageFormatConverter />;
     case "image-to-base64":
@@ -123,7 +127,7 @@ function ToolImplementation({ slug }: { slug: string }) {
     case "exact-age":
       return <ExactAgeCalculator />;
     case "qr-code-generator":
-      return <QrCodeGenerator />;
+      return <HeavyTool slug="qr-code-generator" />;
     case "json-formatter":
       return <JsonFormatter />;
     case "base64-encoder":
@@ -146,17 +150,53 @@ function ToolImplementation({ slug }: { slug: string }) {
     case "bank-interest":
       return <BankInterestCalculator />;
     case "heic-to-jpg":
-      return <HeicToJpg />;
+      return <HeavyTool slug="heic-to-jpg" />;
     case "pdf-rotate":
-      return <PdfPageTool kind="rotate" />;
+      return <PdfPageToolLoader kind="rotate" />;
     case "pdf-delete-pages":
-      return <PdfPageTool kind="delete" />;
+      return <PdfPageToolLoader kind="delete" />;
     case "pdf-split":
-      return <PdfPageTool kind="split" />;
+      return <PdfPageToolLoader kind="split" />;
     case "jwt-decoder":
       return <JwtDecoder />;
     case "hash-generator":
       return <HashGenerator />;
+    case "video-compressor":
+      return <HeavyTool slug="video-compressor" />;
+    case "video-to-gif":
+      return <HeavyTool slug="video-to-gif" />;
+    case "video-to-audio":
+      return <HeavyTool slug="video-to-audio" />;
+    case "video-trimmer":
+      return <HeavyTool slug="video-trimmer" />;
+    case "video-resizer":
+      return <HeavyTool slug="video-resizer" />;
+    case "salary-tax":
+      return <SalaryTaxCalculator />;
+    case "eidi-sanavat":
+      return <EidiSanavatCalculator />;
+    case "image-crop":
+      return <ImageCropper />;
+    case "month-calendar":
+      return <MonthCalendar />;
+    case "timestamp-converter":
+      return <TimestampConverter />;
+    case "csv-json":
+      return <CsvJsonConverter />;
+    case "color-picker":
+      return <ColorPicker />;
+    case "find-replace":
+      return <FindReplace />;
+    case "password-generator":
+      return <PasswordGenerator />;
+    case "persian-lorem":
+      return <PersianLorem />;
+    case "pdf-reorder":
+      return <HeavyTool slug="pdf-reorder" />;
+    case "pdf-watermark":
+      return <HeavyTool slug="pdf-watermark" />;
+    case "favicon-generator":
+      return <HeavyTool slug="favicon-generator" />;
     default: {
       const tool = getToolBySlug(slug);
       return tool ? <ToolPlaceholder tool={tool} /> : null;

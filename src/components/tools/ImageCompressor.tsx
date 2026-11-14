@@ -15,6 +15,7 @@ import {
 } from "@/lib/image";
 import { toPersianDigits } from "@/lib/persian";
 import { cn } from "@/lib/utils";
+import { DeviceLimitLabel } from "./DeviceLimitLabel";
 
 const QUALITY_STEPS = [
   { value: 0.9, label: "کیفیت بالا" },
@@ -139,7 +140,7 @@ export function ImageCompressor() {
             <Upload className="h-7 w-7" aria-hidden="true" />
           </span>
           <p className="mt-4 text-base font-bold text-ink-900">تصویر را اینجا رها کنید</p>
-          <p className="mt-1 text-sm text-ink-500">یا از دکمهٔ زیر انتخاب کنید — حداکثر ۲۵ مگابایت</p>
+          <p className="mt-1 text-sm text-ink-500">یا از دکمهٔ زیر انتخاب کنید — حداکثر <DeviceLimitLabel /></p>
           <button
             type="button"
             onClick={() => inputRef.current?.click()}

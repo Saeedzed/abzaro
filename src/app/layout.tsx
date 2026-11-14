@@ -6,6 +6,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { ThemeScript } from "@/components/layout/ThemeScript";
 import { CommandPalette } from "@/components/search/CommandPalette";
+import { ServiceWorkerRegistrar } from "@/components/pwa/ServiceWorkerRegistrar";
 import { siteConfig } from "@/config/site";
 
 export const metadata: Metadata = {
@@ -52,6 +53,19 @@ export const metadata: Metadata = {
     creator: siteConfig.twitterHandle,
     images: ["/og-default.png"],
   },
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    title: siteConfig.name,
+    statusBarStyle: "default",
+  },
+  icons: {
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
+    apple: [{ url: "/icon-192.png", sizes: "192x192" }],
+  },
   robots: {
     index: true,
     follow: true,
@@ -81,6 +95,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <main className="flex-1">{children}</main>
         <Footer />
         <CommandPalette />
+        <ServiceWorkerRegistrar />
       </body>
     </html>
   );

@@ -45,8 +45,19 @@ export function compactKey(input: string): string {
   return foldPersian(input).replace(/ /g, "");
 }
 
-/** Pre-computed haystack for one tool (title, description, category, keywords). */
+/** Memoised haystacks — folding every tool on each keystroke was wasteful. */
+const searchKeyCache = new Map<string, string>();
+
+/** Folded haystack for one tool (title, description, category, keywords). */
 export function toolSearchKey(tool: Tool): string {
+  const cached = searchKeyCache.get(tool.slug);
+  if (cached) return cached;
+  const key = buildToolSearchKey(tool);
+  searchKeyCache.set(tool.slug, key);
+  return key;
+}
+
+function buildToolSearchKey(tool: Tool): string {
   const category = getCategory(tool.category);
   return foldPersian(
     [tool.title, tool.description, tool.seoTitle, category?.title ?? "", tool.slug, ...tool.keywords].join(" "),

@@ -18,6 +18,13 @@ next-env.d.ts
 abzaro-static.zip
 out
 
+# ffmpeg.wasm core — copied from node_modules by `npm run prepare:ffmpeg`
+# (31 MB; Netlify serves it from the build, not from git).
+public/ffmpeg/*.wasm
+public/ffmpeg/ffmpeg-core.js
+public/ffmpeg/ffmpeg.js
+public/ffmpeg/814.ffmpeg.js
+
 # Local Netlify folder
 .netlify
 

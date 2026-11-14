@@ -5,6 +5,7 @@ import { Banknote, Calculator, Table2 } from "lucide-react";
 import { calculateLoan } from "@/lib/finance";
 import { toEnglishDigits, toPersianDigits } from "@/lib/persian";
 import { NumberField, ResultHint, ResultRow, ToolPanel, formatFa, formatToman } from "./shared";
+import { ShareResult, useSharedInput } from "./ShareResult";
 
 function parseNumber(value: string): number | null {
   const normalized = toEnglishDigits(value).replace(/[,٬\s]/g, "");
@@ -17,7 +18,7 @@ function parseNumber(value: string): number | null {
  * table. Uses the standard annuity formula; everything runs locally.
  */
 export function LoanCalculator() {
-  const [amount, setAmount] = useState("100000000");
+  const [amount, setAmount] = useSharedInput("amount", "100000000");
   const [rate, setRate] = useState("23");
   const [months, setMonths] = useState("36");
   const [showTable, setShowTable] = useState(false);
@@ -117,6 +118,8 @@ export function LoanCalculator() {
               value={`${formatFa(result.schedule.length, 0)} ماه`}
               copyable={false}
             />
+
+            <ShareResult params={{ amount, rate, months }} />
 
             <button
               type="button"

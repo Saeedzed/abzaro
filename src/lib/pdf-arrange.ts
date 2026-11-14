@@ -6,7 +6,7 @@
  * visitor's browser; nothing is uploaded.
  */
 
-import { PDFDocument, degrees } from "pdf-lib";
+import { loadPdfLib } from "@/lib/pdf-edit";
 
 export interface PdfInfo {
   pageCount: number;
@@ -26,6 +26,7 @@ const LOAD_ERROR = "خواندن این PDF ممکن نشد. مطمئن شوید
 
 /** Read a PDF and report its size. */
 export async function inspectPdf(file: File): Promise<PdfInfo | PdfOpError> {
+  const { PDFDocument } = await loadPdfLib();
   try {
     const bytes = new Uint8Array(await file.arrayBuffer());
     const doc = await PDFDocument.load(bytes, { ignoreEncryption: true });
@@ -44,6 +45,7 @@ export async function rotatePdf(
   angle: 90 | 180 | 270,
   pages: number[] = [],
 ): Promise<{ blob: Blob; pageCount: number } | PdfOpError> {
+  const { PDFDocument, degrees } = await loadPdfLib();
   try {
     const doc = await PDFDocument.load(new Uint8Array(await file.arrayBuffer()), {
       ignoreEncryption: true,
@@ -71,6 +73,7 @@ export async function deletePdfPages(
   file: File,
   pages: number[],
 ): Promise<{ blob: Blob; pageCount: number } | PdfOpError> {
+  const { PDFDocument } = await loadPdfLib();
   try {
     const doc = await PDFDocument.load(new Uint8Array(await file.arrayBuffer()), {
       ignoreEncryption: true,
@@ -108,6 +111,7 @@ export async function extractPdfPages(
   file: File,
   pages: number[],
 ): Promise<{ blob: Blob; pageCount: number } | PdfOpError> {
+  const { PDFDocument } = await loadPdfLib();
   try {
     const doc = await PDFDocument.load(new Uint8Array(await file.arrayBuffer()), {
       ignoreEncryption: true,

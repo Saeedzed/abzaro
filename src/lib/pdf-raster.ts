@@ -217,3 +217,51 @@ export function pageImageName(
   const padded = String(pageNumber).padStart(String(totalPages).length, "0");
   return `${base}-page-${padded}.${extension}`;
 }
+
+/**
+ * Render the first `maxPages` pages to small JPEG data URLs so tools can show
+ * thumbnails (e.g. the page-reorder list). Runs one page at a time and never
+ * throws: thumbnails are a nicety, the tool works without them.
+ */
+export async function renderPdfPreviews(
+  bytes: Uint8Array,
+  options: { maxWidth?: number; maxPages?: number } = {},
+): Promise<string[]> {
+  const maxWidth = options.maxWidth ?? 160;
+  const maxPages = options.maxPages ?? MAX_PAGES;
+  const urls: string[] = [];
+  let doc: PDFDocumentProxy | null = null;
+
+  try {
+    const pdfjs = await getPdfjs();
+    doc = await pdfjs.getDocument({ data: bytes.slice().slice(), isOffscreenCanvasSupported: true }).promise;
+
+    for (let pageNumber = 1; pageNumber <= Math.min(doc.numPages, maxPages); pageNumber += 1) {
+      const page = await doc.getPage(pageNumber);
+      const base = page.getViewport({ scale: 1 });
+      const scale = maxWidth / base.width;
+      const viewport = page.getViewport({ scale });
+
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.floor(viewport.width));
+      canvas.height = Math.max(1, Math.floor(viewport.height));
+      const context = canvas.getContext("2d");
+      if (!context) break;
+      context.fillStyle = "#ffffff";
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      await page.render({ canvas, canvasContext: context, viewport }).promise;
+      urls.push(canvas.toDataURL("image/jpeg", 0.7));
+      page.cleanup();
+    }
+  } catch {
+    return urls;
+  } finally {
+    try {
+      await doc?.destroy();
+    } catch {
+      // ignore
+    }
+  }
+
+  return urls;
+}

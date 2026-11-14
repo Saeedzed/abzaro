@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Percent, TrendingDown, TrendingUp } from "lucide-react";
 import { percentChange, percentOf, whatPercent } from "@/lib/percent";
 import { NumberField, ResultHint, ResultRow, ToolPanel, formatFa } from "./shared";
+import { ShareResult, useSharedInput } from "./ShareResult";
 
 type Mode = "of" | "what" | "change";
 
@@ -25,8 +26,8 @@ function toNumber(value: string): number | null {
  */
 export function PercentageCalculator() {
   const [mode, setMode] = useState<Mode>("of");
-  const [a, setA] = useState("");
-  const [b, setB] = useState("");
+  const [a, setA] = useSharedInput("a");
+  const [b, setB] = useSharedInput("b");
 
   const numA = toNumber(a);
   const numB = toNumber(b);
@@ -120,6 +121,7 @@ export function PercentageCalculator() {
                 {formatFa(numA ?? 0)} درصد از {formatFa(numB ?? 0)} برابر{" "}
                 {formatFa(result.value)} است.
               </p>
+              <ShareResult params={{ mode, a, b }} />
             </div>
           ) : result.kind === "what" ? (
             <div className="space-y-3">
@@ -128,6 +130,7 @@ export function PercentageCalculator() {
                 {formatFa(numA ?? 0)} برابر {formatFa(result.value)} درصد از{" "}
                 {formatFa(numB ?? 0)} است.
               </p>
+              <ShareResult params={{ mode, a, b }} />
             </div>
           ) : (
             <div className="space-y-3">

@@ -8,6 +8,8 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
+    "prepare:ffmpeg": "node scripts/copy-ffmpeg.mjs",
+    "prebuild": "node scripts/copy-ffmpeg.mjs",
     "test": "node --import tsx --test $(find src -name '*.test.ts')",
     "test:e2e": "node scripts/e2e-check.mjs",
     "test:e2e:all": "node scripts/e2e-all-tools.mjs",
@@ -15,6 +17,8 @@
     "package:static": "node scripts/package-static.mjs"
   },
   "dependencies": {
+    "@ffmpeg/core": "0.12.6",
+    "@ffmpeg/ffmpeg": "0.12.10",
     "@fontsource-variable/vazirmatn": "^5.3.0",
     "heic2any": "^0.0.4",
     "jszip": "^3.10.2",

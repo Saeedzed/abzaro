@@ -142,7 +142,7 @@ export function ProfilePicture() {
     return (
       <UploadZone
         title="عکس خود را اینجا رها کنید"
-        hint="JPG، PNG یا WebP — حداکثر ۲۵ مگابایت"
+        hint="JPG، PNG یا WebP — محدودیت حجم بر اساس حافظهٔ دستگاه"
         buttonLabel="انتخاب عکس"
         accept="image/*"
         onFiles={(files) => void handleFiles(files)}

@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Activity, HeartPulse, Scale } from "lucide-react";
 import { calculateBmi } from "@/lib/finance";
 import { toEnglishDigits } from "@/lib/persian";
 import { NumberField, ResultHint, ResultRow, ToolPanel, formatFa } from "./shared";
+import { ShareResult, useSharedInput } from "./ShareResult";
 
 function parseNumber(value: string): number | null {
   const normalized = toEnglishDigits(value).replace(/[,٬\s]/g, "").replace("٫", ".");
@@ -20,8 +21,8 @@ const RANGES = [
 ];
 
 export function BmiCalculator() {
-  const [weight, setWeight] = useState("");
-  const [height, setHeight] = useState("");
+  const [weight, setWeight] = useSharedInput("w");
+  const [height, setHeight] = useSharedInput("h");
 
   const kg = parseNumber(weight);
   const cm = parseNumber(height);
@@ -113,6 +114,7 @@ export function BmiCalculator() {
                 emphasize
               />
             )}
+            <ShareResult params={{ w: weight, h: height }} />
           </div>
         ) : (
           <ResultHint>

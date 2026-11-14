@@ -11,6 +11,14 @@
 [[plugins]]
   package = "@netlify/plugin-nextjs"
 
+# The ffmpeg.wasm core is fetched by the video tools at runtime. It is
+# content-addressed by version (the npm packages are exact-pinned), so it can
+# be cached for a month; the .wasm is streamed with range support by Netlify.
+[[headers]]
+  for = "/ffmpeg/*"
+  [headers.values]
+    Cache-Control = "public, max-age=2592000"
+
 # Long-cache the immutable build assets.
 [[headers]]
   for = "/_next/static/*"

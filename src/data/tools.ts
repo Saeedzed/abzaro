@@ -1,5 +1,7 @@
 import {
   ArrowDownUp,
+  AudioLines,
+  Crop,
   ArrowLeftRight,
   BadgePercent,
   Banknote,
@@ -14,6 +16,7 @@ import {
   FileImage,
   FileText,
   Fingerprint,
+  Gift,
   Hash,
   HeartPulse,
   Images,
@@ -25,7 +28,10 @@ import {
   ListFilter,
   Minimize2,
   Percent,
+  Package,
+  Palette,
   QrCode,
+  Replace,
   RotateCw,
   Ruler,
   Scissors,
@@ -33,7 +39,10 @@ import {
   SpellCheck,
   Trash2,
   Type,
+  Stamp,
+  Video,
   UserRound,
+  Wallet,
   type LucideIcon,
 } from "lucide-react";
 
@@ -101,7 +110,7 @@ export const tools: Tool[] = [
     seoTitle: "شمارش کلمات آنلاین رایگان",
     seoDescription:
       "تعداد کلمات، کاراکترها، جمله‌ها، پاراگراف‌ها و زمان مطالعهٔ متن را به‌صورت رایگان و لحظه‌ای بشمارید؛ بدون نیاز به ثبت‌نام.",
-    keywords: ["شمارش کلمات", "تعداد کلمات", "word counter", "شمارش واژه", "تعداد واژه"],
+    keywords: ["شمارش کلمات", "تعداد کلمات", "word counter", "شمارش واژه", "تعداد واژه", "شمارش کلمه", "word count", "شمارنده کلمه", "چند کلمه است"],
     status: "live",
     popular: true,
     addedAt: "2025-11-01",
@@ -122,9 +131,9 @@ export const tools: Tool[] = [
     seoTitle: "شمارش کاراکتر آنلاین رایگان",
     seoDescription:
       "تعداد کاراکترهای متن را با و بدون فاصله، تعداد کلمات، خطوط و حجم متن را به‌صورت رایگان و لحظه‌ای محاسبه کنید.",
-    keywords: ["شمارش کاراکتر", "تعداد کاراکتر", "character counter", "شمارش حروف"],
+    keywords: ["شمارش کاراکتر", "تعداد کاراکتر", "character counter", "شمارش حروف", "شمارش حرف", "character count", "شمارش کاراکتر بدون فاصله"],
     status: "live",
-    popular: true,
+    popular: false,
     addedAt: "2025-11-01",
   },
   {
@@ -143,9 +152,9 @@ export const tools: Tool[] = [
     seoTitle: "تبدیل اعداد به فارسی و برعکس",
     seoDescription:
       "اعداد انگلیسی را به ارقام فارسی با جداکنندهٔ هزارگان تبدیل کنید و ارقام فارسی را به انگلیسی برگردانید؛ رایگان و بدون ثبت‌نام.",
-    keywords: ["تبدیل عدد به فارسی", "اعداد فارسی", "persian numbers", "تبدیل ارقام", "اعداد انگلیسی به فارسی"],
+    keywords: ["تبدیل عدد به فارسی", "اعداد فارسی", "persian numbers", "تبدیل ارقام", "اعداد انگلیسی به فارسی", "تبدیل عدد انگلیسی به فارسی", "عدد فارسی به انگلیسی", "ارقام فارسی"],
     status: "live",
-    popular: true,
+    popular: false,
     addedAt: "2025-11-05",
   },
   {
@@ -164,7 +173,7 @@ export const tools: Tool[] = [
     seoTitle: "پاک‌سازی متن فارسی آنلاین",
     seoDescription:
       "متن فارسی را از فاصله‌های اضافی، نیم‌فاصله‌های نادرست و کاراکترهای نامرئی پاک کنید؛ رایگان و در مرورگر شما.",
-    keywords: ["پاک‌سازی متن", "تمیز کردن متن فارسی", "حذف فاصله اضافی", "نیم‌فاصله"],
+    keywords: ["پاک‌سازی متن", "تمیز کردن متن فارسی", "حذف فاصله اضافی", "نیم‌فاصله", "پاک کردن فاصله اضافه", "حذف نیم‌فاصله", "اصلاح متن فارسی", "یکسان‌سازی ی و ک"],
     status: "live",
     popular: false,
     addedAt: "2025-11-10",
@@ -185,7 +194,7 @@ export const tools: Tool[] = [
     seoTitle: "تبدیل عدد به حروف فارسی",
     seoDescription:
       "هر عددی را به حروف فارسی تبدیل کنید؛ مناسب برای فاکتور، چک و متن‌های رسمی. رایگان و بدون ثبت‌نام.",
-    keywords: ["تبدیل عدد به حروف", "عدد به حروف", "number to words", "حروف فارسی"],
+    keywords: ["تبدیل عدد به حروف", "عدد به حروف", "number to words", "حروف فارسی", "نوشتن عدد با حروف", "مبلغ به حروف"],
     status: "live",
     popular: false,
     addedAt: "2025-11-10",
@@ -206,7 +215,7 @@ export const tools: Tool[] = [
     seoTitle: "محاسبه درصد آنلاین رایگان",
     seoDescription:
       "درصد یک عدد از عدد دیگر، افزایش و کاهش درصدی را به‌صورت رایگان و دقیق محاسبه کنید؛ بدون نیاز به ثبت‌نام.",
-    keywords: ["محاسبه درصد", "درصد گیری", "percentage calculator", "درصد عدد"],
+    keywords: ["محاسبه درصد", "درصد گیری", "percentage calculator", "درصد عدد", "درصد گرفتن", "چند درصد", "percent"],
     status: "live",
     popular: true,
     addedAt: "2025-11-12",
@@ -222,12 +231,12 @@ export const tools: Tool[] = [
       "اگر مالیات بر ارزش افزوده هم دارید، درصد آن را اضافه کنید.",
       "قیمت نهایی، مقدار تخفیف و مبلغ مالیات را ببینید و کپی کنید.",
     ],
-    category: "numbers",
+    category: "finance",
     icon: BadgePercent,
     seoTitle: "محاسبه تخفیف آنلاین رایگان",
     seoDescription:
       "قیمت نهایی بعد از تخفیف و مبلغ تخفیف را بر اساس درصد یا مبلغ ثابت محاسبه کنید؛ سریع و رایگان.",
-    keywords: ["محاسبه تخفیف", "قیمت بعد از تخفیف", "discount calculator", "درصد تخفیف"],
+    keywords: ["محاسبه تخفیف", "قیمت بعد از تخفیف", "discount calculator", "درصد تخفیف", "قیمت با تخفیف", "discount"],
     status: "live",
     popular: false,
     addedAt: "2025-11-12",
@@ -248,7 +257,7 @@ export const tools: Tool[] = [
     seoTitle: "محاسبه سن با تاریخ تولد شمسی",
     seoDescription:
       "سن دقیق خود را با وارد کردن تاریخ تولد شمسی، به سال، ماه و روز محاسبه کنید؛ رایگان و بدون ثبت‌نام.",
-    keywords: ["محاسبه سن", "سن دقیق", "age calculator", "تاریخ تولد شمسی"],
+    keywords: ["محاسبه سن", "سن دقیق", "age calculator", "تاریخ تولد شمسی", "تاریخ تولد", "age"],
     status: "live",
     popular: false,
     addedAt: "2025-11-12",
@@ -269,7 +278,7 @@ export const tools: Tool[] = [
     seoTitle: "تغییر اندازه تصویر آنلاین رایگان",
     seoDescription:
       "ابعاد تصاویر را به‌صورت رایگان و بدون افت کیفیت تغییر دهید؛ فایل شما هرگز از دستگاهتان خارج نمی‌شود.",
-    keywords: ["تغییر اندازه تصویر", "resize image", "کوچک کردن عکس", "ابعاد تصویر"],
+    keywords: ["تغییر اندازه تصویر", "resize image", "کوچک کردن عکس", "ابعاد تصویر", "تغییر سایز عکس", "اندازه عکس"],
     status: "live",
     popular: false,
     addedAt: "2025-11-14",
@@ -290,7 +299,7 @@ export const tools: Tool[] = [
     seoTitle: "فشرده‌سازی تصویر آنلاین رایگان",
     seoDescription:
       "حجم تصاویر را بدون افت محسوس کیفیت کاهش دهید؛ پردازش کاملاً در مرورگر شما انجام می‌شود و فایلتان آپلود نمی‌شود.",
-    keywords: ["فشرده‌سازی تصویر", "کم کردن حجم عکس", "compress image", "کاهش حجم تصویر"],
+    keywords: ["فشرده‌سازی تصویر", "کم کردن حجم عکس", "compress image", "کاهش حجم تصویر", "فشرده کردن عکس", "حجم عکس"],
     status: "live",
     popular: true,
     addedAt: "2025-11-14",
@@ -311,16 +320,9 @@ export const tools: Tool[] = [
     seoTitle: "تبدیل عکس به PDF آنلاین رایگان",
     seoDescription:
       "تصاویر JPG، PNG و WebP را در مرورگر خود به یک فایل PDF تبدیل کنید؛ انتخاب ترتیب صفحه‌ها، اندازهٔ A4 یا هم‌اندازهٔ تصویر و حاشیهٔ دلخواه، بدون آپلود فایل.",
-    keywords: [
-      "تبدیل عکس به pdf",
-      "تبدیل تصویر به pdf",
-      "عکس به پی دی اف",
-      "jpg to pdf",
-      "image to pdf",
-      "ادغام عکس در pdf",
-    ],
+    keywords: ["تبدیل عکس به pdf", "تبدیل تصویر به pdf", "عکس به پی دی اف", "jpg to pdf", "image to pdf", "ادغام عکس در pdf"],
     status: "live",
-    popular: true,
+    popular: false,
     addedAt: "2025-11-15",
   },
   {
@@ -339,17 +341,9 @@ export const tools: Tool[] = [
     seoTitle: "تبدیل PDF به عکس JPG و PNG آنلاین",
     seoDescription:
       "هر صفحه از فایل PDF را به تصویر JPG یا PNG تبدیل کنید و با کیفیت دلخواه (تا ۲۱۶ dpi) دانلود کنید؛ پردازش کاملاً در مرورگر و بدون آپلود فایل.",
-    keywords: [
-      "تبدیل pdf به عکس",
-      "pdf به jpg",
-      "pdf به png",
-      "پی دی اف به تصویر",
-      "pdf to image",
-      "pdf to jpg",
-      "استخراج عکس از pdf",
-    ],
+    keywords: ["تبدیل pdf به عکس", "pdf به jpg", "pdf به png", "پی دی اف به تصویر", "pdf to image", "pdf to jpg", "استخراج عکس از pdf", "PDF به عکس", "تبدیل پی دی اف به عکس"],
     status: "live",
-    popular: true,
+    popular: false,
     addedAt: "2025-11-15",
   },
   // ---------------------------------------------------------------- files
@@ -369,15 +363,9 @@ export const tools: Tool[] = [
     seoTitle: "فشرده‌سازی PDF آنلاین رایگان",
     seoDescription:
       "حجم فایل PDF را در مرورگر خود کم کنید: بهینه‌سازی بدون افت کیفیت یا فشرده‌سازی تصویری با کیفیت دلخواه. بدون آپلود فایل و بدون ثبت‌نام.",
-    keywords: [
-      "فشرده سازی pdf",
-      "کم کردن حجم pdf",
-      "compress pdf",
-      "کاهش حجم پی دی اف",
-      "بهینه سازی pdf",
-    ],
+    keywords: ["فشرده سازی pdf", "کم کردن حجم pdf", "compress pdf", "کاهش حجم پی دی اف", "بهینه سازی pdf", "حجم فایل پی دی اف"],
     status: "live",
-    popular: true,
+    popular: false,
     addedAt: "2025-11-16",
   },
   {
@@ -396,9 +384,9 @@ export const tools: Tool[] = [
     seoTitle: "ادغام فایل‌های PDF آنلاین رایگان",
     seoDescription:
       "چند فایل PDF را در مرورگر خود به یک فایل ادغام کنید؛ تغییر ترتیب فایل‌ها، حفظ کیفیت اصلی و بدون آپلود به سرور.",
-    keywords: ["ادغام pdf", "ترکیب pdf", "merge pdf", "یکی کردن پی دی اف", "چند pdf در یک فایل"],
+    keywords: ["ادغام pdf", "ترکیب pdf", "merge pdf", "یکی کردن پی دی اف", "چند pdf در یک فایل", "چسباندن PDF", "یکی کردن فایل PDF", "ادغام"],
     status: "live",
-    popular: true,
+    popular: false,
     addedAt: "2025-11-16",
   },
   // --------------------------------------------------------------- images
@@ -418,14 +406,7 @@ export const tools: Tool[] = [
     seoTitle: "تبدیل JPG به PNG و برعکس آنلاین",
     seoDescription:
       "تصاویر JPG، PNG و WebP را در مرورگر خود به هم تبدیل کنید؛ انتخاب کیفیت، پیش‌نمایش و مقایسهٔ حجم — بدون آپلود فایل.",
-    keywords: [
-      "تبدیل jpg به png",
-      "تبدیل png به jpg",
-      "jpg to png",
-      "png to jpg",
-      "تبدیل قالب تصویر",
-      "webp converter",
-    ],
+    keywords: ["تبدیل jpg به png", "تبدیل png به jpg", "jpg to png", "png to jpg", "تبدیل قالب تصویر", "webp converter"],
     status: "live",
     popular: false,
     addedAt: "2025-11-16",
@@ -446,13 +427,7 @@ export const tools: Tool[] = [
     seoTitle: "تبدیل عکس به Base64 آنلاین",
     seoDescription:
       "تصویر خود را به Base64 تبدیل کنید و به‌صورت data URI یا CSS کپی کنید؛ پردازش در مرورگر و بدون آپلود تصویر.",
-    keywords: [
-      "عکس به base64",
-      "image to base64",
-      "تبدیل تصویر به base64",
-      "data uri",
-      "base64 image",
-    ],
+    keywords: ["عکس به base64", "image to base64", "تبدیل تصویر به base64", "data uri", "base64 image"],
     status: "live",
     popular: false,
     addedAt: "2025-11-16",
@@ -473,13 +448,7 @@ export const tools: Tool[] = [
     seoTitle: "ساخت عکس پروفایل با اندازه دلخواه",
     seoDescription:
       "عکس پروفایل خود را با اندازهٔ دقیق بسازید: برش مربع، بزرگ‌نمایی، شکل دایره یا گوشه‌گرد و پس‌زمینهٔ دلخواه؛ رایگان و بدون آپلود.",
-    keywords: [
-      "عکس پروفایل",
-      "ساخت عکس پروفایل",
-      "برش عکس",
-      "profile picture maker",
-      "تغییر اندازه عکس پروفایل",
-    ],
+    keywords: ["عکس پروفایل", "ساخت عکس پروفایل", "برش عکس", "profile picture maker", "تغییر اندازه عکس پروفایل"],
     status: "live",
     popular: false,
     addedAt: "2025-11-16",
@@ -496,20 +465,14 @@ export const tools: Tool[] = [
       "نوع اقساط (ساده یا با محاسبهٔ دقیق) را انتخاب کنید.",
       "مبلغ قسط ماهانه، کل سود و کل بازپرداخت را ببینید و جدول اقساط را بررسی کنید.",
     ],
-    category: "numbers",
+    category: "finance",
     icon: Banknote,
     seoTitle: "محاسبه اقساط وام آنلاین",
     seoDescription:
       "قسط ماهانهٔ وام و مجموع سود را با مبلغ، نرخ سود و مدت بازپرداخت محاسبه کنید؛ همراه با جدول تفکیکی اقساط — رایگان و بدون ثبت‌نام.",
-    keywords: [
-      "محاسبه اقساط وام",
-      "محاسبه قسط",
-      "loan calculator",
-      "جدول بازپرداخت وام",
-      "سود وام",
-    ],
+    keywords: ["محاسبه اقساط وام", "محاسبه قسط", "loan calculator", "جدول بازپرداخت وام", "سود وام", "اقساط وام", "loan"],
     status: "live",
-    popular: true,
+    popular: false,
     addedAt: "2025-11-16",
   },
   {
@@ -528,7 +491,7 @@ export const tools: Tool[] = [
     seoTitle: "محاسبه BMI (شاخص توده بدنی)",
     seoDescription:
       "شاخص توده بدنی (BMI) خود را با وزن و قد محاسبه کنید؛ همراه با دسته‌بندی لاغری/نرمال/اضافه وزن و محدودهٔ وزن سالم — رایگان.",
-    keywords: ["محاسبه bmi", "شاخص توده بدنی", "bmi calculator", "قد و وزن", "وزن ایده‌آل"],
+    keywords: ["محاسبه bmi", "شاخص توده بدنی", "bmi calculator", "قد و وزن", "وزن ایده‌آل", "چاقی"],
     status: "live",
     popular: false,
     addedAt: "2025-11-16",
@@ -549,13 +512,7 @@ export const tools: Tool[] = [
     seoTitle: "محاسبه اختلاف دو تاریخ شمسی",
     seoDescription:
       "اختلاف بین دو تاریخ شمسی را دقیق به سال، ماه، روز، هفته و ساعت محاسبه کنید؛ روز هفته و تعداد روزها — رایگان و بدون ثبت‌نام.",
-    keywords: [
-      "اختلاف دو تاریخ",
-      "محاسبه فاصله دو تاریخ",
-      "date difference",
-      "تاریخ شمسی",
-      "چند روز گذشته",
-    ],
+    keywords: ["اختلاف دو تاریخ", "محاسبه فاصله دو تاریخ", "date difference", "تاریخ شمسی", "چند روز گذشته", "تفاوت دو تاریخ", "فاصله بین دو تاریخ", "چند روز مانده"],
     status: "live",
     popular: false,
     addedAt: "2025-11-16",
@@ -576,13 +533,7 @@ export const tools: Tool[] = [
     seoTitle: "محاسبه سن دقیق با ساعت تولد",
     seoDescription:
       "سن دقیق خود را با تاریخ و ساعت تولد شمسی محاسبه کنید: سال، ماه، روز، ساعت و دقیقه، مجموع روزها، برج و روز هفته.",
-    keywords: [
-      "محاسبه سن دقیق",
-      "سن با ساعت",
-      "exact age calculator",
-      "تاریخ تولد شمسی",
-      "چند روز زنده ام",
-    ],
+    keywords: ["محاسبه سن دقیق", "سن با ساعت", "exact age calculator", "تاریخ تولد شمسی", "چند روز زنده ام"],
     status: "live",
     popular: false,
     addedAt: "2025-11-16",
@@ -604,7 +555,7 @@ export const tools: Tool[] = [
     seoTitle: "ساخت کد QR آنلاین رایگان",
     seoDescription:
       "کد QR برای لینک، متن، وای‌فای یا شماره تماس بسازید و به‌صورت PNG دانلود کنید؛ انتخاب اندازه، رنگ و سطح مقاومت در برابر خطا.",
-    keywords: ["تولید qr code", "ساخت کد qr", "qr generator", "کیو آر کد", "qr وای فای"],
+    keywords: ["تولید qr code", "ساخت کد qr", "qr generator", "کیو آر کد", "qr وای فای", "ساخت کیو آر کد", "ساخت QR", "بارکد لینک", "qr ساز"],
     status: "live",
     popular: true,
     addedAt: "2025-11-16",
@@ -625,15 +576,9 @@ export const tools: Tool[] = [
     seoTitle: "فرمت و اعتبارسنجی JSON آنلاین",
     seoDescription:
       "JSON خود را مرتب‌سازی، فشرده یا اعتبارسنجی کنید؛ نمایش خطا با شماره خط و ستون، تعمیر خودکار و مرتب‌سازی کلیدها — در مرورگر شما.",
-    keywords: [
-      "json formatter",
-      "json validator",
-      "مرتب سازی json",
-      "اعتبارسنجی json",
-      "json beautifier",
-    ],
+    keywords: ["json formatter", "json validator", "مرتب سازی json", "اعتبارسنجی json", "json beautifier", "مرتب کردن JSON", "فرمت جیسون", "json beautify"],
     status: "live",
-    popular: true,
+    popular: false,
     addedAt: "2025-11-16",
   },
   {
@@ -652,13 +597,7 @@ export const tools: Tool[] = [
     seoTitle: "تبدیل متن به Base64 و برعکس",
     seoDescription:
       "متن را به Base64 کدگذاری یا از Base64 رمزگشایی کنید؛ پشتیبانی از متن فارسی (UTF-8)، حالت URL-safe و کپی سریع.",
-    keywords: [
-      "base64 encoder",
-      "base64 decoder",
-      "تبدیل به base64",
-      "رمزگشایی base64",
-      "base64 آنلاین",
-    ],
+    keywords: ["base64 encoder", "base64 decoder", "تبدیل به base64", "رمزگشایی base64", "base64 آنلاین", "کدگذاری بیس ۶۴", "base64 decode", "دیکد base64"],
     status: "live",
     popular: false,
     addedAt: "2025-11-16",
@@ -679,14 +618,7 @@ export const tools: Tool[] = [
     seoTitle: "کدگذاری و رمزگشایی URL آنلاین",
     seoDescription:
       "لینک یا متن را به فرمت URL کدگذاری (encodeURIComponent / encodeURI) یا از آن رمزگشایی کنید؛ رایگان و در مرورگر شما.",
-    keywords: [
-      "url encoder",
-      "url decoder",
-      "کدگذاری url",
-      "رمزگشایی url",
-      "encodeuricomponent",
-      "percent encoding",
-    ],
+    keywords: ["url encoder", "url decoder", "کدگذاری url", "رمزگشایی url", "encodeuricomponent", "percent encoding", "url decode", "انکود آدرس"],
     status: "live",
     popular: false,
     addedAt: "2025-11-16",
@@ -795,9 +727,9 @@ export const tools: Tool[] = [
     seoTitle: "تبدیل تاریخ شمسی به میلادی و برعکس",
     seoDescription:
       "تاریخ شمسی و میلادی را دقیق و سریع به هم تبدیل کنید؛ همراه با روز هفته و فرمت ISO. رایگان و بدون ثبت‌نام.",
-    keywords: ["تبدیل تاریخ شمسی به میلادی", "تاریخ میلادی به شمسی", "jalali to gregorian", "تبدیل تاریخ", "تقویم شمسی"],
+    keywords: ["تبدیل تاریخ شمسی به میلادی", "تاریخ میلادی به شمسی", "jalali to gregorian", "تبدیل تاریخ", "تقویم شمسی", "تبدیل تاریخ میلادی به شمسی", "date converter"],
     status: "live",
-    popular: true,
+    popular: false,
     addedAt: "2025-11-14",
   },
   {
@@ -816,7 +748,7 @@ export const tools: Tool[] = [
     seoTitle: "تبدیل واحد آنلاین (طول، وزن، دما، مساحت)",
     seoDescription:
       "تبدیل واحدهای طول، وزن، دما، مساحت، حجم، سرعت و حجم داده به‌صورت آنلاین و دقیق؛ رایگان و بدون نصب.",
-    keywords: ["تبدیل واحد", "unit converter", "متر به فوت", "کیلوگرم به پوند", "سانتی‌گراد به فارنهایت"],
+    keywords: ["تبدیل واحد", "unit converter", "متر به فوت", "کیلوگرم به پوند", "سانتی‌گراد به فارنهایت", "کیلو به پوند", "سانتی به اینچ", "unit"],
     status: "live",
     popular: false,
     addedAt: "2025-11-14",
@@ -832,12 +764,12 @@ export const tools: Tool[] = [
       "مبلغ سپرده، نرخ سود سالانه و مدت (ماه) را وارد کنید.",
       "سود کل، مبلغ نهایی، سود ماهانه و نرخ مؤثر سالانه را ببینید.",
     ],
-    category: "numbers",
+    category: "finance",
     icon: Landmark,
     seoTitle: "محاسبه سود بانکی (ساده و مرکب)",
     seoDescription:
       "سود سپردهٔ بانکی را با نرخ سالانه و مدت دلخواه محاسبه کنید؛ سود ساده و مرکب، همراه با نرخ مؤثر سالانه.",
-    keywords: ["سود بانکی", "محاسبه سود سپرده", "سود مرکب", "bank interest", "نرخ سود"],
+    keywords: ["سود بانکی", "محاسبه سود سپرده", "سود مرکب", "bank interest", "نرخ سود", "سود سپرده", "interest"],
     status: "live",
     popular: false,
     addedAt: "2025-11-14",
@@ -860,7 +792,7 @@ export const tools: Tool[] = [
       "عکس HEIC آیفون را بدون نصب برنامه به JPG تبدیل کنید؛ پردازش کامل در مرورگر و بدون آپلود فایل.",
     keywords: ["تبدیل HEIC به JPG", "heic to jpg", "عکس آیفون", "HEIF", "تبدیل عکس آیفون"],
     status: "live",
-    popular: true,
+    popular: false,
     addedAt: "2025-11-14",
   },
   {
@@ -879,7 +811,7 @@ export const tools: Tool[] = [
     seoTitle: "چرخاندن صفحات PDF آنلاین",
     seoDescription:
       "صفحات PDF را ۹۰/۱۸۰/۲۷۰ درجه بچرخانید؛ کیفیت و متن صفحه حفظ می‌شود و فایل در مرورگر شما پردازش می‌شود.",
-    keywords: ["چرخاندن PDF", "rotate pdf", "صفحات افقی PDF", "درست کردن جهت PDF"],
+    keywords: ["چرخاندن PDF", "rotate pdf", "صفحات افقی PDF", "درست کردن جهت PDF", "افقی کردن صفحه PDF", "صفحه چرخیده"],
     status: "live",
     popular: false,
     addedAt: "2025-11-14",
@@ -900,7 +832,7 @@ export const tools: Tool[] = [
     seoTitle: "حذف صفحه از PDF آنلاین",
     seoDescription:
       "صفحه‌های اضافی فایل PDF را حذف کنید؛ پردازش کاملاً در مرورگر انجام می‌شود و کیفیت صفحات حفظ می‌شود.",
-    keywords: ["حذف صفحه PDF", "delete pdf pages", "پاک کردن صفحه از پی دی اف", "ویرایش PDF"],
+    keywords: ["حذف صفحه PDF", "delete pdf pages", "پاک کردن صفحه از پی دی اف", "ویرایش PDF", "پاک کردن برگه", "delete pdf page"],
     status: "live",
     popular: false,
     addedAt: "2025-11-14",
@@ -921,7 +853,7 @@ export const tools: Tool[] = [
     seoTitle: "استخراج و تقسیم صفحات PDF",
     seoDescription:
       "صفحه‌های دلخواه یک PDF را جدا کنید یا فایل را تقسیم کنید؛ رایگان، بدون نصب و با پردازش در مرورگر.",
-    keywords: ["تقسیم PDF", "split pdf", "استخراج صفحه PDF", "جدا کردن صفحات"],
+    keywords: ["تقسیم PDF", "split pdf", "استخراج صفحه PDF", "جدا کردن صفحات", "جدا کردن صفحات PDF", "استخراج صفحه"],
     status: "live",
     popular: false,
     addedAt: "2025-11-14",
@@ -942,7 +874,7 @@ export const tools: Tool[] = [
     seoTitle: "رمزگشایی JWT آنلاین",
     seoDescription:
       "توکن JWT را در مرورگر خودتان رمزگشایی کنید و هدر، payload و تاریخ انقضا را ببینید؛ هیچ داده‌ای ارسال نمی‌شود.",
-    keywords: ["jwt decoder", "رمزگشایی JWT", "توکن JWT", "decode jwt", "jwt payload"],
+    keywords: ["jwt decoder", "رمزگشایی JWT", "توکن JWT", "decode jwt", "jwt payload", "دیکد JWT", "توکن"],
     status: "live",
     popular: false,
     addedAt: "2025-11-14",
@@ -963,10 +895,396 @@ export const tools: Tool[] = [
     seoTitle: "تولید هش (MD5, SHA-256) و UUID",
     seoDescription:
       "هش MD5 و SHA-1/256/384/512 از متن بسازید و UUID v4 تولید کنید؛ همه در مرورگر و بدون ارسال داده.",
-    keywords: ["md5", "sha256", "hash generator", "uuid v4", "تولید هش"],
+    keywords: ["md5", "sha256", "hash generator", "uuid v4", "تولید هش", "ساخت هش", "uuid"],
     status: "live",
     popular: false,
     addedAt: "2025-11-14",
+  },
+
+
+  /* ---------------------------------------------------------------- */
+  /*  Phase 6 — video tools (category «ویدیو و صدا»)                  */
+  /* ---------------------------------------------------------------- */
+  {
+    id: "video-compressor",
+    slug: "video-compressor",
+    title: "فشرده‌سازی ویدیو",
+    description:
+      "حجم ویدیو را برای ارسال در واتساپ و تلگرام کم کنید؛ با انتخاب کیفیت و رزولوشن، بدون آپلود به سرور.",
+    steps: [
+      "ویدیو را انتخاب کنید (MP4، MOV، MKV یا WebM تا ۲۰۰ مگابایت).",
+      "سطح فشرده‌سازی و حداکثر رزولوشن را انتخاب کنید.",
+      "دکمهٔ «شروع پردازش» را بزنید؛ بار اول موتور ویدیو دانلود می‌شود و بعد سریع است.",
+    ],
+    category: "video",
+    icon: Video,
+    seoTitle: "فشرده‌سازی ویدیو آنلاین (کاهش حجم برای واتساپ)",
+    seoDescription:
+      "حجم ویدئو را بدون افت محسوس کیفیت کم کنید؛ خروجی MP4 سازگار با واتساپ و تلگرام، با پردازش کامل در مرورگر.",
+    keywords: ["فشرده سازی ویدیو", "کاهش حجم ویدیو", "compress video", "ویدیو برای واتساپ", "کم کردن حجم فیلم"],
+    status: "live",
+    popular: true,
+    addedAt: "2025-11-15",
+  },
+  {
+    id: "video-to-gif",
+    slug: "video-to-gif",
+    title: "تبدیل ویدیو به GIF",
+    description:
+      "بخشی از ویدیو را به GIF باکیفیت تبدیل کنید؛ با انتخاب عرض، نرخ فریم و بازهٔ زمانی.",
+    steps: [
+      "ویدیو را انتخاب کنید.",
+      "عرض، نرخ فریم و بازهٔ زمانی (شروع و پایان به ثانیه) را مشخص کنید.",
+      "پردازش را شروع کنید و GIF را دانلود کنید.",
+    ],
+    category: "video",
+    icon: FileImage,
+    seoTitle: "تبدیل ویدیو به GIF آنلاین",
+    seoDescription:
+      "از ویدیو یا فیلم، GIF باکیفیت بسازید (با پالت رنگ بهینه)؛ انتخاب زمان شروع و پایان، بدون آپلود فایل.",
+    keywords: ["تبدیل ویدیو به GIF", "video to gif", "ساخت گیف از فیلم", "gif ساز"],
+    status: "live",
+    popular: false,
+    addedAt: "2025-11-15",
+  },
+  {
+    id: "video-to-audio",
+    slug: "video-to-audio",
+    title: "استخراج صدا از ویدیو (MP3)",
+    description:
+      "صدای ویدیو را جدا کنید و به‌صورت MP3 با کیفیت دلخواه ذخیره کنید.",
+    steps: [
+      "ویدیو را انتخاب کنید.",
+      "کیفیت صدای خروجی (۱۹۲، ۱۲۸ یا ۶۴ کیلوبیت) را انتخاب کنید.",
+      "پردازش را شروع کنید و فایل MP3 را دانلود کنید.",
+    ],
+    category: "video",
+    icon: AudioLines,
+    seoTitle: "استخراج صدا از ویدیو (تبدیل به MP3)",
+    seoDescription:
+      "صدای فیلم را جدا کنید و MP3 بگیرید؛ کیفیت قابل انتخاب و پردازش کاملاً در مرورگر بدون آپلود.",
+    keywords: ["استخراج صدا از ویدیو", "ویدیو به صدا", "video to mp3", "تبدیل فیلم به موزیک"],
+    status: "live",
+    popular: false,
+    addedAt: "2025-11-15",
+  },
+  {
+    id: "video-trimmer",
+    slug: "video-trimmer",
+    title: "بریدن و کوتاه کردن ویدیو",
+    description:
+      "بازهٔ دلخواه از ویدیو را جدا کنید؛ خروجی MP4 با همان کیفیت، بدون نصب برنامه.",
+    steps: [
+      "ویدیو را انتخاب کنید.",
+      "زمان شروع و پایان را به ثانیه وارد کنید (پایان خالی = تا آخر).",
+      "پردازش را شروع کنید و کلیپ بریده‌شده را دانلود کنید.",
+    ],
+    category: "video",
+    icon: Scissors,
+    seoTitle: "بریدن و کوتاه کردن ویدیو آنلاین",
+    seoDescription:
+      "بخش دلخواه ویدیو را جدا کنید؛ برش دقیق با زمان شروع و پایان، خروجی MP4 و بدون آپلود.",
+    keywords: ["بریدن ویدیو", "کوتاه کردن فیلم", "trim video", "cut video", "جدا کردن بخشی از ویدیو"],
+    status: "live",
+    popular: false,
+    addedAt: "2025-11-15",
+  },
+  {
+    id: "video-resizer",
+    slug: "video-resizer",
+    title: "تغییر رزولوشن ویدیو",
+    description:
+      "اندازهٔ ویدیو را تغییر دهید و نسبت تصویر را برای استوری، پست مربع یا افقی تنظیم کنید.",
+    steps: [
+      "ویدیو را انتخاب کنید.",
+      "رزولوشن خروجی و نسبت تصویر را انتخاب کنید.",
+      "پردازش را شروع کنید و ویدیوی تغییر‌اندازه‌شده را دانلود کنید.",
+    ],
+    category: "video",
+    icon: Scaling,
+    seoTitle: "تغییر رزولوشن ویدیو آنلاین",
+    seoDescription:
+      "رزولوشن ویدیو را به ۱۰۸۰p، ۷۲۰p، ۴۸۰p یا ۳۶۰p تغییر دهید و نسبت تصویر را برای استوری و پست تنظیم کنید.",
+    keywords: ["تغییر رزولوشن ویدیو", "resize video", "تغییر سایز فیلم", "ویدیو استوری", "1080p"],
+    status: "live",
+    popular: false,
+    addedAt: "2025-11-15",
+  },
+
+
+  /* ---------------------------------------------------------------- */
+  /*  Phase 6 — بستهٔ B: مالی، سند، داده، متن، تصویر                 */
+  /* ---------------------------------------------------------------- */
+  {
+    id: "salary-tax",
+    slug: "salary-tax",
+    title: "ماشین‌حساب حقوق و مالیات",
+    description:
+      "مالیات بر حقوق، بیمه و پرداختی خالص را با جدول پلکانی رسمی سال ۱۴۰۴ محاسبه کنید.",
+    steps: [
+      "حقوق پایه و مزایای مشمول را وارد کنید.",
+      "مزایای معاف (حق مسکن و بن) را مشخص کنید.",
+      "مالیات ماهانه، بیمه و پرداختی خالص را ببینید.",
+    ],
+    category: "finance",
+    icon: Wallet,
+    seoTitle: "محاسبه مالیات بر حقوق و حقوق خالص ۱۴۰۴",
+    seoDescription:
+      "محاسبهٔ دقیق مالیات حقوق با پله‌های ۱۴۰۴، کسر بیمهٔ ۷٪ و محاسبهٔ پرداختی خالص؛ همراه با تفکیک پله‌های مالیاتی.",
+    keywords: ["مالیات حقوق", "محاسبه حقوق خالص", "حقوق و دستمزد", "معافیت مالیاتی ۱۴۰۴", "salary tax"],
+    status: "live",
+    popular: true,
+    addedAt: "2025-11-20",
+  },
+  {
+    id: "eidi-sanavat",
+    slug: "eidi-sanavat",
+    title: "محاسبه عیدی و سنوات",
+    description:
+      "عیدی پایان سال و سنوات را بر اساس حقوق ماهانه و سابقهٔ کار محاسبه کنید.",
+    steps: [
+      "حقوق ماهانه را وارد کنید.",
+      "ماه‌های کارکرد در سال و سابقه را مشخص کنید.",
+      "عیدی خالص، سنوات و جمع آن‌ها را ببینید.",
+    ],
+    category: "finance",
+    icon: Gift,
+    seoTitle: "محاسبه عیدی و سنوات ۱۴۰۴",
+    seoDescription:
+      "محاسبهٔ آنلاین عیدی و سنوات بر اساس قانون کار و حداقل حقوق ۱۴۰۴؛ با کف و سقف قانونی و مالیات عیدی.",
+    keywords: ["عیدی", "سنوات", "محاسبه عیدی ۱۴۰۴", "پاداش پایان سال", "حقوق و مزایا"],
+    status: "live",
+    popular: true,
+    addedAt: "2025-11-20",
+  },
+  {
+    id: "image-crop",
+    slug: "image-crop",
+    title: "برش تصویر (Crop)",
+    description:
+      "عکس را با نسبت‌های آمادهٔ اینستاگرام، استوری و کاور یوتیوب برش بدهید.",
+    steps: [
+      "عکس را انتخاب یا رها کنید.",
+      "نسبت برش (۱:۱، ۴:۵، ۹:۱۶…) را انتخاب کنید.",
+      "برش را بزنید و تصویر را دانلود کنید.",
+    ],
+    category: "images",
+    icon: Crop,
+    seoTitle: "برش آنلاین عکس با نسبت اینستاگرام و استوری",
+    seoDescription:
+      "برش تصویر با نسبت‌های آمادهٔ شبکه‌های اجتماعی (پست، استوری، کاور) بدون افت کیفیت؛ کاملاً در مرورگر.",
+    keywords: ["برش عکس", "crop image", "برش تصویر اینستاگرام", "سایز استوری", "کاور یوتیوب"],
+    status: "live",
+    popular: false,
+    addedAt: "2025-11-20",
+  },
+  {
+    id: "favicon-generator",
+    slug: "favicon-generator",
+    title: "ساخت favicon از عکس",
+    description:
+      "از یک عکس یا لوگو، پنج سایز استاندارد favicon را در یک فایل ZIP بگیرید.",
+    steps: [
+      "عکس یا لوگو را انتخاب کنید.",
+      "پس‌زمینه و گردی گوشه‌ها را تنظیم کنید.",
+      "بستهٔ ZIP را بسازید و دانلود کنید.",
+    ],
+    category: "images",
+    icon: Package,
+    seoTitle: "ساخت favicon آنلاین از عکس (ZIP)",
+    seoDescription:
+      "تولید favicon در سایزهای ۱۶، ۳۲، ۱۸۰، ۱۹۲ و ۵۱۲ پیکسل همراه با site.webmanifest و کد HTML آماده.",
+    keywords: ["favicon", "فاوآیکون", "ساخت آیکون سایت", "apple touch icon", "manifest"],
+    status: "live",
+    popular: false,
+    addedAt: "2025-11-20",
+  },
+  {
+    id: "pdf-reorder",
+    slug: "pdf-reorder",
+    title: "مرتب‌سازی صفحات PDF",
+    description:
+      "ترتیب صفحه‌های PDF را با پیش‌نمایش تصویری تغییر دهید و فایل جدید بگیرید.",
+    steps: [
+      "فایل PDF را انتخاب کنید تا پیش‌نمایش صفحه‌ها ساخته شود.",
+      "با کلیدهای جابه‌جایی، ترتیب را درست کنید (یا برعکس/تصادفی).",
+      "فایل PDF با ترتیب جدید را دانلود کنید.",
+    ],
+    category: "files",
+    icon: Layers,
+    seoTitle: "مرتب‌سازی و جابه‌جایی صفحات PDF آنلاین",
+    seoDescription:
+      "ترتیب صفحات PDF را با پیش‌نمایش تغییر دهید؛ بدون آپلود فایل و بدون افت کیفیت متن.",
+    keywords: ["مرتب سازی PDF", "جابه جایی صفحات PDF", "reorder pdf", "ترتیب صفحات"],
+    status: "live",
+    popular: false,
+    addedAt: "2025-11-20",
+  },
+  {
+    id: "pdf-watermark",
+    slug: "pdf-watermark",
+    title: "شمارهٔ صفحه و واترمارک PDF",
+    description:
+      "به همهٔ صفحه‌های PDF شمارهٔ صفحه و واترمارک متنی اضافه کنید.",
+    steps: [
+      "فایل PDF را انتخاب کنید.",
+      "شمارهٔ صفحه و/یا متن واترمارک را تنظیم کنید.",
+      "فایل جدید را دانلود کنید.",
+    ],
+    category: "files",
+    icon: Stamp,
+    seoTitle: "افزودن شماره صفحه و واترمارک به PDF",
+    seoDescription:
+      "درج شمارهٔ صفحه با ارقام فارسی و واترمارک متنی روی همهٔ صفحه‌های PDF، بدون آپلود فایل.",
+    keywords: ["شماره صفحه PDF", "واترمارک PDF", "page number pdf", "watermark pdf"],
+    status: "live",
+    popular: false,
+    addedAt: "2025-11-20",
+  },
+  {
+    id: "month-calendar",
+    slug: "month-calendar",
+    title: "تقویم ماهانه شمسی",
+    description:
+      "نمای کامل ماه شمسی با تعطیلی جمعه‌ها، جابه‌جایی بین ماه‌ها و مشخص‌شدن امروز.",
+    steps: [
+      "ماه و سال را انتخاب کنید یا با فلش‌ها جابه‌جا شوید.",
+      "روزهای جمعه و امروز مشخص می‌شوند.",
+      "برای تبدیل تاریخ دقیق از ابزار تبدیل تاریخ استفاده کنید.",
+    ],
+    category: "numbers",
+    icon: CalendarDays,
+    seoTitle: "تقویم ماهانه شمسی (تقویم آبان ۱۴۰۴ و…)",
+    seoDescription:
+      "تقویم کامل ماه‌های شمسی با روزهای هفته از شنبه، جمعه‌ها و امروز؛ سریع و بدون تبلیغ.",
+    keywords: ["تقویم شمسی", "تقویم ماهانه", "تقویم آبان ۱۴۰۴", "تقویم سال ۱۴۰۴", "persian calendar"],
+    status: "live",
+    popular: false,
+    addedAt: "2025-11-20",
+  },
+  {
+    id: "timestamp-converter",
+    slug: "timestamp-converter",
+    title: "تبدیل Timestamp به تاریخ",
+    description:
+      "Timestamp یونیکس را به تاریخ شمسی و میلادی تبدیل کنید و برعکس.",
+    steps: [
+      "Timestamp را وارد کنید (ثانیه یا میلی‌ثانیه).",
+      "تاریخ شمسی، میلادی و ISO را ببینید.",
+      "برای مسیر برعکس، یک تاریخ انتخاب کنید.",
+    ],
+    category: "dev",
+    icon: CalendarClock,
+    seoTitle: "تبدیل Timestamp به تاریخ شمسی و میلادی",
+    seoDescription:
+      "تبدیل Unix timestamp به تاریخ شمسی و میلادی و برعکس؛ با تشخیص خودکار ثانیه و میلی‌ثانیه.",
+    keywords: ["timestamp", "یونیکس تایم", "تبدیل timestamp به تاریخ", "unix time", "epoch converter"],
+    status: "live",
+    popular: false,
+    addedAt: "2025-11-20",
+  },
+  {
+    id: "csv-json",
+    slug: "csv-json",
+    title: "تبدیل CSV و JSON",
+    description: "داده‌های CSV را به JSON و JSON را به CSV تبدیل کنید؛ دوطرفه و دقیق.",
+    steps: [
+      "حالت تبدیل را انتخاب کنید (CSV→JSON یا JSON→CSV).",
+      "داده را در کادر بچسبانید.",
+      "خروجی را کپی کنید.",
+    ],
+    category: "dev",
+    icon: Braces,
+    seoTitle: "تبدیل CSV به JSON و JSON به CSV آنلاین",
+    seoDescription:
+      "تبدیل دقیق CSV به JSON و برعکس، با پشتیبانی از فیلدهای داخل گیومه، جداکنندهٔ خودکار و تشخیص نوع داده.",
+    keywords: ["CSV به JSON", "JSON به CSV", "csv to json", "json to csv", "تبدیل اکسل به جیسون"],
+    status: "live",
+    popular: false,
+    addedAt: "2025-11-20",
+  },
+  {
+    id: "color-picker",
+    slug: "color-picker",
+    title: "انتخاب رنگ و کد رنگ",
+    description: "رنگ را انتخاب کنید و کد HEX، RGB و HSL آن را در لحظه بگیرید.",
+    steps: [
+      "از انتخابگر رنگ یا کد HEX استفاده کنید.",
+      "با اسلایدرها روشنایی و اشباع را تنظیم کنید.",
+      "کد HEX، RGB یا HSL را کپی کنید.",
+    ],
+    category: "dev",
+    icon: Palette,
+    seoTitle: "انتخاب رنگ آنلاین و تبدیل HEX، RGB، HSL",
+    seoDescription:
+      "کد رنگ را انتخاب و به HEX، RGB و HSL تبدیل کنید؛ با پیش‌نمایش و رنگ‌های آماده.",
+    keywords: ["انتخاب رنگ", "کد رنگ", "color picker", "HEX به RGB", "تبدیل رنگ"],
+    status: "live",
+    popular: false,
+    addedAt: "2025-11-20",
+  },
+  {
+    id: "find-replace",
+    slug: "find-replace",
+    title: "پیدا و جایگزین چندگانه",
+    description:
+      "در یک متن، چندین عبارت را همزمان پیدا و جایگزین کنید؛ به ترتیب قواعد.",
+    steps: [
+      "متن را در کادر اصلی بچسبانید.",
+      "قواعد «پیدا → جایگزین» را اضافه کنید.",
+      "خروجی ویرایش‌شده را کپی کنید.",
+    ],
+    category: "text",
+    icon: Replace,
+    seoTitle: "پیدا و جایگزین چندگانه متن آنلاین",
+    seoDescription:
+      "چندین جایگزینی را در یک متن، همزمان و به ترتیب انجام دهید؛ با گزینهٔ بی‌توجه به بزرگی/کوچکی حروف.",
+    keywords: ["پیدا و جایگزین", "replace all", "جایگزینی گروهی", "جستجو و جایگزینی"],
+    status: "live",
+    popular: false,
+    addedAt: "2025-11-20",
+  },
+  {
+    id: "password-generator",
+    slug: "password-generator",
+    title: "تولید رمز عبور قوی",
+    description:
+      "رمز عبور تصادفی و قوی بسازید؛ با تعیین طول، نوع کاراکترها و سنجش قدرت.",
+    steps: [
+      "طول رمز و نوع کاراکترها را انتخاب کنید.",
+      "تعداد رمز را مشخص کنید.",
+      "روی رمز بزنید تا کپی شود.",
+    ],
+    category: "dev",
+    icon: KeyRound,
+    seoTitle: "تولید رمز عبور قوی و تصادفی",
+    seoDescription:
+      "ساخت رمز عبور تصادفی با crypto.getRandomValues در مرورگر؛ با سنجش آنتروپی و حذف حروف شبیه به هم.",
+    keywords: ["تولید رمز عبور", "پسورد ساز", "password generator", "رمز قوی", "رمز تصادفی"],
+    status: "live",
+    popular: true,
+    addedAt: "2025-11-20",
+  },
+  {
+    id: "persian-lorem",
+    slug: "persian-lorem",
+    title: "متن ساختگی فارسی (لورم ایپسوم)",
+    description:
+      "متن ساختگی فارسی برای پر کردن قالب و طراحی؛ با تعداد پاراگراف و جملهٔ دلخواه.",
+    steps: [
+      "تعداد پاراگراف و جمله را انتخاب کنید.",
+      "اگر متن جدید می‌خواهید «متن جدید» را بزنید.",
+      "متن را کپی و در طرح خود استفاده کنید.",
+    ],
+    category: "text",
+    icon: Type,
+    seoTitle: "متن لورم ایپسوم فارسی (متن ساختگی برای طراحی)",
+    seoDescription:
+      "تولید متن ساختگی فارسی برای طراحی، تست طول متن و پر کردن قالب؛ قابل کپی با یک کلیک.",
+    keywords: ["لورم ایپسوم فارسی", "متن ساختگی", "lorem ipsum persian", "متن تستی", "متن بدل"],
+    status: "live",
+    popular: false,
+    addedAt: "2025-11-20",
   },
 
 ];

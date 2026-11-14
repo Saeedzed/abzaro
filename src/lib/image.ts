@@ -14,7 +14,27 @@ export const ACCEPTED_IMAGE_TYPES = [
   "image/avif",
 ] as const;
 
-export const MAX_FILE_BYTES = 25 * 1024 * 1024; // 25 MB
+export const MAX_FILE_BYTES = 25 * 1024 * 1024; // 25 MB on a normal device
+
+/**
+ * Decoding a big image needs roughly 4 × width × height bytes of RAM, so a
+ * low-end phone chokes long before the 25 MB limit. `navigator.deviceMemory`
+ * (GB, Chrome/Edge/Android) lets us pick a cap that device can actually
+ * handle; browsers without it get the standard 25 MB.
+ */
+export function deviceMaxFileBytes(): number {
+  if (typeof navigator === "undefined") return MAX_FILE_BYTES;
+  const memory = (navigator as Navigator & { deviceMemory?: number }).deviceMemory;
+  if (typeof memory !== "number" || !Number.isFinite(memory)) return MAX_FILE_BYTES;
+  if (memory <= 2) return 8 * 1024 * 1024; // 8 MB
+  if (memory <= 4) return 15 * 1024 * 1024; // 15 MB
+  return MAX_FILE_BYTES;
+}
+
+/** User-facing limit, e.g. «۸ مگابایت». */
+export function deviceLimitLabel(): string {
+  return formatBytes(deviceMaxFileBytes());
+}
 
 export type OutputFormat = "image/jpeg" | "image/png" | "image/webp";
 
@@ -56,8 +76,14 @@ export async function loadImageFile(file: File): Promise<LoadedImage | ImageErro
   if (!isAcceptedType(file.type)) {
     return { message: "فقط فایل‌های تصویری (JPG، PNG، WebP، GIF، AVIF) پذیرفته می‌شوند." };
   }
-  if (file.size > MAX_FILE_BYTES) {
-    return { message: "حجم فایل باید کمتر از ۲۵ مگابایت باشد." };
+  const limit = deviceMaxFileBytes();
+  if (file.size > limit) {
+    return {
+      message:
+        limit < MAX_FILE_BYTES
+          ? `حجم فایل باید کمتر از ${formatBytes(limit)} باشد (حافظهٔ این دستگاه محدود است).`
+          : `حجم فایل باید کمتر از ${formatBytes(limit)} باشد.`,
+    };
   }
   try {
     const bitmap = await createImageBitmap(file);

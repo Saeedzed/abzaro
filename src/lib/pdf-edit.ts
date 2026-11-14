@@ -6,7 +6,19 @@
  * lives in the component (it needs a canvas).
  */
 
-import { PDFDocument } from "pdf-lib";
+type PdfLib = typeof import("pdf-lib");
+
+/**
+ * pdf-lib is ~380 KB. Loading it lazily keeps it out of the shared chunk that
+ * every page (including text-only tools) would otherwise download, and the
+ * module promise is cached so repeated calls reuse the same instance.
+ */
+let pdfLibPromise: Promise<PdfLib> | null = null;
+
+export function loadPdfLib(): Promise<PdfLib> {
+  if (!pdfLibPromise) pdfLibPromise = import("pdf-lib");
+  return pdfLibPromise;
+}
 
 export interface MergeInput {
   name: string;
@@ -23,6 +35,7 @@ export interface MergeResult {
 
 /** Merge several PDFs into one, preserving order. Returns a Persian error on failure. */
 export async function mergePdfs(inputs: MergeInput[]): Promise<MergeResult> {
+  const { PDFDocument } = await loadPdfLib();
   const empty: MergeResult = { bytes: new Uint8Array(), pageCount: 0, sources: [], error: null };
   if (inputs.length === 0) return { ...empty, error: "هیچ فایلی برای ادغام انتخاب نشده است." };
 
@@ -62,6 +75,7 @@ export async function resavePdf(bytes: Uint8Array): Promise<{
   pageCount: number;
   error: string | null;
 }> {
+  const { PDFDocument } = await loadPdfLib();
   try {
     const doc = await PDFDocument.load(bytes, { ignoreEncryption: true, updateMetadata: false });
     doc.setTitle("");
@@ -89,13 +103,3 @@ export const PDF_COMPRESS_PRESETS = [
 ] as const;
 
 export type PdfCompressMode = "lossless" | "raster";
-
-/**
- * Bring two PDFs together page-by-page — used by the merge tool to preview the
- * resulting order without generating the file.
- */
-export function describeMerge(sources: Array<{ name: string; pages: number }>): string {
-  if (sources.length === 0) return "";
-  const total = sources.reduce((sum, source) => sum + source.pages, 0);
-  return `${sources.length} فایل · ${total} صفحه`;
-}

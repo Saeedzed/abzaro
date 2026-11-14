@@ -89,7 +89,7 @@ export function ImageFormatConverter() {
     return (
       <UploadZone
         title="تصویر را اینجا رها کنید"
-        hint="JPG، PNG، WebP، GIF یا AVIF — حداکثر ۲۵ مگابایت"
+        hint="JPG، PNG، WebP، GIF یا AVIF — محدودیت حجم بر اساس حافظهٔ دستگاه"
         buttonLabel="انتخاب تصویر"
         accept="image/*"
         onFiles={(files) => void handleFiles(files)}

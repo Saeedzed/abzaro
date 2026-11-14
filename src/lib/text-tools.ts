@@ -209,3 +209,91 @@ export function keywordDensity(input: string, options: { limit?: number; minLeng
 
   return { totalWords, uniqueWords: counts.size, keywords: ranked };
 }
+
+/* ------------------------------------------------------------------ */
+/*  Multiple find & replace (پیدا و جایگزین چندگانه)                   */
+/* ------------------------------------------------------------------ */
+
+export interface ReplaceRule {
+  find: string;
+  replace: string;
+}
+
+/**
+ * Apply a list of literal find/replace rules in order.
+ * Empty `find` values are ignored (otherwise every position matches).
+ */
+export function applyReplaceRules(
+  input: string,
+  rules: ReplaceRule[],
+  options: { ignoreCase?: boolean } = {},
+): { output: string; replacements: number } {
+  let output = input;
+  let replacements = 0;
+
+  for (const rule of rules) {
+    if (!rule.find) continue;
+    const escaped = rule.find.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const pattern = new RegExp(escaped, options.ignoreCase ? "gi" : "g");
+    output = output.replace(pattern, () => {
+      replacements += 1;
+      return rule.replace;
+    });
+  }
+
+  return { output, replacements };
+}
+
+/* ------------------------------------------------------------------ */
+/*  Persian lorem ipsum (متن ساختگی فارسی)                            */
+/* ------------------------------------------------------------------ */
+
+const LOREM_WORDS =
+  "لورم ایپسوم متن ساختگی با تولید سادگی نامفهوم از صنعت چاپ و با استفاده از طراحان گرافیک است چاپگرها و متون بلکه روزنامه و مجله در ستون و سطرآنچنان که لازم است و برای شرایط فعلی تکنولوژی مورد نیاز و کاربردهای متنوع با هدف بهبود ابزارهای کاربردی می باشد کتابهای زیادی در شصت و سه درصد گذشته حال و آینده شناخت فراوان جامعه و متخصصان را می طلبد".split(
+    " ",
+  );
+
+/**
+ * Deterministic Persian lorem ipsum. The PRNG is seeded so tests (and users)
+ * get the same paragraph twice for the same seed.
+ */
+export function persianLorem(
+  options: { paragraphs?: number; sentencesPerParagraph?: number; seed?: number } = {},
+): string {
+  const paragraphs = clampInt(options.paragraphs ?? 3, 1, 20);
+  const sentences = clampInt(options.sentencesPerParagraph ?? 4, 1, 15);
+  const random = mulberry32(options.seed ?? 1404);
+  const out: string[] = [];
+
+  for (let p = 0; p < paragraphs; p += 1) {
+    const parts: string[] = [];
+    for (let s = 0; s < sentences; s += 1) {
+      const words: string[] = [];
+      const count = 6 + Math.floor(random() * 9);
+      for (let w = 0; w < count; w += 1) {
+        words.push(LOREM_WORDS[Math.floor(random() * LOREM_WORDS.length)] ?? "");
+      }
+      const sentence = words.join(" ");
+      parts.push(sentence.charAt(0).toUpperCase() + sentence.slice(1) + ".");
+    }
+    out.push(parts.join(" "));
+  }
+
+  return out.join("\n\n");
+}
+
+function clampInt(value: number, min: number, max: number): number {
+  if (!Number.isFinite(value)) return min;
+  return Math.min(Math.max(Math.round(value), min), max);
+}
+
+function mulberry32(seed: number): () => number {
+  let state = seed >>> 0;
+  return () => {
+    state = (state + 0x6d2b79f5) >>> 0;
+    let t = state;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}

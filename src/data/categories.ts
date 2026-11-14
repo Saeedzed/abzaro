@@ -1,9 +1,11 @@
 import {
   Calculator,
+  Clapperboard,
   Code2,
-  FileText,
   FilePen,
+  FileText,
   Image as ImageIcon,
+  Wallet,
   type LucideIcon,
 } from "lucide-react";
 
@@ -42,10 +44,24 @@ export const categories: Category[] = [
   },
   {
     slug: "files",
-    title: "ویرایش فایل و PDF",
+    title: "PDF و سند",
     description:
-      "ابزارهای کار با فایل و PDF؛ تبدیل عکس به PDF، فشرده‌سازی و ادغام PDF، و تبدیل صفحه‌های PDF به تصویر — بدون آپلود فایل.",
+      "تبدیل عکس به PDF، فشرده‌سازی، ادغام، چرخش، حذف و مرتب‌سازی صفحه‌ها، شمارهٔ صفحه و واترمارک، و تبدیل PDF به تصویر — بدون آپلود فایل.",
     icon: FilePen,
+  },
+  {
+    slug: "finance",
+    title: "مالی و حقوق",
+    description:
+      "محاسبهٔ اقساط وام، سود سپرده، تخفیف، حقوق و مالیات بر درآمد، عیدی و سنوات — با جدول‌های رسمی سال ۱۴۰۴.",
+    icon: Wallet,
+  },
+  {
+    slug: "video",
+    title: "ویدیو و صدا",
+    description:
+      "فشرده‌سازی، بریدن، تغییر رزولوشن، تبدیل به GIF و استخراج صدا از ویدیو؛ همه با موتور ffmpeg که داخل مرورگر شما اجرا می‌شود و فایلی آپلود نمی‌شود.",
+    icon: Clapperboard,
   },
   {
     slug: "dev",

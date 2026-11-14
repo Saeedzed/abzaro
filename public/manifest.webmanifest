@@ -1,0 +1,24 @@
+{
+  "name": "ابزارو — ابزارهای آنلاین فارسی",
+  "short_name": "ابزارو",
+  "description": "ابزارهای آنلاین رایگان فارسی: متن، اعداد، تصویر، PDF، ویدیو و برنامه‌نویسی — همه در مرورگر شما.",
+  "lang": "fa",
+  "dir": "rtl",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "categories": ["utilities", "productivity"],
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "شمارش کلمات", "url": "/tools/word-counter" },
+    { "name": "فشرده‌سازی تصویر", "url": "/tools/image-compressor" },
+    { "name": "تبدیل تاریخ", "url": "/tools/date-converter" }
+  ]
+}

@@ -64,27 +64,3 @@ export function useRecentTools() {
 
   return { slugs, ready, clear };
 }
-
-/* -------------------------------------------------------------------------- */
-/*  Last-used input values per tool (so a reload doesn't lose work)           */
-/* -------------------------------------------------------------------------- */
-
-const DRAFT_PREFIX = "abzaro-draft:";
-
-/** Persist a tool's input state (`data-testid`-free, purely additive). */
-export function saveDraft(toolSlug: string, value: unknown): void {
-  try {
-    localStorage.setItem(DRAFT_PREFIX + toolSlug, JSON.stringify(value));
-  } catch {
-    /* ignore */
-  }
-}
-
-export function readDraft<T>(toolSlug: string): T | null {
-  try {
-    const raw = localStorage.getItem(DRAFT_PREFIX + toolSlug);
-    return raw ? (JSON.parse(raw) as T) : null;
-  } catch {
-    return null;
-  }
-}

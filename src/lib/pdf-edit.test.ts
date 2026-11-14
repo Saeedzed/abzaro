@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { PDFDocument, StandardFonts } from "pdf-lib";
-import { describeMerge, mergePdfs, resavePdf } from "./pdf-edit";
+import { mergePdfs, resavePdf } from "./pdf-edit";
 
 /** Build an in-memory PDF with `pages` pages and some text. */
 async function makePdf(pages: number, label = "page"): Promise<Uint8Array> {
@@ -85,15 +85,4 @@ test("resavePdf: reports a Persian error for junk input", async () => {
   const result = await resavePdf(new Uint8Array([37, 80, 68, 70])); // "%PDF" with nothing after
   assert.notEqual(result.error, null);
   assert.match(result.error ?? "", /[\u0600-\u06FF]/);
-});
-
-test("describeMerge summarises the selection", () => {
-  assert.equal(describeMerge([]), "");
-  assert.equal(
-    describeMerge([
-      { name: "a", pages: 2 },
-      { name: "b", pages: 4 },
-    ]),
-    "2 فایل · 6 صفحه",
-  );
 });

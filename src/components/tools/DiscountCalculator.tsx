@@ -8,6 +8,7 @@ import {
   originalPriceFromDiscounted,
 } from "@/lib/percent";
 import { NumberField, ResultHint, ResultRow, ToolPanel, formatFa, formatToman } from "./shared";
+import { ShareResult, useSharedInput } from "./ShareResult";
 
 type Mode = "percent" | "amount" | "reverse";
 
@@ -29,8 +30,8 @@ function toNumber(value: string): number | null {
  */
 export function DiscountCalculator() {
   const [mode, setMode] = useState<Mode>("percent");
-  const [price, setPrice] = useState("");
-  const [value, setValue] = useState("");
+  const [price, setPrice] = useSharedInput("p");
+  const [value, setValue] = useSharedInput("v");
 
   const numPrice = toNumber(price);
   const numValue = toNumber(value);
@@ -133,11 +134,13 @@ export function DiscountCalculator() {
                 emphasize
               />
               <ResultRow label="مبلغ تخفیف" value={formatToman(result.discountAmmount)} />
+              <ShareResult params={{ mode, p: price, v: value }} />
             </div>
           ) : "finalPrice" in result ? (
             <div className="space-y-3">
               <ResultRow label="قیمت نهایی" value={formatToman(result.finalPrice)} emphasize />
               <ResultRow label="مبلغ تخفیف" value={formatToman(result.discountAmmount)} />
+              <ShareResult params={{ mode, p: price, v: value }} />
               <ResultRow
                 label="درصد تخفیف مؤثر"
                 value={`${formatFa(result.effectivePercent)}٪`}

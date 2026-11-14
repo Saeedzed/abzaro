@@ -575,16 +575,16 @@ check("palette: Escape closes it", (await page.locator("[data-testid='command-pa
 await page.goto(`${BASE}/tools`, { waitUntil: "domcontentloaded" });
 await page.waitForTimeout(700);
 const countAll = await page.locator("[data-testid='tools-filter-count']").innerText();
-check("tools filter: shows all 38 tools by default", has(countAll, 38), countAll);
+check("tools filter: shows all 56 tools by default", has(countAll, 56), countAll);
 await page.locator("[data-testid='tools-filter-input']").fill("pdf");
 await page.waitForTimeout(400);
 const countSearch = await page.locator("[data-testid='tools-filter-count']").innerText();
-check("tools filter: live search narrows the grid", has(countSearch, 7), countSearch);
+check("tools filter: live search narrows the grid", has(countSearch, 9), countSearch);
 await page.locator("[data-testid='tools-filter-input']").fill("");
 await page.getByRole("button", { name: /^تصاویر \(/ }).first().click();
 await page.waitForTimeout(400);
 const countCat = await page.locator("[data-testid='tools-filter-count']").innerText();
-check("tools filter: category chip filters to 6 image tools", has(countCat, 6), countCat);
+check("tools filter: category chip filters to 8 image tools", has(countCat, 8), countCat);
 check(
   "tools filter: no PDF tool card leaks into the images filter",
   (await page.locator("main a[href^='/tools/pdf-']").count()) === 0 &&
@@ -754,7 +754,7 @@ check("hash-generator: uuids look like v4", /[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3
 const reg = await page.goto(`${BASE}/tools`, { waitUntil: "domcontentloaded" });
 check("tools page loads", reg?.status() === 200);
 body = await page.locator("body").innerText();
-check("all 38 tools listed, none marked «به‌زودی»", !body.includes("به‌زودی") && (await page.locator("main a[href^='/tools/']").count()) >= 38);
+check("all 56 tools listed, none marked «به‌زودی»", !body.includes("به‌زودی") && (await page.locator("main a[href^='/tools/']").count()) >= 56);
 
 check("no uncaught JS errors", errors.length === 0, errors.slice(0, 4).join(" || "));
 

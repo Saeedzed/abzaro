@@ -129,15 +129,4 @@ export function fromGregorian(year: number, month: number, day: number): DateFac
   return factsFromJdn(jalali, { year, month, day }, jdn);
 }
 
-/** Today, in both calendars (used to prefill the form). */
-export function todayFacts(): DateFacts {
-  const now = new Date();
-  const facts = fromGregorian(now.getFullYear(), now.getMonth() + 1, now.getDate());
-  if (facts) return facts;
-  // Unreachable in practice; keeps the return type honest.
-  const fallback = fromJalali(1404, 1, 1);
-  if (!fallback) throw new Error("calendar init failed");
-  return fallback;
-}
-
 export { WEEKDAYS };
