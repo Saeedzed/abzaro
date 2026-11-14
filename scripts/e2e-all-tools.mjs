@@ -487,14 +487,14 @@ check("categories page lists all 5 categories", (await page.locator("main a[href
 await page.goto(`${BASE}/categories/images`, { waitUntil: "domcontentloaded" });
 await page.waitForTimeout(600);
 const imagesBody = await page.locator("main").innerText();
-check("images category: ۵ tools", has(imagesBody, 5), imagesBody.match(/[۰-۹]+ ابزار در این دسته‌بندی/)?.[0] ?? "");
+check("images category: ۶ tools", has(imagesBody, 6), imagesBody.match(/[۰-۹]+ ابزار در این دسته‌بندی/)?.[0] ?? "");
 check("images category: no PDF tools", !/PDF/.test(imagesBody));
 check("images category: keeps the 3 new image tools", /JPG|Base64|پروفایل/.test(imagesBody));
 
 await page.goto(`${BASE}/categories/files`, { waitUntil: "domcontentloaded" });
 await page.waitForTimeout(600);
 const filesBody = await page.locator("main").innerText();
-check("files category: ۴ tools", has(filesBody, 4), filesBody.match(/[۰-۹]+ ابزار در این دسته‌بندی/)?.[0] ?? "");
+check("files category: ۷ tools", has(filesBody, 7), filesBody.match(/[۰-۹]+ ابزار در این دسته‌بندی/)?.[0] ?? "");
 check("files category: contains all four PDF tools", ["عکس به PDF", "PDF به عکس", "فشرده‌سازی PDF", "ادغام PDF"].every((t) => filesBody.includes(t)));
 
 await page.goto(`${BASE}/tools/word-counter`, { waitUntil: "domcontentloaded" });
@@ -575,16 +575,16 @@ check("palette: Escape closes it", (await page.locator("[data-testid='command-pa
 await page.goto(`${BASE}/tools`, { waitUntil: "domcontentloaded" });
 await page.waitForTimeout(700);
 const countAll = await page.locator("[data-testid='tools-filter-count']").innerText();
-check("tools filter: shows all 25 tools by default", has(countAll, 25), countAll);
+check("tools filter: shows all 38 tools by default", has(countAll, 38), countAll);
 await page.locator("[data-testid='tools-filter-input']").fill("pdf");
 await page.waitForTimeout(400);
 const countSearch = await page.locator("[data-testid='tools-filter-count']").innerText();
-check("tools filter: live search narrows the grid", has(countSearch, 4), countSearch);
+check("tools filter: live search narrows the grid", has(countSearch, 7), countSearch);
 await page.locator("[data-testid='tools-filter-input']").fill("");
 await page.getByRole("button", { name: /^تصاویر \(/ }).first().click();
 await page.waitForTimeout(400);
 const countCat = await page.locator("[data-testid='tools-filter-count']").innerText();
-check("tools filter: category chip filters to 5 image tools", has(countCat, 5), countCat);
+check("tools filter: category chip filters to 6 image tools", has(countCat, 6), countCat);
 check(
   "tools filter: no PDF tool card leaks into the images filter",
   (await page.locator("main a[href^='/tools/pdf-']").count()) === 0 &&
@@ -599,11 +599,162 @@ await page.waitForTimeout(900);
 check("recent tools: homepage shows the tool that was just opened", (await page.locator("#recent-heading").count()) === 1);
 check("recent tools: strip links back to the tool", (await page.locator("#recent-heading").locator("xpath=..").innerText()).includes("QR"));
 
+// ============ package A: 12 new tools ============
+
+// --- 1. duplicate-line-remover
+await page.goto(`${BASE}/tools/duplicate-line-remover`, { waitUntil: "domcontentloaded" });
+await page.waitForTimeout(500);
+await page.locator("[data-testid='dedupe-input']").fill("تهران\nاصفهان\nتهران\nمشهد\nاصفهان");
+await page.waitForTimeout(300);
+const dedupeOut = await page.locator("[data-testid='dedupe-output']").inputValue();
+check("duplicate-line-remover: removes repeats, keeps order", dedupeOut === "تهران\nاصفهان\nمشهد", JSON.stringify(dedupeOut));
+check("duplicate-line-remover: reports 3 unique of 5", (await page.locator("main").innerText()).includes("۳"));
+
+// --- 2. line-sorter
+await page.goto(`${BASE}/tools/line-sorter`, { waitUntil: "domcontentloaded" });
+await page.waitForTimeout(500);
+await page.locator("[data-testid='sort-input']").fill("پ\nا\nب");
+await page.waitForTimeout(300);
+const sortedOut = await page.locator("[data-testid='sort-output']").inputValue();
+check("line-sorter: sorts Persian alphabetically", sortedOut === "ا\nب\nپ", JSON.stringify(sortedOut));
+await page.locator("[data-testid='sort-mode-reverse']").click();
+await page.waitForTimeout(300);
+check("line-sorter: reverse mode flips the order", (await page.locator("[data-testid='sort-output']").inputValue()) === "ب\nا\nپ", await page.locator("[data-testid='sort-output']").inputValue());
+
+// --- 3. keyword-density
+await page.goto(`${BASE}/tools/keyword-density`, { waitUntil: "domcontentloaded" });
+await page.waitForTimeout(500);
+await page.locator("[data-testid='kd-input']").fill("عکس به PDF تبدیل عکس به PDF آنلاین");
+await page.waitForTimeout(400);
+const kdList = await page.locator("[data-testid='kd-list']").innerText();
+check("keyword-density: lists frequent words with Persian counts", /عکس/.test(kdList) && /PDF/i.test(kdList), kdList.split("\n").slice(0, 4).join(" | "));
+check("keyword-density: counts all words", has(await page.locator("[data-testid='kd-total']").innerText(), 8), await page.locator("[data-testid='kd-total']").innerText());
+
+// --- 4. slug-generator
+await page.goto(`${BASE}/tools/slug-generator`, { waitUntil: "domcontentloaded" });
+await page.waitForTimeout(500);
+await page.locator("[data-testid='slug-input']").fill("چطور یک عکس را به PDF تبدیل کنیم؟");
+await page.waitForTimeout(300);
+const latinSlug = await page.locator("[data-testid='slug-output-latin']").innerText();
+const faSlug = await page.locator("[data-testid='slug-output-fa']").innerText();
+check("slug-generator: latin slug is url-safe", latinSlug.trim() === "chtvr-yk-aks-ra-bh-pdf-tbdyl-knym", latinSlug.trim());
+check("slug-generator: persian slug keeps the letters", faSlug.includes("چطور"), faSlug.trim());
+
+// --- 5. date-converter
+await page.goto(`${BASE}/tools/date-converter`, { waitUntil: "domcontentloaded" });
+await page.waitForTimeout(600);
+await page.selectOption("#date-jy", "1404");
+await page.selectOption("#date-jm", "8");
+await page.selectOption("#date-jd", "14");
+await page.waitForTimeout(400);
+const grOut = await page.locator("[data-testid='date-out-gregorian']").innerText();
+check("date-converter: ۱۴ آبان ۱۴۰۴ → ۵ نوامبر ۲۰۲۵", /۵ نوامبر ۲۰۲۵/.test(grOut), grOut);
+check("date-converter: weekday is چهارشنبه", /چهارشنبه/.test(await page.locator("[data-testid='date-out-weekday']").innerText()));
+check("date-converter: ISO date is 2025-11-05", (await page.locator("[data-testid='date-out-iso']").innerText()).trim() === "2025-11-05");
+await page.locator("[data-testid='date-direction-gr2jl']").click();
+await page.waitForTimeout(400);
+check("date-converter: reverse mode converts 2025-11-05 back", /۱۴ آبان ۱۴۰۴/.test(await page.locator("[data-testid='date-out-jalali']").innerText()));
+
+// --- 6. unit-converter
+await page.goto(`${BASE}/tools/unit-converter`, { waitUntil: "domcontentloaded" });
+await page.waitForTimeout(500);
+await page.locator("[data-testid='unit-input']").fill("100");
+await page.selectOption("[data-testid='unit-from']", "centimeter");
+await page.selectOption("[data-testid='unit-to']", "meter");
+await page.waitForTimeout(400);
+check("unit-converter: 100 cm = 1 m", (await page.locator("[data-testid='unit-result']").innerText()).trim() === "۱", await page.locator("[data-testid='unit-result']").innerText());
+await page.locator("[data-testid='unit-group-temperature']").click();
+await page.waitForTimeout(300);
+await page.locator("[data-testid='unit-input']").fill("100");
+await page.selectOption("[data-testid='unit-from']", "celsius");
+await page.selectOption("[data-testid='unit-to']", "fahrenheit");
+await page.waitForTimeout(400);
+check("unit-converter: 100°C = 212°F", (await page.locator("[data-testid='unit-result']").innerText()).replace(/[٫,]/g, "").trim() === "۲۱۲", await page.locator("[data-testid='unit-result']").innerText());
+check("unit-converter: shows the all-units table", (await page.locator("[data-testid='unit-table'] li").count()) >= 3);
+
+// --- 7. bank-interest
+await page.goto(`${BASE}/tools/bank-interest`, { waitUntil: "domcontentloaded" });
+await page.waitForTimeout(600);
+const profit = await page.locator("[data-testid='interest-profit']").innerText();
+check("bank-interest: 100M @23% for 12 months → 23,000,000 profit", /۲۳٬۰۰۰٬۰۰۰/.test(profit), profit.replace(/\n/g, " "));
+check("bank-interest: effective rate shown", /۲۳/.test(await page.locator("[data-testid='interest-effective']").innerText()));
+await page.locator("[data-testid='interest-mode-compound']").click();
+await page.waitForTimeout(500);
+check("bank-interest: compound mode changes the profit", !/۲۳٬۰۰۰٬۰۰۰/.test(await page.locator("[data-testid='interest-profit']").innerText()), await page.locator("[data-testid='interest-profit']").innerText());
+
+// --- 8. heic-to-jpg (rejects non-HEIC input)
+await page.goto(`${BASE}/tools/heic-to-jpg`, { waitUntil: "domcontentloaded" });
+await page.waitForTimeout(500);
+await page.locator("[data-testid='heic-input']").setInputFiles(TEST_IMAGE);
+await page.waitForTimeout(800);
+check("heic-to-jpg: rejects non-HEIC files with a Persian message", /HEIC|HEIF/.test(await page.locator("main").innerText()));
+
+// --- 9. pdf-rotate
+await page.goto(`${BASE}/tools/pdf-rotate`, { waitUntil: "domcontentloaded" });
+await page.waitForTimeout(500);
+await page.locator("[data-testid='pdf-rotate-input']").setInputFiles(PDF_FIXTURE_3P);
+await page.waitForTimeout(1200);
+check("pdf-rotate: reads the page count", has(await page.locator("main").innerText(), 3));
+await page.locator("[data-testid='pdf-rotate-run']").click();
+await page.waitForTimeout(2500);
+check("pdf-rotate: produces a downloadable file", (await page.locator("[data-testid='pdf-rotate-result']").count()) === 1);
+const rotateDownload = await grabDownload(() => page.locator("[data-testid='pdf-rotate-download']").click());
+check("pdf-rotate: download is a real PDF", rotateDownload.ok && rotateDownload.name.endsWith(".pdf") && rotateDownload.bytes > 500, `${rotateDownload.name} ${rotateDownload.bytes}B`);
+
+// --- 10. pdf-delete-pages
+await page.goto(`${BASE}/tools/pdf-delete-pages`, { waitUntil: "domcontentloaded" });
+await page.waitForTimeout(500);
+await page.locator("[data-testid='pdf-delete-input']").setInputFiles(PDF_FIXTURE_3P);
+await page.waitForTimeout(1200);
+await page.locator("[data-testid='pdf-delete-range']").fill("2");
+await page.locator("[data-testid='pdf-delete-run']").click();
+await page.waitForTimeout(2500);
+check("pdf-delete-pages: result reports 2 remaining pages", has(await page.locator("[data-testid='pdf-delete-result']").innerText(), 2), await page.locator("[data-testid='pdf-delete-result']").innerText());
+const deleteDownload = await grabDownload(() => page.locator("[data-testid='pdf-delete-download']").click());
+check("pdf-delete-pages: downloads the trimmed PDF", deleteDownload.ok && deleteDownload.bytes > 400, `${deleteDownload.name} ${deleteDownload.bytes}B`);
+
+// --- 11. pdf-split
+await page.goto(`${BASE}/tools/pdf-split`, { waitUntil: "domcontentloaded" });
+await page.waitForTimeout(500);
+await page.locator("[data-testid='pdf-split-input']").setInputFiles(PDF_FIXTURE_3P);
+await page.waitForTimeout(1200);
+await page.locator("[data-testid='pdf-split-range']").fill("1-2");
+await page.locator("[data-testid='pdf-split-run']").click();
+await page.waitForTimeout(2500);
+check("pdf-split: extracts 2 pages", has(await page.locator("[data-testid='pdf-split-result']").innerText(), 2), await page.locator("[data-testid='pdf-split-result']").innerText());
+const splitDownload = await grabDownload(() => page.locator("[data-testid='pdf-split-download']").click());
+check("pdf-split: downloads the extracted pages", splitDownload.ok && splitDownload.bytes > 400, `${splitDownload.name} ${splitDownload.bytes}B`);
+
+// --- 12. jwt-decoder
+await page.goto(`${BASE}/tools/jwt-decoder`, { waitUntil: "domcontentloaded" });
+await page.waitForTimeout(500);
+await page.locator("[data-testid='jwt-input']").fill(
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6ImFsaSIsImlhdCI6MTcwMDAwMDAwMCwiZXhwIjoxOTAwMDAwMDAwfQ.dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk",
+);
+await page.waitForTimeout(500);
+check("jwt-decoder: shows HS256 and the payload", /HS256/.test(await page.locator("[data-testid='jwt-header']").innerText()) && /ali/.test(await page.locator("[data-testid='jwt-payload']").innerText()));
+await page.locator("[data-testid='jwt-input']").fill("not-a-token");
+await page.waitForTimeout(400);
+check("jwt-decoder: invalid input shows a Persian error", (await page.locator("[data-testid='jwt-error']").count()) === 1);
+
+// --- 13. hash-generator
+await page.goto(`${BASE}/tools/hash-generator`, { waitUntil: "domcontentloaded" });
+await page.waitForTimeout(700);
+await page.locator("[data-testid='hash-input']").fill("abc");
+await page.waitForTimeout(800);
+check("hash-generator: MD5 of «abc» is correct", (await page.locator("[data-testid='hash-md5']").innerText()).trim() === "900150983cd24fb0d6963f7d28e17f72");
+check("hash-generator: SHA-256 of «abc» is correct", (await page.locator("[data-testid='hash-sha-256']").innerText()).trim() === "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad", await page.locator("[data-testid='hash-sha-256']").innerText());
+check("hash-generator: generates 5 UUIDs", (await page.locator("[data-testid='uuid-list'] li").count()) === 5);
+await page.locator("[data-testid='uuid-generate']").click();
+await page.waitForTimeout(300);
+const uuidText = await page.locator("[data-testid='uuid-list']").innerText();
+check("hash-generator: uuids look like v4", /[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}/.test(uuidText));
+
 // ============ registry / SEO ============
 const reg = await page.goto(`${BASE}/tools`, { waitUntil: "domcontentloaded" });
 check("tools page loads", reg?.status() === 200);
 body = await page.locator("body").innerText();
-check("all 25 tools listed, none marked «به‌زودی»", !body.includes("به‌زودی"));
+check("all 38 tools listed, none marked «به‌زودی»", !body.includes("به‌زودی") && (await page.locator("main a[href^='/tools/']").count()) >= 38);
 
 check("no uncaught JS errors", errors.length === 0, errors.slice(0, 4).join(" || "));
 

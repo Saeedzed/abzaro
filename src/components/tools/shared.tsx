@@ -85,12 +85,15 @@ export function ResultRow({
   hint,
   copyable = true,
   emphasize = false,
+  testId,
 }: {
   label: string;
   value: string;
   hint?: string;
   copyable?: boolean;
   emphasize?: boolean;
+  /** Optional hook for the browser tests. */
+  testId?: string;
 }) {
   const [copied, setCopied] = useState(false);
 
@@ -107,6 +110,7 @@ export function ResultRow({
 
   return (
     <div
+      data-testid={testId}
       className={cn(
         "flex items-center justify-between gap-3 rounded-xl border px-4 py-3.5",
         emphasize
@@ -150,20 +154,28 @@ export function ToolPanel({
   title,
   description,
   icon,
+  action,
   children,
 }: {
   title: string;
   description?: string;
   icon?: React.ReactNode;
+  /** Optional control (copy button, sample link…) pinned to the title row. */
+  action?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
     <div className="rounded-2xl border border-ink-200 bg-white p-4 shadow-card sm:p-5">
-      <h3 className="flex items-center gap-2 text-base font-bold text-ink-900">
-        {icon}
-        {title}
-      </h3>
-      {description && <p className="mt-1 text-xs text-ink-500">{description}</p>}
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h3 className="flex items-center gap-2 text-base font-bold text-ink-900">
+            {icon}
+            {title}
+          </h3>
+          {description && <p className="mt-1 text-xs text-ink-500">{description}</p>}
+        </div>
+        {action && <div className="shrink-0">{action}</div>}
+      </div>
       <div className="mt-4">{children}</div>
     </div>
   );

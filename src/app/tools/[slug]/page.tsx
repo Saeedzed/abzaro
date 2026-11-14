@@ -3,6 +3,17 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Container } from "@/components/layout/Container";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
+import { DuplicateLineRemover } from "@/components/tools/DuplicateLineRemover";
+import { LineSorter } from "@/components/tools/LineSorter";
+import { KeywordDensity } from "@/components/tools/KeywordDensity";
+import { SlugGenerator } from "@/components/tools/SlugGenerator";
+import { DateConverter } from "@/components/tools/DateConverter";
+import { UnitConverter } from "@/components/tools/UnitConverter";
+import { BankInterestCalculator } from "@/components/tools/BankInterestCalculator";
+import { JwtDecoder } from "@/components/tools/JwtDecoder";
+import { HashGenerator } from "@/components/tools/HashGenerator";
+import { HeicToJpg } from "@/components/tools/HeicToJpg";
+import { PdfPageTool } from "@/components/tools/PdfPageTool";
 import { RelatedTools } from "@/components/tools/RelatedTools";
 import { RecentToolsTracker } from "@/components/tools/RecentToolsTracker";
 import { toPersianDigits } from "@/lib/persian";
@@ -119,6 +130,33 @@ function ToolImplementation({ slug }: { slug: string }) {
       return <Base64Tool />;
     case "url-encoder":
       return <UrlEncoder />;
+
+    case "duplicate-line-remover":
+      return <DuplicateLineRemover />;
+    case "line-sorter":
+      return <LineSorter />;
+    case "keyword-density":
+      return <KeywordDensity />;
+    case "slug-generator":
+      return <SlugGenerator />;
+    case "date-converter":
+      return <DateConverter />;
+    case "unit-converter":
+      return <UnitConverter />;
+    case "bank-interest":
+      return <BankInterestCalculator />;
+    case "heic-to-jpg":
+      return <HeicToJpg />;
+    case "pdf-rotate":
+      return <PdfPageTool kind="rotate" />;
+    case "pdf-delete-pages":
+      return <PdfPageTool kind="delete" />;
+    case "pdf-split":
+      return <PdfPageTool kind="split" />;
+    case "jwt-decoder":
+      return <JwtDecoder />;
+    case "hash-generator":
+      return <HashGenerator />;
     default: {
       const tool = getToolBySlug(slug);
       return tool ? <ToolPlaceholder tool={tool} /> : null;

@@ -47,7 +47,7 @@ export function ToolsExplorer() {
             type="search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="جست‌وجو در ۲۵ ابزار… (مثلاً PDF، درصد، عکس)"
+            placeholder={`جست‌وجو در ${toPersianDigits(tools.length)} ابزار… (مثلاً PDF، درصد، عکس)`}
             aria-label="جست‌وجو در ابزارها"
             data-testid="tools-filter-input"
             className="w-full bg-transparent text-sm outline-none placeholder:text-ink-400"

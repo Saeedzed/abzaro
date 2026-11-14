@@ -1,4 +1,5 @@
 import {
+  ArrowDownUp,
   ArrowLeftRight,
   BadgePercent,
   Banknote,
@@ -6,20 +7,31 @@ import {
   Braces,
   CalendarClock,
   CalendarDays,
+  CalendarSync,
   CalendarRange,
+  ChartColumn,
   Eraser,
   FileImage,
   FileText,
+  Fingerprint,
   Hash,
   HeartPulse,
+  Images,
   Languages,
+  KeyRound,
+  Landmark,
   Layers,
   Link2,
+  ListFilter,
   Minimize2,
   Percent,
   QrCode,
+  RotateCw,
+  Ruler,
+  Scissors,
   Scaling,
   SpellCheck,
+  Trash2,
   Type,
   UserRound,
   type LucideIcon,
@@ -126,7 +138,7 @@ export const tools: Tool[] = [
       "جهت تبدیل (فارسی ← لاتین یا لاتین ← فارسی) را انتخاب کنید.",
       "خروجی را کپی کنید و در فایل یا فرم خود بچسبانید.",
     ],
-    category: "numbers",
+    category: "text",
     icon: Languages,
     seoTitle: "تبدیل اعداد به فارسی و برعکس",
     seoDescription:
@@ -168,7 +180,7 @@ export const tools: Tool[] = [
       "دکمهٔ تبدیل را بزنید.",
       "معادل نوشتاری فارسی عدد را کپی کنید؛ مناسب چک، فاکتور و سند رسمی.",
     ],
-    category: "numbers",
+    category: "text",
     icon: SpellCheck,
     seoTitle: "تبدیل عدد به حروف فارسی",
     seoDescription:
@@ -679,6 +691,284 @@ export const tools: Tool[] = [
     popular: false,
     addedAt: "2025-11-16",
   },
+
+  /* ---------------------------------------------------------------- */
+  /*  Phase 5 — package A (12 new tools)                              */
+  /* ---------------------------------------------------------------- */
+  {
+    id: "duplicate-line-remover",
+    slug: "duplicate-line-remover",
+    title: "حذف خطوط تکراری",
+    description:
+      "خطوط تکراری متن را حذف کنید و ترتیب اولین تکرارها را نگه دارید؛ مناسب لیست‌ها، شماره‌ها و فهرست‌های بلند.",
+    steps: [
+      "فهرست خود را در کادر بچسبانید؛ هر خط یک آیتم است.",
+      "گزینه‌ها را انتخاب کنید: نادیده‌گرفتن حروف بزرگ/کوچک، فاصله‌های اضافی و حذف خطوط خالی.",
+      "خروجی یکتا را کپی کنید یا فایل متنی را دانلود کنید.",
+    ],
+    category: "text",
+    icon: ListFilter,
+    seoTitle: "حذف خطوط تکراری آنلاین",
+    seoDescription:
+      "خطوط تکراری متن یا لیست را به‌صورت آنلاین حذف کنید؛ ترتیب اصلی حفظ می‌شود و همه‌چیز در مرورگر شما انجام می‌شود.",
+    keywords: ["حذف تکراری", "حذف خطوط تکراری", "remove duplicates", "لیست بدون تکرار", "یونیک کردن لیست"],
+    status: "live",
+    popular: false,
+    addedAt: "2025-11-14",
+  },
+  {
+    id: "line-sorter",
+    slug: "line-sorter",
+    title: "مرتب‌سازی خطوط",
+    description:
+      "خطوط متن را الفبایی (فارسی)، بر اساس طول یا تصادفی مرتب کنید؛ با امکان معکوس کردن ترتیب.",
+    steps: [
+      "خطوط را در کادر وارد کنید (هر خط یک آیتم).",
+      "نوع مرتب‌سازی را انتخاب کنید: الفبایی، طولانی‌ترین، کوتاه‌ترین، تصادفی یا معکوس.",
+      "خروجی را کپی کنید یا فایل متنی را دانلود کنید.",
+    ],
+    category: "text",
+    icon: ArrowDownUp,
+    seoTitle: "مرتب‌سازی خطوط متن آنلاین",
+    seoDescription:
+      "خطوط متن را الفبایی فارسی، بر اساس طول یا تصادفی مرتب کنید؛ رایگان، بدون نصب و با پردازش در مرورگر.",
+    keywords: ["مرتب سازی خطوط", "sort lines", "مرتب کردن متن", "شuffle لیست", "الفبایی کردن"],
+    status: "live",
+    popular: false,
+    addedAt: "2025-11-14",
+  },
+  {
+    id: "keyword-density",
+    slug: "keyword-density",
+    title: "چگالی و تکرار کلمات کلیدی",
+    description:
+      "پرتکرارترین کلمات متن و چگالی آن‌ها را ببینید؛ ابزار کاربردی برای سئو و ویرایش محتوا.",
+    steps: [
+      "متن مقاله یا توضیحات محصول را بچسبانید.",
+      "کلمات پرتکرار، تعداد و درصد چگالی هر کدام را ببینید.",
+      "کلمات ربط را با یک کلیک حذف کنید تا فقط کلمات کلیدی واقعی بمانند.",
+    ],
+    category: "text",
+    icon: ChartColumn,
+    seoTitle: "محاسبه چگالی کلمات کلیدی فارسی",
+    seoDescription:
+      "تکرار کلمات و چگالی کلمات کلیدی متن فارسی را اندازه بگیرید؛ نیم‌فاصله و «ی/ک» عربی یکسان‌سازی می‌شود.",
+    keywords: ["چگالی کلمات کلیدی", "keyword density", "تکرار کلمات", "سئو متن", "شمارش کلمات پرتکرار"],
+    status: "live",
+    popular: false,
+    addedAt: "2025-11-14",
+  },
+  {
+    id: "slug-generator",
+    slug: "slug-generator",
+    title: "ساخت اسلاگ (آدرس صفحه)",
+    description:
+      "از عنوان فارسی، اسلاگ انگلیسی یا فارسی بسازید؛ مناسب آدرس پست وبلاگ، محصول و دسته‌بندی.",
+    steps: [
+      "عنوان پست یا محصول را بنویسید.",
+      "انتخاب کنید اسلاگ انگلیسی (حروف لاتین) باشد یا فارسی، و جداکننده را مشخص کنید.",
+      "اسلاگ نهایی را کپی کنید؛ پیش‌نمایش آدرس هم نمایش داده می‌شود.",
+    ],
+    category: "text",
+    icon: Link2,
+    seoTitle: "ساخت اسلاگ فارسی و انگلیسی",
+    seoDescription:
+      "از عنوان فارسی، اسلاگ استاندارد بسازید (ترنسلیت به لاتین یا نگه‌داشتن حروف فارسی)؛ مناسب سئو و آدرس‌های خوانا.",
+    keywords: ["اسلاگ", "slug generator", "ساخت اسلاگ فارسی", "آدرس صفحه", "permalink"],
+    status: "live",
+    popular: false,
+    addedAt: "2025-11-14",
+  },
+  {
+    id: "date-converter",
+    slug: "date-converter",
+    title: "تبدیل تاریخ شمسی و میلادی",
+    description:
+      "تاریخ شمسی را به میلادی و میلادی را به شمسی تبدیل کنید؛ با روز هفته و فرمت استاندارد ISO.",
+    steps: [
+      "جهت تبدیل را انتخاب کنید: شمسی ← میلادی یا میلادی ← شمسی.",
+      "سال، ماه و روز را از منوها انتخاب کنید.",
+      "تاریخ معادل، روز هفته و فرمت ISO را ببینید و کپی کنید.",
+    ],
+    category: "numbers",
+    icon: CalendarSync,
+    seoTitle: "تبدیل تاریخ شمسی به میلادی و برعکس",
+    seoDescription:
+      "تاریخ شمسی و میلادی را دقیق و سریع به هم تبدیل کنید؛ همراه با روز هفته و فرمت ISO. رایگان و بدون ثبت‌نام.",
+    keywords: ["تبدیل تاریخ شمسی به میلادی", "تاریخ میلادی به شمسی", "jalali to gregorian", "تبدیل تاریخ", "تقویم شمسی"],
+    status: "live",
+    popular: true,
+    addedAt: "2025-11-14",
+  },
+  {
+    id: "unit-converter",
+    slug: "unit-converter",
+    title: "تبدیل واحد (طول، وزن، دما…)",
+    description:
+      "واحدهای طول، وزن، دما، مساحت، حجم، سرعت و حجم داده را هم‌زمان تبدیل کنید.",
+    steps: [
+      "دستهٔ واحد را انتخاب کنید (طول، وزن، دما، مساحت، حجم، سرعت، داده).",
+      "مقدار و واحد مبدأ را وارد کنید؛ واحد مقصد را انتخاب یا با دکمهٔ جابه‌جایی عوض کنید.",
+      "نتیجه و جدول همهٔ واحدهای همان دسته را ببینید.",
+    ],
+    category: "numbers",
+    icon: Ruler,
+    seoTitle: "تبدیل واحد آنلاین (طول، وزن، دما، مساحت)",
+    seoDescription:
+      "تبدیل واحدهای طول، وزن، دما، مساحت، حجم، سرعت و حجم داده به‌صورت آنلاین و دقیق؛ رایگان و بدون نصب.",
+    keywords: ["تبدیل واحد", "unit converter", "متر به فوت", "کیلوگرم به پوند", "سانتی‌گراد به فارنهایت"],
+    status: "live",
+    popular: false,
+    addedAt: "2025-11-14",
+  },
+  {
+    id: "bank-interest",
+    slug: "bank-interest",
+    title: "محاسبه سود بانکی",
+    description:
+      "سود ساده و مرکب سپردهٔ بانکی را با نرخ سالانه و مدت دلخواه حساب کنید.",
+    steps: [
+      "نوع محاسبه را انتخاب کنید: سود ساده یا سود مرکب.",
+      "مبلغ سپرده، نرخ سود سالانه و مدت (ماه) را وارد کنید.",
+      "سود کل، مبلغ نهایی، سود ماهانه و نرخ مؤثر سالانه را ببینید.",
+    ],
+    category: "numbers",
+    icon: Landmark,
+    seoTitle: "محاسبه سود بانکی (ساده و مرکب)",
+    seoDescription:
+      "سود سپردهٔ بانکی را با نرخ سالانه و مدت دلخواه محاسبه کنید؛ سود ساده و مرکب، همراه با نرخ مؤثر سالانه.",
+    keywords: ["سود بانکی", "محاسبه سود سپرده", "سود مرکب", "bank interest", "نرخ سود"],
+    status: "live",
+    popular: false,
+    addedAt: "2025-11-14",
+  },
+  {
+    id: "heic-to-jpg",
+    slug: "heic-to-jpg",
+    title: "تبدیل HEIC به JPG",
+    description:
+      "عکس‌های HEIC آیفون را به JPG تبدیل کنید تا در همهٔ دستگاه‌ها و سایت‌ها باز شوند.",
+    steps: [
+      "عکس‌های HEIC/HEIF را انتخاب کنید (چند فایل هم‌زمان مجاز است).",
+      "کیفیت خروجی JPG را با اسلایدر تنظیم کنید.",
+      "هر عکس را جداگانه دانلود کنید؛ فایل‌ها هرگز آپلود نمی‌شوند.",
+    ],
+    category: "images",
+    icon: Images,
+    seoTitle: "تبدیل HEIC به JPG آنلاین",
+    seoDescription:
+      "عکس HEIC آیفون را بدون نصب برنامه به JPG تبدیل کنید؛ پردازش کامل در مرورگر و بدون آپلود فایل.",
+    keywords: ["تبدیل HEIC به JPG", "heic to jpg", "عکس آیفون", "HEIF", "تبدیل عکس آیفون"],
+    status: "live",
+    popular: true,
+    addedAt: "2025-11-14",
+  },
+  {
+    id: "pdf-rotate",
+    slug: "pdf-rotate",
+    title: "چرخاندن صفحات PDF",
+    description:
+      "صفحات PDF را ۹۰، ۱۸۰ یا ۲۷۰ درجه بچرخانید؛ بدون افت کیفیت و بدون آپلود.",
+    steps: [
+      "فایل PDF را انتخاب کنید.",
+      "زاویهٔ چرخش را مشخص کنید (۹۰، ۱۸۰ یا ۲۷۰ درجه).",
+      "اگر فقط بعضی صفحات را می‌خواهید، شمارهٔ آن‌ها را وارد کنید و فایل را دانلود کنید.",
+    ],
+    category: "files",
+    icon: RotateCw,
+    seoTitle: "چرخاندن صفحات PDF آنلاین",
+    seoDescription:
+      "صفحات PDF را ۹۰/۱۸۰/۲۷۰ درجه بچرخانید؛ کیفیت و متن صفحه حفظ می‌شود و فایل در مرورگر شما پردازش می‌شود.",
+    keywords: ["چرخاندن PDF", "rotate pdf", "صفحات افقی PDF", "درست کردن جهت PDF"],
+    status: "live",
+    popular: false,
+    addedAt: "2025-11-14",
+  },
+  {
+    id: "pdf-delete-pages",
+    slug: "pdf-delete-pages",
+    title: "حذف صفحه از PDF",
+    description:
+      "صفحه‌های اضافی PDF را حذف کنید و فایل تمیز تحویل بگیرید؛ بدون آپلود به سرور.",
+    steps: [
+      "فایل PDF را انتخاب کنید و تعداد صفحات آن را ببینید.",
+      "شمارهٔ صفحه‌های موردنظر برای حذف را وارد کنید (مثال: 1-3, 5).",
+      "فایل جدید را دانلود کنید؛ بقیهٔ صفحات بدون تغییر می‌مانند.",
+    ],
+    category: "files",
+    icon: Trash2,
+    seoTitle: "حذف صفحه از PDF آنلاین",
+    seoDescription:
+      "صفحه‌های اضافی فایل PDF را حذف کنید؛ پردازش کاملاً در مرورگر انجام می‌شود و کیفیت صفحات حفظ می‌شود.",
+    keywords: ["حذف صفحه PDF", "delete pdf pages", "پاک کردن صفحه از پی دی اف", "ویرایش PDF"],
+    status: "live",
+    popular: false,
+    addedAt: "2025-11-14",
+  },
+  {
+    id: "pdf-split",
+    slug: "pdf-split",
+    title: "استخراج و تقسیم صفحات PDF",
+    description:
+      "از یک PDF، صفحه‌های دلخواه را استخراج کنید یا فایل را به بخش‌های کوچک‌تر تقسیم کنید.",
+    steps: [
+      "فایل PDF را انتخاب کنید.",
+      "بازهٔ صفحه‌ها را وارد کنید (مثال: 1-3, 5).",
+      "فایل جدید شامل همان صفحات را دانلود کنید.",
+    ],
+    category: "files",
+    icon: Scissors,
+    seoTitle: "استخراج و تقسیم صفحات PDF",
+    seoDescription:
+      "صفحه‌های دلخواه یک PDF را جدا کنید یا فایل را تقسیم کنید؛ رایگان، بدون نصب و با پردازش در مرورگر.",
+    keywords: ["تقسیم PDF", "split pdf", "استخراج صفحه PDF", "جدا کردن صفحات"],
+    status: "live",
+    popular: false,
+    addedAt: "2025-11-14",
+  },
+  {
+    id: "jwt-decoder",
+    slug: "jwt-decoder",
+    title: "رمزگشایی JWT",
+    description:
+      "هدر و payload توکن JWT را بخوانید و وضعیت انقضا را ببینید؛ امضا بررسی نمی‌شود.",
+    steps: [
+      "توکن JWT را در کادر بچسبانید (کلمهٔ Bearer هم پذیرفته می‌شود).",
+      "هدر و payload را به‌صورت JSON مرتب ببینید.",
+      "وضعیت انقضا (exp) و زمان صدور (iat) را بررسی کنید.",
+    ],
+    category: "dev",
+    icon: KeyRound,
+    seoTitle: "رمزگشایی JWT آنلاین",
+    seoDescription:
+      "توکن JWT را در مرورگر خودتان رمزگشایی کنید و هدر، payload و تاریخ انقضا را ببینید؛ هیچ داده‌ای ارسال نمی‌شود.",
+    keywords: ["jwt decoder", "رمزگشایی JWT", "توکن JWT", "decode jwt", "jwt payload"],
+    status: "live",
+    popular: false,
+    addedAt: "2025-11-14",
+  },
+  {
+    id: "hash-generator",
+    slug: "hash-generator",
+    title: "تولید هش و UUID",
+    description:
+      "هش MD5، SHA-1، SHA-256، SHA-384 و SHA-512 بسازید و UUID نسخهٔ ۴ تولید کنید.",
+    steps: [
+      "متن موردنظر را وارد کنید؛ هش هر پنج الگوریتم هم‌زمان محاسبه می‌شود.",
+      "هش موردنظر را کپی کنید.",
+      "برای شناسهٔ یکتا، تعداد و تعداد UUID را انتخاب و تولید کنید.",
+    ],
+    category: "dev",
+    icon: Fingerprint,
+    seoTitle: "تولید هش (MD5, SHA-256) و UUID",
+    seoDescription:
+      "هش MD5 و SHA-1/256/384/512 از متن بسازید و UUID v4 تولید کنید؛ همه در مرورگر و بدون ارسال داده.",
+    keywords: ["md5", "sha256", "hash generator", "uuid v4", "تولید هش"],
+    status: "live",
+    popular: false,
+    addedAt: "2025-11-14",
+  },
+
 ];
 
 /** Tools flagged as popular, in registry order. */
