@@ -1,16 +1,27 @@
 import {
+  ArrowLeftRight,
   BadgePercent,
+  Banknote,
+  Binary,
+  Braces,
+  CalendarClock,
   CalendarDays,
+  CalendarRange,
   Eraser,
   FileImage,
   FileText,
   Hash,
+  HeartPulse,
   Languages,
+  Layers,
+  Link2,
   Minimize2,
   Percent,
+  QrCode,
   Scaling,
   SpellCheck,
   Type,
+  UserRound,
   type LucideIcon,
 } from "lucide-react";
 
@@ -35,8 +46,14 @@ export interface Tool {
   title: string;
   /** Short Persian description shown on cards and the tool page. */
   description: string;
-  /** Category slug (see src/data/categories.ts). */
+  /** Primary category slug (see src/data/categories.ts). */
   category: string;
+  /**
+   * Extra categories this tool also belongs to. A tool appears in its primary
+   * category plus every slug listed here (e.g. PDF converters live under both
+   * «تصاویر» and «ویرایش فایل و PDF».
+   */
+  alsoIn?: string[];
   /** Lucide icon component. */
   icon: LucideIcon;
   /** SEO <title> (brand suffix is added by the layout template). */
@@ -221,6 +238,7 @@ export const tools: Tool[] = [
     description:
       "چند تصویر را انتخاب کنید، ترتیبشان را مشخص کنید و همگی را در یک فایل PDF به‌همراه تنظیم اندازهٔ صفحه و حاشیه دانلود کنید.",
     category: "images",
+    alsoIn: ["files"],
     icon: FileText,
     seoTitle: "تبدیل عکس به PDF آنلاین رایگان",
     seoDescription:
@@ -244,6 +262,7 @@ export const tools: Tool[] = [
     description:
       "صفحه‌های فایل PDF را به تصویر JPG یا PNG تبدیل کنید؛ انتخاب بازهٔ صفحه‌ها، کیفیت خروجی و دانلود تکی یا ZIP.",
     category: "images",
+    alsoIn: ["files"],
     icon: FileImage,
     seoTitle: "تبدیل PDF به عکس JPG و PNG آنلاین",
     seoDescription:
@@ -261,6 +280,282 @@ export const tools: Tool[] = [
     popular: true,
     addedAt: "2025-11-15",
   },
+  // ---------------------------------------------------------------- files
+  {
+    id: "pdf-compressor",
+    slug: "pdf-compressor",
+    title: "فشرده‌سازی PDF",
+    description:
+      "حجم فایل PDF را کم کنید؛ دو روش: بهینه‌سازی بدون افت کیفیت یا تبدیل صفحه‌ها به تصویر برای بیشترین کاهش حجم.",
+    category: "files",
+    alsoIn: ["images"],
+    icon: Minimize2,
+    seoTitle: "فشرده‌سازی PDF آنلاین رایگان",
+    seoDescription:
+      "حجم فایل PDF را در مرورگر خود کم کنید: بهینه‌سازی بدون افت کیفیت یا فشرده‌سازی تصویری با کیفیت دلخواه. بدون آپلود فایل و بدون ثبت‌نام.",
+    keywords: [
+      "فشرده سازی pdf",
+      "کم کردن حجم pdf",
+      "compress pdf",
+      "کاهش حجم پی دی اف",
+      "بهینه سازی pdf",
+    ],
+    status: "live",
+    popular: true,
+    addedAt: "2025-11-16",
+  },
+  {
+    id: "pdf-merger",
+    slug: "pdf-merger",
+    title: "ادغام PDF",
+    description:
+      "چند فایل PDF را با ترتیب دلخواه در یک فایل ادغام کنید؛ کیفیت اصلی صفحه‌ها حفظ می‌شود.",
+    category: "files",
+    alsoIn: ["images"],
+    icon: Layers,
+    seoTitle: "ادغام فایل‌های PDF آنلاین رایگان",
+    seoDescription:
+      "چند فایل PDF را در مرورگر خود به یک فایل ادغام کنید؛ تغییر ترتیب فایل‌ها، حفظ کیفیت اصلی و بدون آپلود به سرور.",
+    keywords: ["ادغام pdf", "ترکیب pdf", "merge pdf", "یکی کردن پی دی اف", "چند pdf در یک فایل"],
+    status: "live",
+    popular: true,
+    addedAt: "2025-11-16",
+  },
+  // --------------------------------------------------------------- images
+  {
+    id: "image-format-converter",
+    slug: "image-format-converter",
+    title: "تبدیل JPG به PNG",
+    description:
+      "قالب تصویر را بین JPG، PNG و WebP تبدیل کنید؛ با تنظیم کیفیت و مقایسهٔ حجم قبل و بعد.",
+    category: "images",
+    icon: ArrowLeftRight,
+    seoTitle: "تبدیل JPG به PNG و برعکس آنلاین",
+    seoDescription:
+      "تصاویر JPG، PNG و WebP را در مرورگر خود به هم تبدیل کنید؛ انتخاب کیفیت، پیش‌نمایش و مقایسهٔ حجم — بدون آپلود فایل.",
+    keywords: [
+      "تبدیل jpg به png",
+      "تبدیل png به jpg",
+      "jpg to png",
+      "png to jpg",
+      "تبدیل قالب تصویر",
+      "webp converter",
+    ],
+    status: "live",
+    popular: false,
+    addedAt: "2025-11-16",
+  },
+  {
+    id: "image-to-base64",
+    slug: "image-to-base64",
+    title: "تبدیل عکس به Base64",
+    description:
+      "تصویر را به رشتهٔ Base64 تبدیل کنید و در قالب خالص، data URI، CSS یا تگ <img> کپی کنید.",
+    category: "images",
+    icon: Binary,
+    seoTitle: "تبدیل عکس به Base64 آنلاین",
+    seoDescription:
+      "تصویر خود را به Base64 تبدیل کنید و به‌صورت data URI یا CSS کپی کنید؛ پردازش در مرورگر و بدون آپلود تصویر.",
+    keywords: [
+      "عکس به base64",
+      "image to base64",
+      "تبدیل تصویر به base64",
+      "data uri",
+      "base64 image",
+    ],
+    status: "live",
+    popular: false,
+    addedAt: "2025-11-16",
+  },
+  {
+    id: "profile-picture",
+    slug: "profile-picture",
+    title: "ساخت تصویر پروفایل",
+    description:
+      "عکس خود را برش دهید، بزرگ‌نمایی کنید و با شکل و پس‌زمینهٔ دلخواه در اندازهٔ دقیق (۲۰۰ تا ۱۰۲۴ پیکسل) ذخیره کنید.",
+    category: "images",
+    icon: UserRound,
+    seoTitle: "ساخت عکس پروفایل با اندازه دلخواه",
+    seoDescription:
+      "عکس پروفایل خود را با اندازهٔ دقیق بسازید: برش مربع، بزرگ‌نمایی، شکل دایره یا گوشه‌گرد و پس‌زمینهٔ دلخواه؛ رایگان و بدون آپلود.",
+    keywords: [
+      "عکس پروفایل",
+      "ساخت عکس پروفایل",
+      "برش عکس",
+      "profile picture maker",
+      "تغییر اندازه عکس پروفایل",
+    ],
+    status: "live",
+    popular: false,
+    addedAt: "2025-11-16",
+  },
+  // -------------------------------------------------------------- numbers
+  {
+    id: "loan-calculator",
+    slug: "loan-calculator",
+    title: "محاسبه اقساط وام",
+    description:
+      "قسط ماهانهٔ وام را بر اساس مبلغ، نرخ سود سالانه و مدت بازپرداخت محاسبه کنید؛ همراه با جدول کامل بازپرداخت.",
+    category: "numbers",
+    icon: Banknote,
+    seoTitle: "محاسبه اقساط وام آنلاین",
+    seoDescription:
+      "قسط ماهانهٔ وام و مجموع سود را با مبلغ، نرخ سود و مدت بازپرداخت محاسبه کنید؛ همراه با جدول تفکیکی اقساط — رایگان و بدون ثبت‌نام.",
+    keywords: [
+      "محاسبه اقساط وام",
+      "محاسبه قسط",
+      "loan calculator",
+      "جدول بازپرداخت وام",
+      "سود وام",
+    ],
+    status: "live",
+    popular: true,
+    addedAt: "2025-11-16",
+  },
+  {
+    id: "bmi-calculator",
+    slug: "bmi-calculator",
+    title: "محاسبه BMI",
+    description:
+      "شاخص توده بدنی را با وزن و قد محاسبه کنید و محدودهٔ وزن سالم و وزن ایده‌آل خود را ببینید.",
+    category: "numbers",
+    icon: HeartPulse,
+    seoTitle: "محاسبه BMI (شاخص توده بدنی)",
+    seoDescription:
+      "شاخص توده بدنی (BMI) خود را با وزن و قد محاسبه کنید؛ همراه با دسته‌بندی لاغری/نرمال/اضافه وزن و محدودهٔ وزن سالم — رایگان.",
+    keywords: ["محاسبه bmi", "شاخص توده بدنی", "bmi calculator", "قد و وزن", "وزن ایده‌آل"],
+    status: "live",
+    popular: false,
+    addedAt: "2025-11-16",
+  },
+  {
+    id: "date-diff",
+    slug: "date-diff",
+    title: "محاسبه اختلاف دو تاریخ",
+    description:
+      "فاصلهٔ بین دو تاریخ شمسی را به سال، ماه، روز، هفته و ساعت محاسبه کنید؛ همراه با روز هفتهٔ هر تاریخ.",
+    category: "numbers",
+    icon: CalendarRange,
+    seoTitle: "محاسبه اختلاف دو تاریخ شمسی",
+    seoDescription:
+      "اختلاف بین دو تاریخ شمسی را دقیق به سال، ماه، روز، هفته و ساعت محاسبه کنید؛ روز هفته و تعداد روزها — رایگان و بدون ثبت‌نام.",
+    keywords: [
+      "اختلاف دو تاریخ",
+      "محاسبه فاصله دو تاریخ",
+      "date difference",
+      "تاریخ شمسی",
+      "چند روز گذشته",
+    ],
+    status: "live",
+    popular: false,
+    addedAt: "2025-11-16",
+  },
+  {
+    id: "exact-age",
+    slug: "exact-age",
+    title: "محاسبه سن دقیق",
+    description:
+      "سن خود را تا همین لحظه به سال، ماه، روز، ساعت و دقیقه ببینید؛ با برج، روز هفته و شمارش تا تولد بعدی.",
+    category: "numbers",
+    icon: CalendarClock,
+    seoTitle: "محاسبه سن دقیق با ساعت تولد",
+    seoDescription:
+      "سن دقیق خود را با تاریخ و ساعت تولد شمسی محاسبه کنید: سال، ماه، روز، ساعت و دقیقه، مجموع روزها، برج و روز هفته.",
+    keywords: [
+      "محاسبه سن دقیق",
+      "سن با ساعت",
+      "exact age calculator",
+      "تاریخ تولد شمسی",
+      "چند روز زنده ام",
+    ],
+    status: "live",
+    popular: false,
+    addedAt: "2025-11-16",
+  },
+  // ------------------------------------------------------------------ dev
+  {
+    id: "qr-code-generator",
+    slug: "qr-code-generator",
+    title: "تولید QR Code",
+    description:
+      "برای متن، لینک، وای‌فای، شماره تماس یا ایمیل کد QR بسازید و آن را با کیفیت بالا به‌صورت PNG دانلود کنید.",
+    category: "dev",
+    icon: QrCode,
+    seoTitle: "ساخت کد QR آنلاین رایگان",
+    seoDescription:
+      "کد QR برای لینک، متن، وای‌فای یا شماره تماس بسازید و به‌صورت PNG دانلود کنید؛ انتخاب اندازه، رنگ و سطح مقاومت در برابر خطا.",
+    keywords: ["تولید qr code", "ساخت کد qr", "qr generator", "کیو آر کد", "qr وای فای"],
+    status: "live",
+    popular: true,
+    addedAt: "2025-11-16",
+  },
+  {
+    id: "json-formatter",
+    slug: "json-formatter",
+    title: "JSON Formatter و اعتبارسنجی",
+    description:
+      "متن JSON را مرتب، فشرده یا اعتبارسنجی کنید؛ خطاها با شماره خط و ستون نمایش داده می‌شوند.",
+    category: "dev",
+    icon: Braces,
+    seoTitle: "فرمت و اعتبارسنجی JSON آنلاین",
+    seoDescription:
+      "JSON خود را مرتب‌سازی، فشرده یا اعتبارسنجی کنید؛ نمایش خطا با شماره خط و ستون، تعمیر خودکار و مرتب‌سازی کلیدها — در مرورگر شما.",
+    keywords: [
+      "json formatter",
+      "json validator",
+      "مرتب سازی json",
+      "اعتبارسنجی json",
+      "json beautifier",
+    ],
+    status: "live",
+    popular: true,
+    addedAt: "2025-11-16",
+  },
+  {
+    id: "base64-encoder",
+    slug: "base64-encoder",
+    title: "Base64 Encoder / Decoder",
+    description:
+      "متن را به Base64 تبدیل کنید و برعکس؛ با پشتیبانی کامل از فارسی و گزینهٔ URL-safe.",
+    category: "dev",
+    icon: Binary,
+    seoTitle: "تبدیل متن به Base64 و برعکس",
+    seoDescription:
+      "متن را به Base64 کدگذاری یا از Base64 رمزگشایی کنید؛ پشتیبانی از متن فارسی (UTF-8)، حالت URL-safe و کپی سریع.",
+    keywords: [
+      "base64 encoder",
+      "base64 decoder",
+      "تبدیل به base64",
+      "رمزگشایی base64",
+      "base64 آنلاین",
+    ],
+    status: "live",
+    popular: false,
+    addedAt: "2025-11-16",
+  },
+  {
+    id: "url-encoder",
+    slug: "url-encoder",
+    title: "URL Encoder / Decoder",
+    description:
+      "لینک یا متن را برای استفاده در URL کدگذاری کنید و رشته‌های کدگذاری‌شده را رمزگشایی کنید.",
+    category: "dev",
+    icon: Link2,
+    seoTitle: "کدگذاری و رمزگشایی URL آنلاین",
+    seoDescription:
+      "لینک یا متن را به فرمت URL کدگذاری (encodeURIComponent / encodeURI) یا از آن رمزگشایی کنید؛ رایگان و در مرورگر شما.",
+    keywords: [
+      "url encoder",
+      "url decoder",
+      "کدگذاری url",
+      "رمزگشایی url",
+      "encodeuricomponent",
+      "percent encoding",
+    ],
+    status: "live",
+    popular: false,
+    addedAt: "2025-11-16",
+  },
 ];
 
 /** Tools flagged as popular, in registry order. */
@@ -275,6 +570,20 @@ export function getToolBySlug(slug: string): Tool | undefined {
   return tools.find((tool) => tool.slug === slug);
 }
 
+/** Every category a tool belongs to, primary first. */
+export function categoriesOf(tool: Tool): string[] {
+  return [tool.category, ...(tool.alsoIn ?? [])];
+}
+
+/** Does this tool belong to the given category (primary or secondary)? */
+export function isInCategory(tool: Tool, categorySlug: string): boolean {
+  return categoriesOf(tool).includes(categorySlug);
+}
+
 export function getToolsByCategory(categorySlug: string): Tool[] {
-  return tools.filter((tool) => tool.category === categorySlug);
+  return tools.filter((tool) => isInCategory(tool, categorySlug));
+}
+
+export function countToolsInCategory(categorySlug: string): number {
+  return getToolsByCategory(categorySlug).length;
 }

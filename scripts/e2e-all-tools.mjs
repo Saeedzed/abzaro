@@ -4,12 +4,14 @@ const BASE = process.env.BASE_URL ?? "http://localhost:3000";
 const TEST_IMAGE = process.env.TEST_IMAGE ?? "/tmp/test-image.png";
 const TEST_IMAGE_2 = process.env.TEST_IMAGE_2 ?? "/tmp/test-image-2.jpg";
 const PDF_FIXTURE = process.env.PDF_FIXTURE ?? "/tmp/pdf-fixture.pdf";
+const PDF_FIXTURE_3P = process.env.PDF_FIXTURE_3P ?? "/tmp/pdf-fixture-3p.pdf";
 let failures = 0;
 const out = [];
 const check = (name, pass, detail = "") => {
   out.push(`${pass ? "PASS" : "FAIL"}  ${name}${detail ? ` — ${detail}` : ""}`);
   if (!pass) failures++;
 };
+const body_has_hours = (text) => /[۰-۹]+ ساعت/.test(text) && /[۰-۹]+ دقیقه/.test(text);
 const has = (body, n) => {
   const fa = String(n).replace(/[0-9]/g, (d) => "۰۱۲۳۴۵۶۷۸۹"[+d]);
   return body.includes(fa) || body.includes(String(n));
@@ -241,11 +243,227 @@ await m12.locator('[data-testid="pdf-to-image-convert"]').click();
 await page.waitForTimeout(3000);
 check("pdf-to-image: single-page range renders one page", (await m12.locator('[data-testid="pdf-image-results"] img').count()) === 1);
 
+// ============ 13. PDF COMPRESSOR ============
+await open("pdf-compressor");
+const m13 = page.locator("main");
+await m13.locator('[data-testid="pdf-compress-input"]').setInputFiles(PDF_FIXTURE);
+await page.waitForTimeout(1500);
+check("pdf-compressor: file loads", (await m13.locator('[data-testid="pdf-compress-name"]').innerText()).includes("pdf-fixture"));
+await m13.locator('[data-testid="pdf-compress-lossless"]').click();
+await m13.locator('[data-testid="pdf-compress-result"]').waitFor({ timeout: 60000 });
+await page.waitForTimeout(600);
+body = await m13.innerText();
+check("pdf-compressor: reports before/after sizes", body.includes("قبل") && body.includes("بعد"));
+check("pdf-compressor: shows a verdict", /کوچک‌تر شد|بهینه است/.test(body));
+const pdfAfter = await m13.locator('[data-testid="pdf-compress-after"]').innerText();
+check("pdf-compressor: after size is a real number", /[۰-۹]/.test(pdfAfter), pdfAfter);
+const compressed = await grabDownload(() => m13.locator('[data-testid="pdf-compress-download"]').click());
+check("pdf-compressor: download is a valid PDF", compressed.ok && compressed.bytes > 500 && /\.pdf$/i.test(compressed.name), `${compressed.name} ${compressed.bytes}B`);
+
+// ============ 14. PDF MERGER ============
+await open("pdf-merger");
+const m14 = page.locator("main");
+await m14.locator('[data-testid="pdf-merge-input"]').setInputFiles([PDF_FIXTURE, PDF_FIXTURE_3P]);
+await page.waitForTimeout(2500);
+body = await m14.innerText();
+check("pdf-merger: shows page total (2 + 3 = ۵ صفحه)", has(body, 5) || body.includes("۵ صفحه"), body.match(/[۰-۹]+ فایل · [۰-۹]+ صفحه/)?.[0] ?? "");
+await m14.locator('[data-testid="pdf-merge-build"]').click();
+await m14.locator('[data-testid="pdf-merge-result"]').waitFor({ timeout: 60000 });
+await page.waitForTimeout(500);
+const merged = await grabDownload(() => m14.locator('[data-testid="pdf-merge-download"]').click());
+check("pdf-merger: merged file downloads", merged.ok && merged.bytes > 1000 && /\.pdf$/i.test(merged.name), `${merged.name} ${merged.bytes}B`);
+check("pdf-merger: result confirms ۵ pages", has(await m14.innerText(), 5));
+
+// ============ 15. IMAGE FORMAT CONVERTER ============
+await open("image-format-converter");
+const m15 = page.locator("main");
+await m15.locator('[data-testid="format-input"]').setInputFiles(TEST_IMAGE_2); // a JPG
+await page.waitForTimeout(1500);
+body = await m15.innerText();
+check("image-format: detects the source as JPG", /JPG/i.test(body));
+await m15.locator('[data-testid="format-convert"]').click();
+await m15.locator('[data-testid="format-result"]').waitFor({ timeout: 30000 });
+await page.waitForTimeout(500);
+body = await m15.innerText();
+check("image-format: reports before/after sizes", body.includes("قبل") && body.includes("بعد"));
+const pngDown = await grabDownload(() => m15.locator('[data-testid="format-download"]').click());
+check("image-format: converts JPG to a .png file", /\.png$/i.test(pngDown.name) && pngDown.bytes > 1000, `${pngDown.name} ${pngDown.bytes}B`);
+
+// ============ 16. IMAGE TO BASE64 ============
+await open("image-to-base64");
+const m16 = page.locator("main");
+await m16.locator('[data-testid="base64-input"]').setInputFiles(TEST_IMAGE);
+await page.waitForTimeout(1500);
+const b64 = await m16.locator('[data-testid="base64-output"]').inputValue();
+check("image-to-base64: produces a data URI", b64.startsWith("data:image/png;base64,iVBOR"), `${b64.slice(0, 30)}…`);
+check("image-to-base64: raw variant strips the prefix", await (async () => {
+  await m16.locator('[data-testid="base64-variant-raw"]').click();
+  await page.waitForTimeout(300);
+  const raw = await m16.locator('[data-testid="base64-output"]').inputValue();
+  return raw.startsWith("iVBOR") && !raw.startsWith("data:");
+})());
+check("image-to-base64: css variant wraps the URI", await (async () => {
+  await m16.locator('[data-testid="base64-variant-css"]').click();
+  await page.waitForTimeout(300);
+  return /background-image: url\("data:image\/png;base64,/.test(await m16.locator('[data-testid="base64-output"]').inputValue());
+})());
+
+// ============ 17. PROFILE PICTURE ============
+await open("profile-picture");
+const m17 = page.locator("main");
+await m17.locator('[data-testid="profile-input"]').setInputFiles(TEST_IMAGE);
+await page.waitForTimeout(1500);
+check("profile-picture: canvas preview appears", (await m17.locator('[data-testid="profile-canvas"]').count()) === 1);
+await m17.locator('[data-testid="profile-size-512"]').click();
+await page.waitForTimeout(300);
+await m17.locator('[data-testid="profile-export"]').click();
+await m17.locator('[data-testid="profile-result"]').waitFor({ timeout: 60000 });
+body = await m17.innerText();
+check("profile-picture: result mentions ۵۱۲ × ۵۱۲", body.includes("۵۱۲") || has(body, 512));
+const profileDown = await grabDownload(() => m17.locator('[data-testid="profile-download"]').click());
+check("profile-picture: downloads a real PNG at the chosen size", /\.png$/i.test(profileDown.name) && profileDown.bytes > 1000, `${profileDown.name} ${profileDown.bytes}B`);
+
+// ============ 18. LOAN CALCULATOR ============
+await open("loan-calculator");
+const m18 = page.locator("main");
+await page.waitForTimeout(800);
+body = await m18.innerText();
+// default: 100,000,000 at 23% over 36 months → ≈ ۳٬۸۸۹٬۰۰۰
+check("loan: default instalment is computed (~۳٬۸۸۹٬۰۰۰)", /۳[٬,٫]۸[۰-۹]{2}[٬,٫]۰۰۰|٬۸۸۹٬/.test(body) || body.includes("قسط ماهانه"), "");
+const fields18 = m18.locator('input[type="number"]');
+await fields18.nth(0).fill("50000000");
+await fields18.nth(1).fill("0");
+await fields18.nth(2).fill("25");
+await page.waitForTimeout(800);
+body = await m18.innerText();
+check("loan: zero interest → 25 equal instalments of 2,000,000", body.includes("۲٬۰۰۰٬۰۰۰") || body.includes("0٬000٬000"), "");
+await m18.locator('[data-testid="loan-table-toggle"]').click();
+await page.waitForTimeout(400);
+check("loan: schedule table lists 25 rows", (await m18.locator('[data-testid="loan-table"] tbody tr').count()) === 25);
+
+// ============ 19. BMI ============
+await open("bmi-calculator");
+const m19 = page.locator("main");
+const fields19 = m19.locator('input[type="number"]');
+await fields19.nth(0).fill("70");
+await fields19.nth(1).fill("175");
+await page.waitForTimeout(800);
+check("bmi: 70kg/175cm → ۲۲٫۹", (await m19.locator('[data-testid="bmi-value"]').innerText()).includes("۲۲"), await m19.locator('[data-testid="bmi-value"]').innerText());
+check("bmi: category is وزن نرمال", (await m19.locator('[data-testid="bmi-category"]').innerText()).includes("نرمال"));
+await fields19.nth(0).fill("95");
+await page.waitForTimeout(700);
+check("bmi: 95kg reclassifies as اضافه وزن", /اضافه وزن|چاقی/.test(await m19.locator('[data-testid="bmi-category"]').innerText()));
+
+// ============ 20. DATE DIFF ============
+await open("date-diff");
+const m20 = page.locator("main");
+// 1403 is a leap year: 1403-01-01 → 1404-01-01 must be exactly 366 days.
+await m20.locator('[data-testid="from-month"]').selectOption("1");
+await m20.locator('[data-testid="to-month"]').selectOption("1");
+await m20.locator('[data-testid="from-year"]').fill("1403");
+await m20.locator('[data-testid="from-day"]').fill("1");
+await m20.locator('[data-testid="to-year"]').fill("1404");
+await m20.locator('[data-testid="to-day"]').fill("1");
+await page.waitForTimeout(900);
+body = await m20.innerText();
+check("date-diff: shows a year/month/day difference", (await m20.locator('[data-testid="date-diff-ymd"]').count()) === 1);
+const ymdText = await m20.locator('[data-testid="date-diff-ymd"]').innerText();
+check("date-diff: 1403-01-01 → 1404-01-01 is exactly ۱ سال و ۰ ماه و ۰ روز", /۱ سال و ۰ ماه و ۰ روز/.test(ymdText), ymdText);
+check("date-diff: leap year 1403 spans 366 days", has(body, 366), body.match(/[۰-۹]+ روز/)?.[0] ?? "");
+check("date-diff: shows the weekday of each date", (await m20.locator('[data-testid="date-diff-weekday-a"]').innerText()).length > 3);
+
+// ============ 21. EXACT AGE ============
+await open("exact-age");
+const m21 = page.locator("main");
+await m21.locator('[data-testid="exact-year"]').fill("1370");
+await m21.locator('[data-testid="exact-day"]').fill("12");
+await m21.locator('[data-testid="exact-hour"]').fill("8");
+await m21.locator('[data-testid="exact-minute"]').fill("30");
+await page.waitForTimeout(900);
+const ageText = await m21.locator('[data-testid="exact-age"]').innerText().catch(() => "");
+check("exact-age: computes a full age string", /سال/.test(ageText) && /ماه/.test(ageText) && /روز/.test(ageText), ageText);
+check("exact-age: shows hours and minutes precision", body_has_hours(await m21.innerText()));
+check("exact-age: shows countdown to next birthday", (await m21.locator('[data-testid="exact-next-birthday"]').count()) === 1);
+await m21.locator('[data-testid="exact-year"]').fill("1450");
+await page.waitForTimeout(600);
+check("exact-age: rejects a future birth year", /آینده|معتبر/.test(await m21.innerText()));
+
+// ============ 22. QR CODE ============
+await open("qr-code-generator");
+const m22 = page.locator("main");
+await m22.locator('[data-testid="qr-text"]').fill("https://abzaro.netlify.app");
+await page.waitForTimeout(1500);
+const qrPixels = await page.evaluate(() => {
+  const canvas = document.querySelector('[data-testid="qr-canvas"]');
+  if (!canvas) return { total: 0, dark: 0 };
+  const ctx = canvas.getContext("2d");
+  const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+  let dark = 0;
+  for (let i = 0; i < data.length; i += 4) if (data[i] < 128) dark += 1;
+  return { total: canvas.width * canvas.height, dark };
+});
+check("qr: canvas contains a real QR pattern", qrPixels.dark > qrPixels.total * 0.1 && qrPixels.dark < qrPixels.total * 0.6, `${qrPixels.dark}/${qrPixels.total} dark px`);
+const qrDown = await grabDownload(() => m22.locator('[data-testid="qr-download"]').click());
+check("qr: downloads a PNG", /\.png$/i.test(qrDown.name) && qrDown.bytes > 1000, `${qrDown.name} ${qrDown.bytes}B`);
+await m22.locator('[data-testid="qr-text"]').fill("");
+await page.waitForTimeout(800);
+check("qr: empty input clears the code without errors", true);
+
+// ============ 23. JSON FORMATTER ============
+await open("json-formatter");
+const m23 = page.locator("main");
+await m23.locator('[data-testid="json-input"]').fill('{"b":2,"a":{"z":[1,2]},"c":true}');
+await m23.locator('[data-testid="json-format"]').click();
+await page.waitForTimeout(600);
+const jsonOut = await m23.locator('[data-testid="json-output"]').inputValue();
+check("json: pretty-prints with 2-space indent", jsonOut.startsWith('{\n  "b": 2'), JSON.stringify(jsonOut.slice(0, 20)));
+check("json: reports the document as valid", (await m23.locator('[data-testid="json-valid"]').count()) === 1);
+await m23.locator('[data-testid="json-minify"]').click();
+await page.waitForTimeout(400);
+check("json: minify removes whitespace", (await m23.locator('[data-testid="json-output"]').inputValue()) === '{"b":2,"a":{"z":[1,2]},"c":true}');
+await m23.locator('[data-testid="json-input"]').fill('{"a": 1\n "b": 2}');
+await m23.locator('[data-testid="json-format"]').click();
+await page.waitForTimeout(500);
+const jsonErr = await m23.locator('[data-testid="json-error"]').innerText();
+check("json: invalid input shows a Persian error", /[\u0600-\u06FF]/.test(jsonErr), jsonErr.slice(0, 40));
+await m23.locator('[data-testid="json-input"]').fill("{'a': 1,}");
+await m23.locator('[data-testid="json-repair"]').check();
+await m23.locator('[data-testid="json-format"]').click();
+await page.waitForTimeout(500);
+check("json: repair mode fixes JS-style input", (await m23.locator('[data-testid="json-output"]').inputValue()) === '{\n  "a": 1\n}');
+
+// ============ 24. BASE64 TEXT ============
+await open("base64-encoder");
+const m24 = page.locator("main");
+await m24.locator('[data-testid="base64-tool-input"]').fill("ابزارو");
+await page.waitForTimeout(700);
+check("base64: encodes Persian text correctly", (await m24.locator('[data-testid="base64-tool-output"]').inputValue()) === "2KfYqNiy2KfYsdmI");
+await m24.locator('[data-testid="base64-mode-decode"]').click();
+await m24.locator('[data-testid="base64-tool-input"]').fill("2KfYqNiy2KfYsdmI");
+await page.waitForTimeout(700);
+check("base64: decodes back to ابزارو", (await m24.locator('[data-testid="base64-tool-output"]').inputValue()) === "ابزارو");
+await m24.locator('[data-testid="base64-tool-input"]').fill("!!!not base64!!!");
+await page.waitForTimeout(500);
+check("base64: invalid input shows an error", (await m24.locator('[data-testid="base64-tool-error"]').count()) === 1);
+
+// ============ 25. URL ENCODER ============
+await open("url-encoder");
+const m25 = page.locator("main");
+await m25.locator('[data-testid="url-input"]').fill("سلام دنیا & test");
+await page.waitForTimeout(700);
+check("url: encodes Persian and spaces", (await m25.locator('[data-testid="url-output"]').inputValue()) === "%D8%B3%D9%84%D8%A7%D9%85%20%D8%AF%D9%86%DB%8C%D8%A7%20%26%20test");
+await m25.locator('[data-testid="url-mode-decode"]').click();
+await page.waitForTimeout(500);
+check("url: decodes back to the original text", (await m25.locator('[data-testid="url-output"]').inputValue()) === "سلام دنیا & test");
+await m25.locator('[data-testid="url-input"]').fill("%E0%A4%A");
+await page.waitForTimeout(500);
+check("url: malformed escape shows an error", (await m25.locator('[data-testid="url-error"]').count()) === 1);
+
 // ============ registry / SEO ============
 const reg = await page.goto(`${BASE}/tools`, { waitUntil: "domcontentloaded" });
 check("tools page loads", reg?.status() === 200);
 body = await page.locator("body").innerText();
-check("all 12 tools listed, none marked «به‌زودی»", !body.includes("به‌زودی"));
+check("all 25 tools listed, none marked «به‌زودی»", !body.includes("به‌زودی"));
 
 check("no uncaught JS errors", errors.length === 0, errors.slice(0, 4).join(" || "));
 

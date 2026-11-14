@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import type { Category } from "@/data/categories";
-import { tools } from "@/data/tools";
+import { countToolsInCategory } from "@/data/tools";
 import { toPersianDigits } from "@/lib/persian";
 
 interface CategoryCardProps {
@@ -11,7 +11,7 @@ interface CategoryCardProps {
 /** Card linking to a category page, with the number of tools it contains. */
 export function CategoryCard({ category }: CategoryCardProps) {
   const Icon = category.icon;
-  const count = tools.filter((tool) => tool.category === category.slug).length;
+  const count = countToolsInCategory(category.slug);
 
   return (
     <Link

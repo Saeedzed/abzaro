@@ -16,8 +16,21 @@ import { ImageResizer } from "@/components/tools/ImageResizer";
 import { ImageCompressor } from "@/components/tools/ImageCompressor";
 import { ImageToPdf } from "@/components/tools/ImageToPdf";
 import { PdfToImage } from "@/components/tools/PdfToImage";
+import { PdfCompressor } from "@/components/tools/PdfCompressor";
+import { PdfMerger } from "@/components/tools/PdfMerger";
+import { ImageFormatConverter } from "@/components/tools/ImageFormatConverter";
+import { ImageToBase64 } from "@/components/tools/ImageToBase64";
+import { ProfilePicture } from "@/components/tools/ProfilePicture";
+import { LoanCalculator } from "@/components/tools/LoanCalculator";
+import { BmiCalculator } from "@/components/tools/BmiCalculator";
+import { DateDiffCalculator } from "@/components/tools/DateDiffCalculator";
+import { ExactAgeCalculator } from "@/components/tools/ExactAgeCalculator";
+import { QrCodeGenerator } from "@/components/tools/QrCodeGenerator";
+import { JsonFormatter } from "@/components/tools/JsonFormatter";
+import { Base64Tool } from "@/components/tools/Base64Tool";
+import { UrlEncoder } from "@/components/tools/UrlEncoder";
 import { getCategory } from "@/data/categories";
-import { getToolBySlug, tools } from "@/data/tools";
+import { categoriesOf, getToolBySlug, tools } from "@/data/tools";
 import { siteConfig } from "@/config/site";
 
 export function generateStaticParams() {
@@ -77,6 +90,32 @@ function ToolImplementation({ slug }: { slug: string }) {
       return <ImageToPdf />;
     case "pdf-to-image":
       return <PdfToImage />;
+    case "pdf-compressor":
+      return <PdfCompressor />;
+    case "pdf-merger":
+      return <PdfMerger />;
+    case "image-format-converter":
+      return <ImageFormatConverter />;
+    case "image-to-base64":
+      return <ImageToBase64 />;
+    case "profile-picture":
+      return <ProfilePicture />;
+    case "loan-calculator":
+      return <LoanCalculator />;
+    case "bmi-calculator":
+      return <BmiCalculator />;
+    case "date-diff":
+      return <DateDiffCalculator />;
+    case "exact-age":
+      return <ExactAgeCalculator />;
+    case "qr-code-generator":
+      return <QrCodeGenerator />;
+    case "json-formatter":
+      return <JsonFormatter />;
+    case "base64-encoder":
+      return <Base64Tool />;
+    case "url-encoder":
+      return <UrlEncoder />;
     default: {
       const tool = getToolBySlug(slug);
       return tool ? <ToolPlaceholder tool={tool} /> : null;
@@ -93,7 +132,9 @@ export default async function ToolPage({
   const tool = getToolBySlug(slug);
   if (!tool) notFound();
 
-  const category = getCategory(tool.category);
+  const toolCategories = categoriesOf(tool)
+    .map((slug) => getCategory(slug))
+    .filter((category): category is NonNullable<typeof category> => Boolean(category));
   const Icon = tool.icon;
 
   const jsonLd = {
@@ -141,13 +182,18 @@ export default async function ToolPage({
           <p className="mt-2 max-w-2xl text-sm leading-7 text-ink-600 sm:text-base">
             {tool.description}
           </p>
-          {category && (
-            <a
-              href={`/categories/${category.slug}`}
-              className="mt-3 inline-block rounded-full bg-ink-100 px-3 py-1 text-xs font-medium text-ink-600 transition hover:bg-brand-50 hover:text-brand-700"
-            >
-              {category.title}
-            </a>
+          {toolCategories.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {toolCategories.map((category) => (
+                <a
+                  key={category.slug}
+                  href={`/categories/${category.slug}`}
+                  className="inline-block rounded-full bg-ink-100 px-3 py-1 text-xs font-medium text-ink-600 transition hover:bg-brand-50 hover:text-brand-700"
+                >
+                  {category.title}
+                </a>
+              ))}
+            </div>
           )}
         </div>
       </header>

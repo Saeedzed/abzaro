@@ -71,3 +71,24 @@
     appearance: textfield;
   }
 }
+
+@layer utilities {
+  /**
+   * Code / JSON panes.
+   *
+   * `dir="ltr"` alone is not enough inside an RTL page: the bidirectional
+   * algorithm still reorders a line that starts with `{` and then contains
+   * Persian text, which pushes JSON punctuation to the wrong side. Pinning the
+   * paragraph direction to LTR fixes that while keeping Persian words intact.
+   */
+  .code-pane,
+  textarea.code-pane,
+  input.code-pane {
+    direction: ltr;
+    unicode-bidi: plaintext;
+    text-align: left;
+  }
+  .code-pane::placeholder {
+    text-align: left;
+  }
+}

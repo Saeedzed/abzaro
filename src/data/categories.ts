@@ -1,6 +1,8 @@
 import {
   Calculator,
+  Code2,
   FileText,
+  FilePen,
   Image as ImageIcon,
   type LucideIcon,
 } from "lucide-react";
@@ -35,8 +37,22 @@ export const categories: Category[] = [
     slug: "images",
     title: "تصاویر",
     description:
-      "تغییر اندازه و فشرده‌سازی تصاویر؛ همه پردازش‌ها در مرورگر شما انجام می‌شود و فایلتان جایی آپلود نمی‌شود.",
+      "تغییر اندازه، فشرده‌سازی و تبدیل قالب تصاویر؛ همه پردازش‌ها در مرورگر شما انجام می‌شود و فایلتان جایی آپلود نمی‌شود.",
     icon: ImageIcon,
+  },
+  {
+    slug: "files",
+    title: "ویرایش فایل و PDF",
+    description:
+      "ابزارهای کار با فایل و PDF؛ تبدیل عکس به PDF، فشرده‌سازی و ادغام PDF، و تبدیل صفحه‌های PDF به تصویر — بدون آپلود فایل.",
+    icon: FilePen,
+  },
+  {
+    slug: "dev",
+    title: "برنامه‌نویسی و وب",
+    description:
+      "ابزارهای کاربردی توسعه‌دهندگان؛ تولید QR Code، مرتب‌سازی و اعتبارسنجی JSON، و کدگذاری Base64 و URL.",
+    icon: Code2,
   },
 ];
 

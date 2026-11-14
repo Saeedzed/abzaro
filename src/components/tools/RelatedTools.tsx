@@ -1,5 +1,5 @@
 import type { Tool } from "@/data/tools";
-import { tools } from "@/data/tools";
+import { categoriesOf, tools } from "@/data/tools";
 import { ToolGrid } from "@/components/tools/ToolGrid";
 
 interface RelatedToolsProps {
@@ -13,10 +13,11 @@ interface RelatedToolsProps {
  */
 export function RelatedTools({ currentTool, limit = 3 }: RelatedToolsProps) {
   const others = tools.filter((tool) => tool.id !== currentTool.id);
-  const sameCategory = others.filter(
-    (tool) => tool.category === currentTool.category,
+  const currentCategories = categoriesOf(currentTool);
+  const sameCategory = others.filter((tool) =>
+    categoriesOf(tool).some((slug) => currentCategories.includes(slug)),
   );
-  const rest = others.filter((tool) => tool.category !== currentTool.category);
+  const rest = others.filter((tool) => !sameCategory.includes(tool));
   const related = [...sameCategory, ...rest].slice(0, limit);
 
   if (related.length === 0) return null;
