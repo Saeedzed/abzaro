@@ -1,0 +1,175 @@
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { Container } from "@/components/layout/Container";
+import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
+import { RelatedTools } from "@/components/tools/RelatedTools";
+import { ToolPlaceholder } from "@/components/tools/ToolPlaceholder";
+import { WordCounter } from "@/components/tools/WordCounter";
+import { CharacterCounter } from "@/components/tools/CharacterCounter";
+import { PersianNumberConverter } from "@/components/tools/PersianNumberConverter";
+import { PersianTextCleaner } from "@/components/tools/PersianTextCleaner";
+import { NumberToWords } from "@/components/tools/NumberToWords";
+import { PercentageCalculator } from "@/components/tools/PercentageCalculator";
+import { DiscountCalculator } from "@/components/tools/DiscountCalculator";
+import { AgeCalculator } from "@/components/tools/AgeCalculator";
+import { ImageResizer } from "@/components/tools/ImageResizer";
+import { ImageCompressor } from "@/components/tools/ImageCompressor";
+import { getCategory } from "@/data/categories";
+import { getToolBySlug, tools } from "@/data/tools";
+import { siteConfig } from "@/config/site";
+
+export function generateStaticParams() {
+  return tools.map((tool) => ({ slug: tool.slug }));
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const tool = getToolBySlug(slug);
+  if (!tool) {
+    return { title: "ابزار یافت نشد" };
+  }
+  return {
+    title: tool.seoTitle,
+    description: tool.seoDescription,
+    keywords: tool.keywords,
+    alternates: { canonical: `/tools/${tool.slug}` },
+    openGraph: {
+      type: "website",
+      locale: siteConfig.locale,
+      url: `${siteConfig.url}/tools/${tool.slug}`,
+      siteName: siteConfig.name,
+      title: `${tool.seoTitle} | ${siteConfig.name}`,
+      description: tool.seoDescription,
+    },
+  };
+}
+
+/** Renders the real implementation for live tools, placeholder otherwise. */
+function ToolImplementation({ slug }: { slug: string }) {
+  switch (slug) {
+    case "word-counter":
+      return <WordCounter />;
+    case "character-counter":
+      return <CharacterCounter />;
+    case "persian-number-converter":
+      return <PersianNumberConverter />;
+    case "persian-text-cleaner":
+      return <PersianTextCleaner />;
+    case "number-to-words":
+      return <NumberToWords />;
+    case "percentage-calculator":
+      return <PercentageCalculator />;
+    case "discount-calculator":
+      return <DiscountCalculator />;
+    case "age-calculator":
+      return <AgeCalculator />;
+    case "image-resizer":
+      return <ImageResizer />;
+    case "image-compressor":
+      return <ImageCompressor />;
+    default: {
+      const tool = getToolBySlug(slug);
+      return tool ? <ToolPlaceholder tool={tool} /> : null;
+    }
+  }
+}
+
+export default async function ToolPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  const tool = getToolBySlug(slug);
+  if (!tool) notFound();
+
+  const category = getCategory(tool.category);
+  const Icon = tool.icon;
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: tool.title,
+    applicationCategory: "UtilitiesApplication",
+    operatingSystem: "Web",
+    inLanguage: "fa",
+    offers: { "@type": "Offer", price: "0", priceCurrency: "IRR" },
+    url: `${siteConfig.url}/tools/${tool.slug}`,
+    description: tool.seoDescription,
+  };
+
+  return (
+    <Container className="py-8 sm:py-12">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+
+      <Breadcrumbs
+        items={[
+          { label: "خانه", href: "/" },
+          { label: "ابزارها", href: "/tools" },
+          { label: tool.title },
+        ]}
+      />
+
+      <header className="mt-6 flex items-start gap-4">
+        <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-brand-600 text-white shadow-card">
+          <Icon className="h-7 w-7" aria-hidden="true" />
+        </span>
+        <div>
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="text-2xl font-extrabold text-ink-900 sm:text-3xl">
+              {tool.title}
+            </h1>
+            {tool.status === "soon" && (
+              <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-medium text-amber-700 ring-1 ring-amber-200">
+                به‌زودی
+              </span>
+            )}
+          </div>
+          <p className="mt-2 max-w-2xl text-sm leading-7 text-ink-600 sm:text-base">
+            {tool.description}
+          </p>
+          {category && (
+            <a
+              href={`/categories/${category.slug}`}
+              className="mt-3 inline-block rounded-full bg-ink-100 px-3 py-1 text-xs font-medium text-ink-600 transition hover:bg-brand-50 hover:text-brand-700"
+            >
+              {category.title}
+            </a>
+          )}
+        </div>
+      </header>
+
+      <section className="mt-8" aria-label={`ابزار ${tool.title}`}>
+        <ToolImplementation slug={tool.slug} />
+      </section>
+
+      <section className="mt-12" aria-labelledby="about-tool-heading">
+        <h2
+          id="about-tool-heading"
+          className="text-xl font-extrabold text-ink-900 sm:text-2xl"
+        >
+          درباره «{tool.title}»
+        </h2>
+        <div className="mt-4 max-w-3xl space-y-4 text-sm leading-8 text-ink-600 sm:text-base">
+          <p>{tool.description}</p>
+          <p>
+            این ابزار به‌صورت رایگان و بدون نیاز به ثبت‌نام در دسترس است. همهٔ
+            پردازش‌ها در مرورگر شما انجام می‌شود؛ بنابراین متن یا فایل شما
+            هرگز به سرور ارسال نمی‌شود و حریم خصوصی‌تان حفظ می‌شود.
+          </p>
+        </div>
+      </section>
+
+      <div className="mt-12 border-t border-ink-200 pt-10">
+        <RelatedTools currentTool={tool} />
+      </div>
+    </Container>
+  );
+}

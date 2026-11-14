@@ -1,0 +1,43 @@
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+# Node 20 — matches the engines field in package.json.
+[build.environment]
+  NODE_VERSION = "20"
+
+# Netlify's Next.js runtime (OpenNext) is installed automatically for Next.js
+# sites, but we pin it here so the build is reproducible.
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# Long-cache the immutable build assets.
+[[headers]]
+  for = "/_next/static/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Long-cache generated images.
+[[headers]]
+  for = "/_next/image*"
+  [headers.values]
+    Cache-Control = "public, max-age=60, stale-while-revalidate=86400"
+
+# Security headers. X-Frame-Options is intentionally absent so the site can be
+# embedded in previews; see next.config.ts for the rationale.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=(), interest-cohort=()"
+
+# Deploy previews and branch deploys get their own site URL so canonical links
+# and the sitemap never point at production from a preview build. Netlify's
+# DEPLOY_PRIME_URL is a better fit, but context env vars cannot interpolate it,
+# so these are placeholders you can override in the Netlify UI.
+[context.deploy-preview.environment]
+  NEXT_PUBLIC_SITE_URL = "https://deploy-preview.netlify.app"
+
+[context.branch-deploy.environment]
+  NEXT_PUBLIC_SITE_URL = "https://branch-deploy.netlify.app"

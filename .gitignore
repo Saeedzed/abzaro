@@ -1,0 +1,29 @@
+# Build output
+node_modules
+.next
+out
+build
+dist
+coverage
+*.tsbuildinfo
+next-env.d.ts
+
+# Environment — never commit real values
+.env
+.env.local
+.env*.local
+.env.production
+
+# Local Netlify folder
+.netlify
+
+# Editor / OS
+.DS_Store
+*.log
+.vercel
+.idea
+.vscode
+
+# Tooling caches
+.cache
+.turbo
