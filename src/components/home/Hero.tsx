@@ -39,8 +39,11 @@ export function Hero() {
           <SearchBox
             size="large"
             placeholder="ابزار موردنظرت را جستجو کن…"
-            className="mx-auto mt-8 max-w-xl text-start"
+            className="mx-auto mt-9 max-w-2xl text-start"
           />
+          <p className="mt-3 text-xs text-ink-500">
+            بدون نصب و بدون ثبت‌نام · همهٔ پردازش‌ها در مرورگر شما انجام می‌شود
+          </p>
 
           <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
             <span className="text-xs font-medium text-ink-500">

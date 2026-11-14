@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Container } from "@/components/layout/Container";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { RelatedTools } from "@/components/tools/RelatedTools";
+import { toPersianDigits } from "@/lib/persian";
 import { ToolPlaceholder } from "@/components/tools/ToolPlaceholder";
 import { WordCounter } from "@/components/tools/WordCounter";
 import { CharacterCounter } from "@/components/tools/CharacterCounter";
@@ -198,8 +200,36 @@ export default async function ToolPage({
         </div>
       </header>
 
-      <section className="mt-8" aria-label={`ابزار ${tool.title}`}>
+      <section
+        className="mt-8 rounded-3xl border border-ink-200 bg-ink-50/60 p-4 shadow-card sm:p-6 lg:p-8"
+        aria-label={`ابزار ${tool.title}`}
+      >
         <ToolImplementation slug={tool.slug} />
+      </section>
+
+      <section className="mt-12" aria-labelledby="how-to-heading">
+        <p className="text-xs font-bold tracking-wide text-brand-600">
+          راهنما
+        </p>
+        <h2
+          id="how-to-heading"
+          className="mt-1 text-xl font-extrabold text-ink-900 sm:text-2xl"
+        >
+          آموزش استفاده از «{tool.title}»
+        </h2>
+        <ol className="mt-5 grid gap-3 sm:gap-4 lg:grid-cols-3">
+          {tool.steps.map((step, index) => (
+            <li
+              key={step}
+              className="flex gap-3 rounded-2xl border border-ink-200 bg-white p-4 shadow-card sm:p-5"
+            >
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-50 text-sm font-bold text-brand-700">
+                {toPersianDigits(index + 1)}
+              </span>
+              <p className="text-sm leading-7 text-ink-700">{step}</p>
+            </li>
+          ))}
+        </ol>
       </section>
 
       <section className="mt-12" aria-labelledby="about-tool-heading">
@@ -215,6 +245,16 @@ export default async function ToolPage({
             این ابزار به‌صورت رایگان و بدون نیاز به ثبت‌نام در دسترس است. همهٔ
             پردازش‌ها در مرورگر شما انجام می‌شود؛ بنابراین متن یا فایل شما
             هرگز به سرور ارسال نمی‌شود و حریم خصوصی‌تان حفظ می‌شود.
+          </p>
+          <p>
+            اگر ابزار درست کار نکرد یا پیشنهادی برای بهتر شدنش داشتید، از صفحهٔ{" "}
+            <Link
+              href="/contact"
+              className="font-semibold text-brand-600 hover:text-brand-700"
+            >
+              تماس با ما
+            </Link>{" "}
+            بنویسید؛ همهٔ ابزارها بر اساس بازخورد کاربران بهتر می‌شوند.
           </p>
         </div>
       </section>

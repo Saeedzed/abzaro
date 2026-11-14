@@ -22,11 +22,14 @@ export const metadata: Metadata = {
 };
 
 function SectionHeading({
+  id,
   title,
   description,
   href,
   linkLabel,
 }: {
+  /** Must match the `aria-labelledby` of the surrounding <section>. */
+  id: string;
   title: string;
   description?: string;
   href?: string;
@@ -35,7 +38,10 @@ function SectionHeading({
   return (
     <div className="flex flex-wrap items-end justify-between gap-4">
       <div>
-        <h2 className="text-2xl font-extrabold text-ink-900 sm:text-3xl">
+        <h2
+          id={id}
+          className="text-2xl font-extrabold text-ink-900 sm:text-3xl"
+        >
           {title}
         </h2>
         {description && (
@@ -85,25 +91,15 @@ export default function HomePage() {
     <>
       <Hero />
 
-      {/* Popular tools */}
-      <section className="py-14 sm:py-16" aria-labelledby="popular-tools-heading">
-        <Container>
-          <SectionHeading
-            title="ابزارهای پرطرفدار"
-            description="پراستفاده‌ترین ابزارهای ابزارو؛ برای کارهای روزمرهٔ متن، اعداد و محاسبات."
-            href="/tools"
-            linkLabel="همه ابزارها"
-          />
-          <ToolGrid tools={popularTools} className="mt-8" />
-        </Container>
-      </section>
-
       {/* Categories */}
       <section className="bg-ink-50 py-14 sm:py-16" aria-labelledby="categories-heading">
         <Container>
           <SectionHeading
+            id="categories-heading"
             title="دسته‌بندی ابزارها"
             description="ابزارها بر اساس نوع کار دسته‌بندی شده‌اند تا سریع‌تر به ابزار موردنظرتان برسید."
+            href="/categories"
+            linkLabel="همه دسته‌بندی‌ها"
           />
           <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
             {categories.map((category) => (
@@ -113,10 +109,25 @@ export default function HomePage() {
         </Container>
       </section>
 
+      {/* Popular tools */}
+      <section className="py-14 sm:py-16" aria-labelledby="popular-tools-heading">
+        <Container>
+          <SectionHeading
+            id="popular-tools-heading"
+            title="ابزارهای پرطرفدار"
+            description="پراستفاده‌ترین ابزارهای ابزارو؛ برای کارهای روزمرهٔ متن، اعداد و محاسبات."
+            href="/tools"
+            linkLabel="همه ابزارها"
+          />
+          <ToolGrid tools={popularTools} className="mt-8" />
+        </Container>
+      </section>
+
       {/* Recently added */}
       <section className="py-14 sm:py-16" aria-labelledby="recent-tools-heading">
         <Container>
           <SectionHeading
+            id="recent-tools-heading"
             title="ابزارهای تازه"
             description="جدیدترین ابزارهایی که به مجموعهٔ ابزارو اضافه شده‌اند."
             href="/tools"

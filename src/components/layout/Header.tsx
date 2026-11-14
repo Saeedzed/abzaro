@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Menu, Wrench, X } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { Menu, X } from "lucide-react";
 import { Container } from "@/components/layout/Container";
+import { Logo } from "@/components/layout/Logo";
 import { SearchBox } from "@/components/search/SearchBox";
 import { siteConfig } from "@/config/site";
 import { cn } from "@/lib/utils";
@@ -11,6 +13,7 @@ import { cn } from "@/lib/utils";
 const NAV_LINKS = [
   { href: "/", label: "خانه" },
   { href: "/tools", label: "ابزارها" },
+  { href: "/categories", label: "دسته‌بندی" },
   { href: "/blog", label: "وبلاگ" },
   { href: "/about", label: "درباره ما" },
   { href: "/contact", label: "تماس با ما" },
@@ -18,6 +21,10 @@ const NAV_LINKS = [
 
 export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const pathname = usePathname();
+
+  const isActive = (href: string) =>
+    href === "/" ? pathname === "/" : pathname.startsWith(href);
 
   return (
     <header className="sticky top-0 z-40 border-b border-ink-200/70 bg-white/90 backdrop-blur">
@@ -29,11 +36,9 @@ export function Header() {
             className="flex shrink-0 items-center gap-2.5"
             aria-label={`${siteConfig.name} — صفحه اصلی`}
           >
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-600 text-white shadow-card">
-              <Wrench className="h-5 w-5" aria-hidden="true" />
-            </span>
+            <Logo className="h-10 w-10 transition-transform duration-200 hover:scale-105" />
             <span className="leading-tight">
-              <span className="block text-lg font-extrabold text-ink-900">
+              <span className="block text-lg font-extrabold tracking-tight text-ink-900">
                 {siteConfig.name}
               </span>
               <span className="hidden text-[11px] text-ink-500 sm:block">
@@ -51,7 +56,13 @@ export function Header() {
               <Link
                 key={link.href}
                 href={link.href}
-                className="rounded-lg px-3 py-2 text-sm font-medium text-ink-600 transition hover:bg-ink-100 hover:text-ink-900"
+                aria-current={isActive(link.href) ? "page" : undefined}
+                className={cn(
+                  "rounded-lg px-3 py-2 text-sm font-medium transition",
+                  isActive(link.href)
+                    ? "bg-brand-50 text-brand-700"
+                    : "text-ink-600 hover:bg-ink-100 hover:text-ink-900",
+                )}
               >
                 {link.label}
               </Link>
@@ -95,7 +106,13 @@ export function Header() {
                 key={link.href}
                 href={link.href}
                 onClick={() => setMobileOpen(false)}
-                className="rounded-lg px-3 py-2.5 text-sm font-medium text-ink-700 transition hover:bg-ink-100"
+                aria-current={isActive(link.href) ? "page" : undefined}
+                className={cn(
+                  "rounded-lg px-3 py-2.5 text-sm font-medium transition",
+                  isActive(link.href)
+                    ? "bg-brand-50 text-brand-700"
+                    : "text-ink-700 hover:bg-ink-100",
+                )}
               >
                 {link.label}
               </Link>

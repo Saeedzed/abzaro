@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Wrench } from "lucide-react";
+import { Logo } from "@/components/layout/Logo";
 import { Container } from "@/components/layout/Container";
 import { categories } from "@/data/categories";
 import { popularTools } from "@/data/tools";
@@ -8,6 +8,7 @@ import { siteConfig } from "@/config/site";
 const QUICK_LINKS = [
   { href: "/", label: "صفحه اصلی" },
   { href: "/tools", label: "همه ابزارها" },
+  { href: "/categories", label: "دسته‌بندی‌ها" },
   { href: "/blog", label: "وبلاگ" },
   { href: "/about", label: "درباره ابزارو" },
   { href: "/contact", label: "تماس با ما" },
@@ -26,9 +27,7 @@ export function Footer() {
           {/* Brand */}
           <div>
             <Link href="/" className="flex items-center gap-2.5">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-600 text-white">
-                <Wrench className="h-5 w-5" aria-hidden="true" />
-              </span>
+              <Logo className="h-9 w-9" />
               <span className="text-lg font-extrabold text-ink-900">
                 {siteConfig.name}
               </span>

@@ -459,6 +459,43 @@ await m25.locator('[data-testid="url-input"]').fill("%E0%A4%A");
 await page.waitForTimeout(500);
 check("url: malformed escape shows an error", (await m25.locator('[data-testid="url-error"]').count()) === 1);
 
+// ============ navigation / information architecture ============
+await page.goto(`${BASE}/`, { waitUntil: "domcontentloaded" });
+await page.waitForTimeout(800);
+body = await page.locator("body").innerText();
+check("home: navigation has a دسته‌بندی entry", /دسته‌بندی/.test(await page.locator("header nav").first().innerText()));
+check("home: categories section comes before popular tools", await page.evaluate(() => {
+  const cats = document.getElementById("categories-heading");
+  const popular = document.getElementById("popular-tools-heading");
+  if (!cats || !popular) return false;
+  return Boolean(cats.compareDocumentPosition(popular) & Node.DOCUMENT_POSITION_FOLLOWING);
+}));
+
+check("home: brand logo (inline SVG) renders in the header", (await page.locator("header svg[viewBox='0 0 40 40']").count()) >= 1);
+check("home: hero has the large search field", (await page.locator("input[type='search']").count()) >= 1);
+
+const catsPage = await page.goto(`${BASE}/categories`, { waitUntil: "domcontentloaded" });
+check("categories page loads", catsPage?.status() === 200);
+check("categories page lists all 5 categories", (await page.locator("main a[href^='/categories/']").count()) >= 5);
+
+await page.goto(`${BASE}/categories/images`, { waitUntil: "domcontentloaded" });
+await page.waitForTimeout(600);
+const imagesBody = await page.locator("main").innerText();
+check("images category: ۵ tools", has(imagesBody, 5), imagesBody.match(/[۰-۹]+ ابزار در این دسته‌بندی/)?.[0] ?? "");
+check("images category: no PDF tools", !/PDF/.test(imagesBody));
+check("images category: keeps the 3 new image tools", /JPG|Base64|پروفایل/.test(imagesBody));
+
+await page.goto(`${BASE}/categories/files`, { waitUntil: "domcontentloaded" });
+await page.waitForTimeout(600);
+const filesBody = await page.locator("main").innerText();
+check("files category: ۴ tools", has(filesBody, 4), filesBody.match(/[۰-۹]+ ابزار در این دسته‌بندی/)?.[0] ?? "");
+check("files category: contains all four PDF tools", ["عکس به PDF", "PDF به عکس", "فشرده‌سازی PDF", "ادغام PDF"].every((t) => filesBody.includes(t)));
+
+await page.goto(`${BASE}/tools/word-counter`, { waitUntil: "domcontentloaded" });
+await page.waitForTimeout(800);
+check("tool page: has a «آموزش استفاده» guide with 3 steps", (await page.locator("section[aria-labelledby='how-to-heading'] ol li").count()) === 3);
+check("tool page: keeps about + related-tools sections", (await page.locator("#about-tool-heading, #how-to-heading").count()) === 2 && (await page.locator("body").innerText()).includes("ابزارهای مرتبط"));
+
 // ============ registry / SEO ============
 const reg = await page.goto(`${BASE}/tools`, { waitUntil: "domcontentloaded" });
 check("tools page loads", reg?.status() === 200);

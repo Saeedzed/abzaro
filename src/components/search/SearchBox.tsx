@@ -88,14 +88,16 @@ export function SearchBox({
         role="search"
         onSubmit={(event) => event.preventDefault()}
         className={cn(
-          "flex items-center gap-2 rounded-xl border border-ink-200 bg-white shadow-card transition focus-within:border-brand-400 focus-within:ring-4 focus-within:ring-brand-100",
-          isLarge ? "px-4 py-3.5" : "px-3 py-2",
+          "flex items-center gap-2 border bg-white transition focus-within:border-brand-400 focus-within:ring-4 focus-within:ring-brand-100",
+          isLarge
+            ? "rounded-2xl border-ink-200 px-5 py-4 shadow-card-hover focus-within:shadow-lg sm:py-4.5"
+            : "rounded-xl border-ink-200 shadow-card px-3 py-2",
         )}
       >
         <Search
           className={cn(
             "shrink-0 text-ink-400",
-            isLarge ? "h-5 w-5" : "h-4 w-4",
+            isLarge ? "h-5.5 w-5.5 text-brand-500" : "h-4 w-4",
           )}
           aria-hidden="true"
         />
@@ -120,7 +122,7 @@ export function SearchBox({
           }
           className={cn(
             "w-full bg-transparent outline-none placeholder:text-ink-400",
-            isLarge ? "text-base sm:text-lg" : "text-sm",
+            isLarge ? "text-base sm:text-lg lg:text-xl" : "text-sm",
           )}
         />
         {query && (
