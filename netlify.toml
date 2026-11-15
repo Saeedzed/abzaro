@@ -1,51 +1,20 @@
 [build]
   command = "npm run build"
-  publish = ".next"
+  publish = "out"
 
-# Node 20 — matches the engines field in package.json.
+# Netlify's default is Node 22 these days, but pinning it makes the build
+# reproducible and avoids a silent toolchain switch.
 [build.environment]
-  NODE_VERSION = "20"
+  NODE_VERSION = "22"
+  NEXT_TELEMETRY_DISABLED = "1"
+  # The site is a pure static export: no API routes, no server rendering.
+  # This is the same switch the local `npm run build:static` uses.
+  ABZARO_EXPORT = "1"
 
-# Netlify's Next.js runtime (OpenNext) is installed automatically for Next.js
-# sites, but we pin it here so the build is reproducible.
-[[plugins]]
-  package = "@netlify/plugin-nextjs"
-
-# The ffmpeg.wasm core is fetched by the video tools at runtime. It is
-# content-addressed by version (the npm packages are exact-pinned), so it can
-# be cached for a month; the .wasm is streamed with range support by Netlify.
-[[headers]]
-  for = "/ffmpeg/*"
-  [headers.values]
-    Cache-Control = "public, max-age=2592000"
-
-# Long-cache the immutable build assets.
-[[headers]]
-  for = "/_next/static/*"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
-
-# Long-cache generated images.
-[[headers]]
-  for = "/_next/image*"
-  [headers.values]
-    Cache-Control = "public, max-age=60, stale-while-revalidate=86400"
-
-# Security headers. X-Frame-Options is intentionally absent so the site can be
-# embedded in previews; see next.config.ts for the rationale.
-[[headers]]
-  for = "/*"
-  [headers.values]
-    X-Content-Type-Options = "nosniff"
-    Referrer-Policy = "strict-origin-when-cross-origin"
-    Permissions-Policy = "camera=(), microphone=(), geolocation=(), interest-cohort=()"
-
-# Deploy previews and branch deploys get their own site URL so canonical links
-# and the sitemap never point at production from a preview build. Netlify's
-# DEPLOY_PRIME_URL is a better fit, but context env vars cannot interpolate it,
-# so these are placeholders you can override in the Netlify UI.
-[context.deploy-preview.environment]
-  NEXT_PUBLIC_SITE_URL = "https://deploy-preview.netlify.app"
-
-[context.branch-deploy.environment]
-  NEXT_PUBLIC_SITE_URL = "https://branch-deploy.netlify.app"
+# Next's static export emits directory-style URLs (/tools/doc-invoice/index.html),
+# so clean URLs need no rewrite rules. Anything unknown should land on the 404
+# page Next generated rather than Netlify's own.
+[[redirects]]
+  from = "/*"
+  to = "/404.html"
+  status = 404
