@@ -31,10 +31,18 @@ const isStaticExport = process.env.ABZARO_EXPORT === "1";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  /**
+   * `standalone` emits a self-contained server bundle (`.next/standalone`) that
+   * is all the Docker image needs. It is inactive for the plain `next start`
+   * and for the static export, so nothing else changes.
+   */
+  output: isStaticExport ? "export" : undefined,
+  ...(process.env.ABZARO_STANDALONE === "1" && !isStaticExport
+    ? { output: "standalone" as const }
+    : {}),
   poweredByHeader: false,
   ...(isStaticExport
     ? {
-        output: "export" as const,
         // Emit `path/index.html` instead of `path.html` so static hosting
         // (Netlify Drop, S3, nginx) resolves clean URLs without rewrites.
         trailingSlash: true,

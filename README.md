@@ -157,3 +157,7 @@ NEXT_PUBLIC_SITE_URL="https://abzaro.ir"
 **ابزارهای تصویری به Canvas متکی‌اند و آپلود نمی‌کنند.** `createImageBitmap` فایل را
 می‌خواند، روی canvas کشیده می‌شود و `canvas.toBlob` خروجی را می‌سازد. `ImageBitmap` پس
 از استفاده `close()` می‌شود و object URLها هم پاک می‌شوند تا حافظه نشت نکند.
+
+## استقرار روی لیارا
+
+راهنمای کامل: [DEPLOY-LIARA.md](./DEPLOY-LIARA.md)

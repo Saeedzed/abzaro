@@ -1,0 +1,10 @@
+node_modules
+.next
+.git
+.github
+*.zip
+/tmp
+scripts/e2e-*.mjs
+out
+coverage
+.env.local

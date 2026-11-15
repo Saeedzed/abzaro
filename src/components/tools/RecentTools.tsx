@@ -5,7 +5,6 @@ import { ArrowLeft, History, X } from "lucide-react";
 import { tools } from "@/data/tools";
 import { IconTile } from "@/components/ui/IconTile";
 import { useRecentTools } from "@/lib/use-recent-tools";
-import { useSession } from "@/lib/use-session";
 
 /**
  * «اخیراً استفاده کردید» — a compact shortcut strip on the homepage, filled
@@ -13,8 +12,7 @@ import { useSession } from "@/lib/use-session";
  * visitors who have never opened a tool see no empty box.
  */
 export function RecentTools() {
-  const { session } = useSession();
-  const { slugs, ready, clear } = useRecentTools(session?.id ?? null);
+  const { slugs, ready, clear } = useRecentTools();
   const recent = slugs
     .map((slug) => tools.find((tool) => tool.slug === slug))
     .filter((tool): tool is (typeof tools)[number] => Boolean(tool))
@@ -30,7 +28,7 @@ export function RecentTools() {
           className="flex items-center gap-1.5 text-xs font-bold text-ink-500"
         >
           <History className="h-3.5 w-3.5" aria-hidden="true" />
-          {session ? `اخیراً استفاده کردید، ${session.name}` : "اخیراً استفاده کردید"}
+          اخیراً استفاده کردید
         </h2>
 
         <ul className="flex flex-1 flex-wrap gap-2">
