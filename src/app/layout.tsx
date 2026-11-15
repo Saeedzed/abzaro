@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
+import Script from "next/script";
 import "@fontsource-variable/vazirmatn";
 import "./globals.css";
 import { Header } from "@/components/layout/Header";
@@ -98,6 +99,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <MobileTabBar />
         <CommandPalette />
         <ServiceWorkerRegistrar />
+        <Script
+          src="https://static.cloudflareinsights.com/beacon.min.js"
+          data-cf-beacon={JSON.stringify({ token: "d99dbaf2f0974336988f7302c4784ea8" })}
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );
