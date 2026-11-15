@@ -69,6 +69,29 @@ export function CategoryArt({
         </svg>
       );
 
+    /* مالی و حقوق — a receipt with a currency line and a stamp */
+    case "finance":
+      return (
+        <svg {...common}>
+          <path d="M42 6h40v46l-7-5-6 5-7-5-6 5-7-5-7 5z" fill="currentColor" opacity="0.2" />
+          <rect x="50" y="18" width="24" height="4" rx="2" fill="currentColor" opacity="0.55" />
+          <rect x="50" y="28" width="16" height="4" rx="2" fill="currentColor" opacity="0.4" />
+          <rect x="50" y="38" width="20" height="4" rx="2" fill="currentColor" opacity="0.3" />
+          <circle cx="96" cy="30" r="14" fill="currentColor" opacity="0.16" />
+          <path d="M89 30h14M96 23v14" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" opacity="0.7" />
+        </svg>
+      );
+
+    /* ویدیو و صدا — a play frame with sound waves */
+    case "video":
+      return (
+        <svg {...common}>
+          <rect x="8" y="12" width="64" height="42" rx="8" fill="currentColor" opacity="0.2" />
+          <path d="M33 24l17 9-17 9z" fill="currentColor" opacity="0.75" />
+          <path d="M82 26a12 12 0 010 16M90 20a20 20 0 010 28M98 15a28 28 0 010 38" stroke="currentColor" strokeWidth="3" strokeLinecap="round" fill="none" opacity="0.45" />
+        </svg>
+      );
+
     /* برنامه‌نویسی و وب — code brackets in a browser window */
     case "dev":
       return (

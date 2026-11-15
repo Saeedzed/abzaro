@@ -19,7 +19,7 @@ export function VideoCompressor() {
     <VideoToolShell
       id="video-compressor"
       title="ویدیو را انتخاب کنید"
-      hint="MP4، MOV، MKV یا WebM — حداکثر ۲۰۰ مگابایت"
+      hint="MP4، MOV، MKV یا WebM — تا ۲ گیگابایت"
       run={async (file) => {
         const inputName = `input.${extensionOf(file.name)}`;
         const outputName = `${baseNameOf(file.name)}-compressed.mp4`;

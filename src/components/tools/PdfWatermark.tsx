@@ -6,6 +6,7 @@ import { downloadBlob, formatBytes } from "@/lib/image";
 import { baseFileName } from "@/lib/pdf-pages";
 import { inspectPdf, isPdfOpError } from "@/lib/pdf-arrange";
 import { stampPdf, type StampPosition } from "@/lib/pdf-reorder";
+import { PDF_LARGE_BYTES } from "@/lib/pdf-raster";
 import { toPersianDigits } from "@/lib/persian";
 import { cn } from "@/lib/utils";
 import { UploadZone } from "./UploadZone";
@@ -86,7 +87,7 @@ export function PdfWatermark() {
             <UploadZone
               accept="application/pdf"
               title="فایل PDF را انتخاب کنید"
-              hint="حداکثر ۴۰ مگابایت"
+              hint="بدون محدودیت حجم"
               buttonLabel="انتخاب فایل PDF"
               onFiles={(files) => void handleFile(files[0])}
               testId="pdf-watermark-input"
@@ -96,6 +97,13 @@ export function PdfWatermark() {
               <span className="truncate font-semibold">{file.name}</span>
               <span>{toPersianDigits(pageCount)} صفحه</span>
             </div>
+          )}
+
+          {file && file.size > PDF_LARGE_BYTES && (
+            <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] leading-6 text-amber-800">
+              این فایل بزرگ است ({formatBytes(file.size)}). محدودیتی برای حجم
+              نداریم، اما روی دستگاه‌های کم‌حافظه ممکن است کند شود.
+            </p>
           )}
 
           <label className="flex items-center gap-2 rounded-xl border border-ink-200 px-3 py-2 text-xs font-semibold text-ink-700">

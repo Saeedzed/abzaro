@@ -166,7 +166,7 @@ export function CommandPalette() {
                   </button>
                 );
               })}
-              <p className="mt-2 px-2 text-[11px] leading-6 text-ink-400">
+              <p className="mt-2 hidden px-2 text-[11px] leading-6 text-ink-400 sm:block">
                 از هر صفحه‌ای با{" "}
                 <kbd className="rounded border border-ink-200 px-1 text-[10px]">
                   Ctrl

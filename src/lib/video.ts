@@ -8,7 +8,17 @@
  * backend.
  */
 
-export const MAX_VIDEO_BYTES = 200 * 1024 * 1024; // 200 MB
+/**
+ * No hard size limit: ffmpeg only touches the parts of the file it needs, so a
+ * 2 GB source works as long as the device has room. We do warn (not block) for
+ * very large files, because decoding still needs memory.
+ */
+export const LARGE_VIDEO_BYTES = 2 * 1024 * 1024 * 1024; // 2 GB
+/**
+ * Above this we show a soft "this may be slow on a phone" hint. It is only
+ * advice — nothing is blocked, since the mounted file is streamed, not copied.
+ */
+export const VIDEO_MEMORY_HINT_BYTES = 300 * 1024 * 1024; // 300 MB
 
 export const ACCEPTED_VIDEO_TYPES = [
   "video/mp4",
@@ -47,8 +57,8 @@ export async function inspectVideo(file: File): Promise<VideoInfo | VideoError> 
   if (!looksLikeVideo) {
     return { error: "فقط فایل‌های ویدیویی (MP4، MOV، WebM، MKV، AVI) پذیرفته می‌شوند." };
   }
-  if (file.size > MAX_VIDEO_BYTES) {
-    return { error: "حجم فایل باید کمتر از ۲۰۰ مگابایت باشد." };
+  if (file.size === 0) {
+    return { error: "این فایل خالی است." };
   }
 
   const url = URL.createObjectURL(file);
@@ -111,6 +121,13 @@ export interface FFmpegInstance {
   writeFile(path: string, data: Uint8Array): Promise<boolean>;
   readFile(path: string): Promise<Uint8Array | string>;
   deleteFile(path: string): Promise<boolean>;
+  mount(
+    fsType: "WORKERFS" | "MEMFS" | "IDBFS" | "NODEFS" | "PROXYFS" | "NODERAWFS",
+    options: { files?: File[]; blobs?: { name: string; data: Blob }[] },
+    mountPoint: string,
+  ): Promise<boolean>;
+  unmount(mountPoint: string): Promise<boolean>;
+  createDir(path: string): Promise<boolean>;
   terminate(): void;
   on(event: "log", callback: (payload: { type: string; message: string }) => void): void;
   on(event: "progress", callback: (payload: { progress: number; time: number }) => void): void;
@@ -194,8 +211,17 @@ export interface ConvertOptions {
   args: string[];
   inputName: string;
   outputName: string;
+  /**
+   * Extra ffmpeg passes run after `args`, in the same mounted session (GIF
+   * palette generation: pass 1 writes the palette, pass 2 consumes it).
+   */
+  passes?: string[][];
+  /** Clip length in seconds — lets us turn ffmpeg's time= output into progress. */
+  durationSeconds?: number | null;
   onProgress?: (ratio: number) => void;
   onLog?: (line: string) => void;
+  /** Lets the user cancel a long conversion. */
+  signal?: AbortSignal;
 }
 
 export interface ConvertResult {
@@ -204,54 +230,113 @@ export interface ConvertResult {
   log: string;
 }
 
+/** Read ffmpeg's `time=00:00:12.34` progress lines. */
+function parseProgressSeconds(line: string): number | null {
+  const match = /time=(\d+):(\d{2}):(\d{2})\.(\d+)/.exec(line);
+  if (!match) return null;
+  const [, hours, minutes, seconds, fraction] = match;
+  return (
+    Number(hours) * 3600 +
+    Number(minutes) * 60 +
+    Number(seconds) +
+    Number(`0.${fraction ?? 0}`)
+  );
+}
+
 /**
  * Run one ffmpeg pass over `file` and return the produced file.
- * Throws an `Error` with a Persian message when ffmpeg fails.
+ *
+ * The input is **mounted** (WORKERFS) instead of copied into MEMFS: a 2 GB
+ * upload would otherwise be duplicated in memory, and Emscripten's MEMFS also
+ * refuses single writes above 2 GB. Mounting streams the file on demand, so
+ * large videos work and memory stays flat.
+ *
+ * The failure reason is taken from ffmpeg's own log, not from `exec`'s exit
+ * code: ffmpeg.wasm reports a failed conversion as exit code 0 in some builds.
  */
 export async function convertVideo(
   file: File,
   options: ConvertOptions,
 ): Promise<ConvertResult> {
-  const { ffmpeg } = await loadFFmpeg(options.onLog);
+  const { ffmpeg } = await loadFFmpeg();
   const logLines: string[] = [];
+  let progressFromEvents = 0;
+  let progressFromLog = 0;
 
   const logHandler = ({ message }: { message: string }) => {
     logLines.push(message);
     options.onLog?.(message);
+    const seconds = parseProgressSeconds(message);
+    if (seconds !== null && options.durationSeconds) {
+      progressFromLog = Math.max(progressFromLog, seconds / options.durationSeconds);
+      options.onProgress?.(Math.min(0.99, progressFromLog));
+    }
   };
   const progressHandler = ({ progress }: { progress: number }) => {
-    if (Number.isFinite(progress)) {
-      options.onProgress?.(Math.max(0, Math.min(1, progress)));
-    }
+    if (!Number.isFinite(progress)) return;
+    progressFromEvents = Math.max(progressFromEvents, Math.max(0, Math.min(1, progress)));
+    options.onProgress?.(Math.min(0.99, progressFromEvents));
   };
 
   ffmpeg.on("log", logHandler);
   ffmpeg.on("progress", progressHandler);
 
-  try {
-    await ffmpeg.writeFile(options.inputName, new Uint8Array(await file.arrayBuffer()));
-    await ffmpeg.exec([...options.args]);
+  const throwIfAborted = () => {
+    if (options.signal?.aborted) throw new Error("__aborted__");
+  };
 
-    const data = await ffmpeg.readFile(options.outputName);
-    // `readFile` returns Uint8Array for binary output (string only for text).
-    const bytes = data instanceof Uint8Array ? data : new TextEncoder().encode(String(data));
-    if (bytes.length === 0) {
-      throw new Error("خروجی خالی بود؛ تنظیمات یا فایل ورودی را بررسی کنید.");
+  try {
+    throwIfAborted();
+    await ffmpeg.createDir("/input").catch(() => undefined);
+    // Mount under /input so ffmpeg streams the file instead of copying it.
+    await ffmpeg.mount("WORKERFS", { files: [file] }, "/input");
+
+    // WORKERFS exposes the file under its real name, so map our logical
+    // `input.<ext>` name onto the mounted path.
+    const mountedPath = `/input/${file.name}`;
+    const passes = [options.args, ...(options.passes ?? [])].map((pass) =>
+      pass.map((arg) => (arg === options.inputName ? mountedPath : arg)),
+    );
+    throwIfAborted();
+    for (const pass of passes) {
+      await ffmpeg.exec(pass);
+      throwIfAborted();
+    }
+
+    // The output is written to MEMFS (a Blob-backed workdir can't create files).
+    const data: Uint8Array | string | null = await ffmpeg
+      .readFile(options.outputName)
+      .catch(() => null);
+
+    const bytes =
+      data === null
+        ? new Uint8Array()
+        : data instanceof Uint8Array
+          ? data
+          : new TextEncoder().encode(String(data));
+
+    const log = logLines.join("\n");
+    if (bytes.length === 0 || /Output file #0 does not contain any stream|Conversion failed/i.test(log)) {
+      throw new Error(`__ffmpeg_failed__\n${log}`);
     }
 
     const blob = new Blob([new Uint8Array(bytes)], {
       type: outputMime(options.outputName),
     });
 
-    // Free the worker's virtual FS so a 200 MB video does not linger in memory.
-    await ffmpeg.deleteFile(options.inputName).catch(() => undefined);
     await ffmpeg.deleteFile(options.outputName).catch(() => undefined);
+    await ffmpeg.unmount("/input").catch(() => undefined);
 
-    return { blob, bytes: blob.size, log: logLines.join("\n") };
+    return { blob, bytes: blob.size, log };
   } catch (error) {
+    await ffmpeg.unmount("/input").catch(() => undefined);
+
     const message = error instanceof Error ? error.message : "";
     const log = logLines.join("\n");
 
+    if (message.startsWith("__aborted__")) {
+      throw new Error("پردازش لغو شد.");
+    }
     if (/does not contain any stream|Output file #0 does not contain/i.test(log)) {
       throw new Error(
         "این ویدیو صدای جدا ندارد؛ برای همین فایل صوتی ساخته نشد. ویدیویی با صدا انتخاب کنید.",
@@ -260,9 +345,13 @@ export async function convertVideo(
     if (/Invalid data found|moov atom not found|could not find codec parameters/i.test(log)) {
       throw new Error("فایل ویدیو خوانده نشد؛ ممکن است ناقص یا خراب باشد.");
     }
-    if (/memory|allocate|RangeError/i.test(`${message}\n${log}`)) {
-      throw new Error("حافظهٔ مرورگر برای این فایل کافی نبود؛ ویدیوی کوتاه‌تری امتحان کنید.");
+    if (/memory|allocate|RangeError|out of memory/i.test(`${message}\n${log}`)) {
+      throw new Error(
+        "حافظهٔ این دستگاه برای این فایل کافی نبود. رزولوشن یا طول ویدیو را کمتر کنید یا با کامپیوتر امتحان کنید.",
+      );
     }
+    // Keep the technical reason in the console only; users see Persian text.
+    console.error("[ffmpeg]", message, log.split("\n").slice(-25).join("\n"));
     throw new Error("پردازش ویدیو انجام نشد. قالب فایل یا تنظیمات را تغییر دهید.");
   } finally {
     ffmpeg.off("log", logHandler);

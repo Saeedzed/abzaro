@@ -14,12 +14,12 @@ export const metadata: Metadata = {
 
 export default function ToolsPage() {
   return (
-    <Container className="py-10 sm:py-14">
+    <Container className="py-5 sm:py-14">
       <div className="max-w-2xl">
-        <h1 className="text-3xl font-extrabold text-ink-900 sm:text-4xl">
+        <h1 className="text-xl font-extrabold text-ink-900 sm:text-4xl">
           همه ابزارها
         </h1>
-        <p className="mt-3 text-sm leading-7 text-ink-600 sm:text-base">
+        <p className="mt-2 text-xs leading-6 text-ink-600 sm:mt-3 sm:text-base sm:leading-7">
           {toPersianDigits(tools.length)} ابزار رایگان در{" "}
           {toPersianDigits(categories.length)} دسته‌بندی؛ بدون نیاز به ثبت‌نام و
           با پردازش کامل در مرورگر شما. با فیلتر دسته‌بندی یا جست‌وجوی زنده،

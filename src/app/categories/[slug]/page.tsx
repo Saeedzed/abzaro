@@ -58,7 +58,7 @@ export default async function CategoryPage({
   const Icon = category.icon;
 
   return (
-    <Container className="py-8 sm:py-12">
+    <Container className="py-5 sm:py-12">
       <Breadcrumbs
         items={[
           { label: "خانه", href: "/" },
@@ -67,15 +67,15 @@ export default async function CategoryPage({
         ]}
       />
 
-      <header className="mt-6 flex items-start gap-4">
-        <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-brand-600 text-white shadow-card">
-          <Icon className="h-7 w-7" aria-hidden="true" />
+      <header className="mt-3 flex items-start gap-3 sm:mt-6 sm:gap-4">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-600 text-white shadow-card sm:h-14 sm:w-14 sm:rounded-2xl">
+          <Icon className="h-5 w-5 sm:h-7 sm:w-7" aria-hidden="true" />
         </span>
         <div>
-          <h1 className="text-2xl font-extrabold text-ink-900 sm:text-3xl">
+          <h1 className="text-lg font-extrabold text-ink-900 sm:text-3xl">
             ابزارهای {category.title}
           </h1>
-          <p className="mt-2 max-w-2xl text-sm leading-7 text-ink-600 sm:text-base">
+          <p className="mt-1.5 max-w-2xl text-xs leading-6 text-ink-600 sm:mt-2 sm:text-base sm:leading-7">
             {category.description}
           </p>
           <p className="mt-2 text-xs font-medium text-ink-500">
@@ -84,7 +84,7 @@ export default async function CategoryPage({
         </div>
       </header>
 
-      <div className="mt-10">
+      <div className="mt-5 sm:mt-10">
         {categoryTools.length > 0 ? (
           <ToolGrid tools={categoryTools} />
         ) : (

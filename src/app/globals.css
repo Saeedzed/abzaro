@@ -214,3 +214,25 @@
     text-align: left;
   }
 }
+
+
+/*
+ * Number inputs: hide the native spin buttons (misplaced in RTL and useless on
+ * touch) and keep the typed digits LTR so "1404" never renders as "4104".
+ */
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"],
+input[inputmode="numeric"],
+input[inputmode="decimal"] {
+  direction: ltr;
+  text-align: start;
+  font-variant-numeric: tabular-nums;
+}

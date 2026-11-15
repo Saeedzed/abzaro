@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Download, Loader2, Play, TriangleAlert, Video } from "lucide-react";
+import { Download, Loader2, Play, TriangleAlert, Video, X } from "lucide-react";
 import { downloadBlob, formatBytes } from "@/lib/image";
 import { toPersianDigits } from "@/lib/persian";
 import {
@@ -9,6 +9,8 @@ import {
   formatDuration,
   inspectVideo,
   isVideoError,
+  LARGE_VIDEO_BYTES,
+  VIDEO_MEMORY_HINT_BYTES,
   type VideoInfo,
 } from "@/lib/video";
 import { UploadZone } from "./UploadZone";
@@ -31,7 +33,14 @@ interface VideoToolShellProps {
   run: (file: File, hooks: {
     onProgress: (ratio: number) => void;
     onLog: (line: string) => void;
-  }) => Promise<{ args: string[]; inputName: string; outputName: string; label: string }>;
+  }) => Promise<{
+    args: string[];
+    inputName: string;
+    outputName: string;
+    label: string;
+    /** Extra ffmpeg passes (GIF palette): `args` runs first, then these. */
+    passes?: string[][];
+  }>;
   /** Disabled until the options are valid. */
   canRun?: boolean;
 }
@@ -53,6 +62,7 @@ export function VideoToolShell({ id, title, hint, children, run, canRun = true }
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [resultUrl, setResultUrl] = useState<string | null>(null);
   const logRef = useRef("");
+  const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     if (!file) {
@@ -92,8 +102,15 @@ export function VideoToolShell({ id, title, hint, children, run, canRun = true }
     setInfo(inspected);
   }
 
+  function cancel() {
+    abortRef.current?.abort();
+    setStage("در حال لغو…");
+  }
+
   async function start() {
     if (!file) return;
+    const controller = new AbortController();
+    abortRef.current = controller;
     setBusy(true);
     setError(null);
     setResult(null);
@@ -114,11 +131,17 @@ export function VideoToolShell({ id, title, hint, children, run, canRun = true }
 
       const converted = await convertVideo(file, {
         args: recipe.args,
+        passes: recipe.passes,
         inputName: recipe.inputName,
         outputName: recipe.outputName,
+        durationSeconds: info?.durationSeconds ?? null,
+        signal: controller.signal,
         onProgress: (ratio) => {
           setStage("در حال پردازش…");
           setProgress(ratio);
+        },
+        onLog: (line) => {
+          logRef.current += line + "\n";
         },
       });
 
@@ -133,6 +156,8 @@ export function VideoToolShell({ id, title, hint, children, run, canRun = true }
       setError(runError instanceof Error ? runError.message : "پردازش انجام نشد.");
     } finally {
       setBusy(false);
+      setStage("");
+      abortRef.current = null;
     }
   }
 
@@ -163,6 +188,22 @@ export function VideoToolShell({ id, title, hint, children, run, canRun = true }
               </span>
             </div>
 
+            {file.size > VIDEO_MEMORY_HINT_BYTES && (
+              <p className="mt-3 rounded-xl border border-ink-200 bg-ink-50 px-3 py-2 text-[11px] leading-6 text-ink-600">
+                فایل بزرگی انتخاب کرده‌اید ({formatBytes(file.size)}). محدودیتی
+                نداریم، اما پردازش در مرورگر انجام می‌شود؛ اگر دستگاه کم‌حافظه
+                باشد ممکن است کند شود. با «لغو پردازش» می‌توانید متوقف کنید.
+              </p>
+            )}
+
+            {file.size > LARGE_VIDEO_BYTES && (
+              <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] leading-6 text-amber-800">
+                این فایل بیش از ۲ گیگابایت است. پردازش در مرورگر انجام می‌شود و
+                ممکن است بسته به حافظهٔ دستگاه کند یا متوقف شود؛ برای فایل‌های
+                بزرگ‌تر، از کامپیوتر استفاده کنید.
+              </p>
+            )}
+
             <div className="mt-4">{children({ file, info, busy })}</div>
 
             <button
@@ -192,6 +233,15 @@ export function VideoToolShell({ id, title, hint, children, run, canRun = true }
                   بار اول، موتور ویدیو (~۳۱ مگابایت) دانلود می‌شود؛ بعد از آن فوری است.
                   همهٔ پردازش‌ها داخل مرورگر شما انجام می‌شود.
                 </p>
+                <button
+                  type="button"
+                  onClick={cancel}
+                  data-testid={`${id}-cancel`}
+                  className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-ink-300 bg-white px-3 py-1.5 text-[11px] font-semibold text-ink-700 transition hover:bg-ink-100"
+                >
+                  <X className="h-3.5 w-3.5" aria-hidden="true" />
+                  لغو پردازش
+                </button>
               </div>
             )}
 

@@ -14,7 +14,12 @@ import type {
   RenderTask,
 } from "pdfjs-dist";
 
-export const MAX_PDF_BYTES = 40 * 1024 * 1024; // 40 MB
+/**
+ * No hard file-size limit: pdf.js only reads what it renders, so big files that
+ * the device can hold in memory are fine. This threshold only triggers a
+ * friendly warning (see `PDF_LARGE_BYTES` users), never a rejection.
+ */
+export const PDF_LARGE_BYTES = 100 * 1024 * 1024; // 100 MB
 export const MAX_PAGES = 60;
 
 let pdfjsPromise: Promise<typeof import("pdfjs-dist")> | null = null;
@@ -74,9 +79,6 @@ function describePageSize(width: number, height: number): string {
 export async function openPdf(file: File): Promise<OpenedPdf | PdfError> {
   if (file.type !== "application/pdf" && !/\.pdf$/i.test(file.name)) {
     return { message: "فقط فایل PDF پذیرفته می‌شود." };
-  }
-  if (file.size > MAX_PDF_BYTES) {
-    return { message: "حجم فایل PDF باید کمتر از ۴۰ مگابایت باشد." };
   }
   if (file.size === 0) {
     return { message: "این فایل خالی است." };

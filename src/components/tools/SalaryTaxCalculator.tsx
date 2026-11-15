@@ -54,6 +54,7 @@ export function SalaryTaxCalculator() {
       >
         <div className="space-y-4">
           <NumberField
+            thousands
             label="حقوق پایه و مزایای مشمول (تومان)"
             value={base}
             onChange={setBase}
@@ -62,6 +63,7 @@ export function SalaryTaxCalculator() {
             autoFocus
           />
           <NumberField
+            thousands
             label="اضافه‌کاری / حق اولاد و سایر مزایای مشمول"
             value={extras}
             onChange={setExtras}
@@ -69,6 +71,7 @@ export function SalaryTaxCalculator() {
             suffix="تومان"
           />
           <NumberField
+            thousands
             label="مزایای معاف از مالیات (حق مسکن، بن)"
             value={exempt}
             onChange={setExempt}

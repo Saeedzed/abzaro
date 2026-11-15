@@ -220,7 +220,7 @@ export function PdfToImage() {
             فایل PDF را اینجا رها کنید
           </p>
           <p className="mt-1 text-sm text-ink-500">
-            یا از دکمهٔ زیر انتخاب کنید — حداکثر ۴۰ مگابایت
+            یا از دکمهٔ زیر انتخاب کنید — بدون محدودیت حجم
           </p>
           <button
             type="button"

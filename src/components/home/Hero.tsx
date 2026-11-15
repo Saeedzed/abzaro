@@ -27,19 +27,19 @@ const FEATURES = [
 export function Hero() {
   return (
     <section className="border-b border-ink-200/60 bg-gradient-to-b from-brand-50/70 via-white to-white">
-      <Container className="py-14 sm:py-20">
+      <Container className="py-8 sm:py-20">
         <div className="mx-auto max-w-2xl text-center">
-          <h1 className="text-3xl font-extrabold leading-snug text-ink-900 sm:text-4xl lg:text-5xl lg:leading-snug">
+          <h1 className="text-2xl font-extrabold leading-snug text-ink-900 sm:text-4xl lg:text-5xl lg:leading-snug">
             هر ابزاری که نیاز داری، همین‌جاست!
           </h1>
-          <p className="mx-auto mt-5 max-w-xl text-base leading-8 text-ink-600 sm:text-lg sm:leading-9">
+          <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-ink-600 sm:mt-5 sm:text-lg sm:leading-9">
             {siteConfig.description}
           </p>
 
           <SearchBox
             size="large"
             placeholder="ابزار موردنظرت را جستجو کن…"
-            className="mx-auto mt-9 max-w-2xl text-start"
+            className="mx-auto mt-5 max-w-2xl text-start sm:mt-9"
           />
           <p className="mt-3 text-xs text-ink-500">
             بدون نصب و بدون ثبت‌نام · همهٔ پردازش‌ها در مرورگر شما انجام می‌شود
@@ -61,22 +61,22 @@ export function Hero() {
           </div>
         </div>
 
-        <div className="mx-auto mt-12 grid max-w-3xl grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="mx-auto mt-6 grid max-w-3xl grid-cols-3 gap-2 sm:mt-12 sm:gap-4">
           {FEATURES.map((feature) => {
             const Icon = feature.icon;
             return (
               <div
                 key={feature.title}
-                className="flex items-center gap-3 rounded-2xl border border-ink-200/80 bg-white/80 px-4 py-3.5"
+                className="flex flex-col items-center gap-1.5 rounded-xl border border-ink-200/80 bg-white/80 px-2 py-2.5 text-center sm:flex-row sm:gap-3 sm:rounded-2xl sm:px-4 sm:py-3.5 sm:text-start"
               >
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
-                  <Icon className="h-5 w-5" aria-hidden="true" />
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-600 sm:h-10 sm:w-10 sm:rounded-xl">
+                  <Icon className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" />
                 </span>
                 <span>
-                  <span className="block text-sm font-bold text-ink-900">
+                  <span className="block text-[11px] font-bold leading-4 text-ink-900 sm:text-sm">
                     {feature.title}
                   </span>
-                  <span className="block text-xs text-ink-500">
+                  <span className="hidden text-xs text-ink-500 sm:block">
                     {feature.description}
                   </span>
                 </span>

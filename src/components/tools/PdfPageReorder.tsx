@@ -128,7 +128,7 @@ export function PdfPageReorder() {
             <UploadZone
               accept="application/pdf"
               title="فایل PDF را انتخاب کنید"
-              hint="حداکثر ۴۰ مگابایت — تا ۶۰ صفحه"
+              hint="بدون محدودیت حجم — تا ۶۰ صفحه"
               buttonLabel="انتخاب فایل PDF"
               onFiles={(files) => void handleFile(files[0])}
               testId="pdf-reorder-input"

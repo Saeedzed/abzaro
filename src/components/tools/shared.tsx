@@ -11,6 +11,14 @@ import { cn } from "@/lib/utils";
  */
 
 /** A labelled numeric input with optional suffix (تومان, %…). */
+/** "30000000" → "30,000,000" while typing (keeps a trailing separator). */
+function groupDigits(raw: string): string {
+  if (!raw || !/^-?[\d,.]*$/.test(raw)) return raw;
+  const [intPart = "", ...rest] = raw.split(".");
+  const grouped = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  return rest.length ? `${grouped}.${rest.join("")}` : grouped;
+}
+
 export function NumberField({
   label,
   value,
@@ -22,6 +30,7 @@ export function NumberField({
   max,
   step,
   autoFocus,
+  thousands = false,
 }: {
   label: string;
   value: string;
@@ -33,8 +42,13 @@ export function NumberField({
   max?: number;
   step?: number;
   autoFocus?: boolean;
+  /** Show thousand separators (money / salary inputs read much better). */
+  thousands?: boolean;
 }) {
   const id = useId();
+  /** With separators we must use a text field, so keep the caret sane by
+   *  storing the raw digits and only formatting the displayed value. */
+  const displayValue = thousands ? groupDigits(value) : value;
   return (
     <div>
       <label htmlFor={id} className="mb-1.5 block text-sm font-semibold text-ink-700">
@@ -43,11 +57,17 @@ export function NumberField({
       <div className="relative">
         <input
           id={id}
-          type="number"
-          inputMode="decimal"
+          type={thousands ? "text" : "number"}
+          inputMode={thousands ? "numeric" : "decimal"}
           dir="ltr"
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
+          value={displayValue}
+          onChange={(event) =>
+            onChange(
+              thousands
+                ? event.target.value.replace(/,/g, "").replace(/[^\d.]/g, "")
+                : event.target.value,
+            )
+          }
           placeholder={placeholder}
           min={min}
           max={max}
@@ -60,11 +80,11 @@ export function NumberField({
             error
               ? "border-red-300 focus:border-red-400 focus:ring-red-100"
               : "border-ink-200 focus:border-brand-400 focus:ring-brand-100",
-            suffix && "pe-16",
+            suffix && "ps-20",
           )}
         />
         {suffix && (
-          <span className="pointer-events-none absolute inset-y-0 end-4 flex items-center text-sm font-medium text-ink-400">
+          <span className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 rounded-md bg-white/85 px-1 text-[10px] font-medium text-ink-400">
             {suffix}
           </span>
         )}

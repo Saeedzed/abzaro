@@ -39,24 +39,46 @@ export function VideoToGif() {
       run={async (file) => {
         const inputName = `input.${extensionOf(file.name)}`;
         const outputName = `${baseNameOf(file.name)}.gif`;
+        const paletteName = "palette.png";
 
         const start = Math.max(0, Number(from) || 0);
         const end = to.trim() === "" ? null : Number(to);
-        const clipArgs =
-          end !== null && end > start
-            ? ["-ss", String(start), "-t", String(end - start)]
-            : start > 0
-              ? ["-ss", String(start)]
-              : [];
+        const duration = end !== null && end > start ? end - start : null;
 
-        // Palette pass then apply — same output name so the shell reads one file.
+        // `-ss` MUST come before `-i` (input seeking): after `-i` ffmpeg decodes
+        // the whole file from zero, which on a long video looks like a hang.
+        const seek = start > 0 ? ["-ss", String(start)] : [];
+        const trim = duration !== null ? ["-t", String(duration)] : [];
         const filter = `fps=${fps.fps},scale=${width.width}:-1:flags=lanczos`;
+
         return {
+          // Pass 1 — build a 256-colour palette for this exact clip.
           args: [
-            "-i", inputName,
-            ...clipArgs,
-            "-vf", `${filter},split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse`,
-            outputName,
+            ...seek,
+            ...trim,
+            "-i",
+            inputName,
+            "-vf",
+            `${filter},palettegen=stats_mode=diff`,
+            "-frames:v",
+            "1",
+            paletteName,
+          ],
+          // Pass 2 — re-use the same seek and apply the palette.
+          passes: [
+            [
+              ...seek,
+              ...trim,
+              "-i",
+              inputName,
+              "-i",
+              paletteName,
+              "-lavfi",
+              `${filter}[x];[x][1:v]paletteuse=dither=bayer:bayer_scale=3`,
+              "-loop",
+              "0",
+              outputName,
+            ],
           ],
           inputName,
           outputName,
@@ -120,7 +142,7 @@ export function VideoToGif() {
                 min={0}
                 value={from}
                 onChange={(event) => setFrom(event.target.value)}
-                data-testid="video-gif-from"
+                data-testid="video-to-gif-from"
                 className="mt-1 w-full rounded-lg border border-ink-200 px-3 py-2 text-sm outline-none focus:border-brand-400"
               />
             </label>
@@ -132,7 +154,7 @@ export function VideoToGif() {
                 value={to}
                 onChange={(event) => setTo(event.target.value)}
                 placeholder="تا آخر"
-                data-testid="video-gif-to"
+                data-testid="video-to-gif-to"
                 className="mt-1 w-full rounded-lg border border-ink-200 px-3 py-2 text-sm outline-none focus:border-brand-400"
               />
             </label>

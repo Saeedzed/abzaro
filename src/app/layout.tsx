@@ -4,6 +4,7 @@ import "@fontsource-variable/vazirmatn";
 import "./globals.css";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { MobileTabBar } from "@/components/layout/MobileTabBar";
 import { ThemeScript } from "@/components/layout/ThemeScript";
 import { CommandPalette } from "@/components/search/CommandPalette";
 import { ServiceWorkerRegistrar } from "@/components/pwa/ServiceWorkerRegistrar";
@@ -92,8 +93,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       </head>
       <body className="flex min-h-screen flex-col">
         <Header />
-        <main className="flex-1">{children}</main>
+        <main className="flex-1 pb-16 md:pb-0">{children}</main>
         <Footer />
+        <MobileTabBar />
         <CommandPalette />
         <ServiceWorkerRegistrar />
       </body>

@@ -231,7 +231,7 @@ export default async function ToolPage({
   };
 
   return (
-    <Container className="py-8 sm:py-12">
+    <Container className="py-5 sm:py-12">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -247,13 +247,13 @@ export default async function ToolPage({
         ]}
       />
 
-      <header className="mt-6 flex items-start gap-4">
-        <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-brand-600 text-white shadow-card">
-          <Icon className="h-7 w-7" aria-hidden="true" />
+      <header className="mt-3 flex items-start gap-3 sm:mt-6 sm:gap-4">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-600 text-white shadow-card sm:h-14 sm:w-14 sm:rounded-2xl">
+          <Icon className="h-5 w-5 sm:h-7 sm:w-7" aria-hidden="true" />
         </span>
-        <div>
+        <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-2xl font-extrabold text-ink-900 sm:text-3xl">
+            <h1 className="text-lg font-extrabold text-ink-900 sm:text-3xl">
               {tool.title}
             </h1>
             {tool.status === "soon" && (
@@ -262,7 +262,7 @@ export default async function ToolPage({
               </span>
             )}
           </div>
-          <p className="mt-2 max-w-2xl text-sm leading-7 text-ink-600 sm:text-base">
+          <p className="mt-1.5 max-w-2xl text-xs leading-6 text-ink-600 sm:mt-2 sm:text-base sm:leading-7">
             {tool.description}
           </p>
           {toolCategories.length > 0 && (
@@ -282,13 +282,13 @@ export default async function ToolPage({
       </header>
 
       <section
-        className="mt-8 rounded-3xl border border-ink-200 bg-ink-50/60 p-4 shadow-card sm:p-6 lg:p-8"
+        className="mt-4 rounded-2xl border border-ink-200 bg-ink-50/60 p-2.5 shadow-card sm:mt-8 sm:rounded-3xl sm:p-6 lg:p-8"
         aria-label={`ابزار ${tool.title}`}
       >
         <ToolImplementation slug={tool.slug} />
       </section>
 
-      <section className="mt-12" aria-labelledby="how-to-heading">
+      <section className="mt-8 sm:mt-12" aria-labelledby="how-to-heading">
         <p className="text-xs font-bold tracking-wide text-brand-600">
           راهنما
         </p>

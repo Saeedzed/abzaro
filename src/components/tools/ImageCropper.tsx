@@ -15,6 +15,7 @@ import { toPersianDigits } from "@/lib/persian";
 import { cn } from "@/lib/utils";
 import { ToolPanel } from "./shared";
 import { DeviceLimitLabel } from "./DeviceLimitLabel";
+import { CropEditor, fitRatioRect, type CropRect } from "./CropEditor";
 
 interface RatioPreset {
   id: string;
@@ -49,8 +50,9 @@ export function ImageCropper() {
   const [error, setError] = useState<string | null>(null);
   const [preset, setPreset] = useState<RatioPreset>(RATIOS[1] as RatioPreset);
   const [format, setFormat] = useState<OutputFormat>("image/jpeg");
-  const [zoom, setZoom] = useState(1);
-  const [ratioOffset, setRatioOffset] = useState(0.5); // horizontal focus 0..1
+  const [rect, setRect] = useState<CropRect>({ x: 0, y: 0, w: 0, h: 0 });
+  const [sourceUrl, setSourceUrl] = useState<string | null>(null);
+  const [sourceFile, setSourceFile] = useState<File | null>(null);
   const [result, setResult] = useState<{ blob: Blob; width: number; height: number } | null>(null);
   const [resultUrl, setResultUrl] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -72,6 +74,17 @@ export function ImageCropper() {
     return () => image.bitmap.close();
   }, [image]);
 
+  // Object URL of the picked file, used by the on-image crop editor.
+  useEffect(() => {
+    if (!sourceFile) {
+      setSourceUrl(null);
+      return;
+    }
+    const url = URL.createObjectURL(sourceFile);
+    setSourceUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [sourceFile]);
+
   async function handleFile(file: File | undefined) {
     if (!file) return;
     setError(null);
@@ -80,28 +93,29 @@ export function ImageCropper() {
     if (isLoadError(loaded)) {
       setError(loaded.message);
       setImage(null);
+      setSourceFile(null);
       return;
     }
+    setSourceFile(file);
     setImage(loaded);
-    setZoom(1);
-    setRatioOffset(0.5);
+    setRect(
+      loaded ? fitRatioRect(loaded.width, loaded.height, preset.ratio) : { x: 0, y: 0, w: 0, h: 0 },
+    );
   }
 
-  /** Highest-quality crop for the chosen ratio (centred, shrink-only). */
-  function cropRect(width: number, height: number, ratio: number) {
-    if (!ratio) return { sx: 0, sy: 0, sw: width, sh: height };
-    let sw = width;
-    let sh = width / ratio;
-    if (sh > height) {
-      sh = height;
-      sw = height * ratio;
-    }
-    // Zoom shrinks the crop window (1 = as large as possible).
-    sw = sw / zoom;
-    sh = sh / zoom;
-    const sx = Math.max(0, Math.min(width - sw, (width - sw) * ratioOffset));
-    const sy = Math.max(0, (height - sh) / 2);
-    return { sx, sy, sw, sh };
+  /** Re-fit the box (keeping its centre) when the ratio preset changes. */
+  function applyRatio(next: RatioPreset) {
+    setPreset(next);
+    if (!image) return;
+    setRect((current) => {
+      if (!next.ratio) return { x: 0, y: 0, w: image.width, h: image.height };
+      const cx = current.w ? current.x + current.w / 2 : image.width / 2;
+      const cy = current.h ? current.y + current.h / 2 : image.height / 2;
+      const areaScale = current.w
+        ? Math.min(1, current.w / image.width)
+        : 1;
+      return fitRatioRect(image.width, image.height, next.ratio, cx, cy, areaScale);
+    });
   }
 
   async function handleCrop() {
@@ -109,7 +123,10 @@ export function ImageCropper() {
     setBusy(true);
     setError(null);
     try {
-      const { sx, sy, sw, sh } = cropRect(image.width, image.height, preset.ratio);
+      const sx = Math.round(rect.x);
+      const sy = Math.round(rect.y);
+      const sw = Math.max(1, Math.round(rect.w));
+      const sh = Math.max(1, Math.round(rect.h));
       const outWidth = Math.round(sw);
       const outHeight = Math.round(sh);
       const canvas = document.createElement("canvas");
@@ -198,6 +215,15 @@ export function ImageCropper() {
                 </span>
               </div>
 
+              <CropEditor
+                src={sourceUrl ?? ""}
+                imageWidth={image.width}
+                imageHeight={image.height}
+                ratio={preset.ratio}
+                rect={rect}
+                onRectChange={setRect}
+              />
+
               <div>
                 <p className="mb-2 text-xs font-semibold text-ink-700">نسبت برش</p>
                 <div className="grid grid-cols-3 gap-2">
@@ -205,7 +231,7 @@ export function ImageCropper() {
                     <button
                       key={item.id}
                       type="button"
-                      onClick={() => setPreset(item)}
+                      onClick={() => applyRatio(item)}
                       aria-pressed={preset.id === item.id}
                       data-testid={`crop-ratio-${item.id}`}
                       className={cn(
@@ -225,42 +251,6 @@ export function ImageCropper() {
                   ))}
                 </div>
               </div>
-
-              {preset.ratio !== 0 && (
-                <div className="space-y-2">
-                  <div>
-                    <div className="flex items-center justify-between text-xs font-semibold text-ink-700">
-                      <label htmlFor="crop-zoom">بزرگ‌نمایی برش</label>
-                      <span className="text-brand-700">{toPersianDigits(zoom.toFixed(1))}×</span>
-                    </div>
-                    <input
-                      id="crop-zoom"
-                      type="range"
-                      min={1}
-                      max={3}
-                      step={0.1}
-                      value={zoom}
-                      onChange={(event) => setZoom(Number(event.target.value))}
-                      className="mt-1 w-full accent-brand-600"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="crop-offset" className="text-xs font-semibold text-ink-700">
-                      جابه‌جایی افقی
-                    </label>
-                    <input
-                      id="crop-offset"
-                      type="range"
-                      min={0}
-                      max={1}
-                      step={0.01}
-                      value={ratioOffset}
-                      onChange={(event) => setRatioOffset(Number(event.target.value))}
-                      className="mt-1 w-full accent-brand-600"
-                    />
-                  </div>
-                </div>
-              )}
 
               <div>
                 <p className="mb-2 text-xs font-semibold text-ink-700">قالب خروجی</p>

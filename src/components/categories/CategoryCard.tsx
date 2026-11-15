@@ -8,12 +8,40 @@ import { toPersianDigits } from "@/lib/persian";
 
 interface CategoryCardProps {
   category: Category;
+  /**
+   * `compact` renders the phone version: no big illustration, icon + title +
+   * count only, so a whole category list fits in one or two screens.
+   */
+  variant?: "full" | "compact";
 }
 
 /** Card linking to a category page: illustration cover, icon, count. */
-export function CategoryCard({ category }: CategoryCardProps) {
+export function CategoryCard({ category, variant = "full" }: CategoryCardProps) {
   const Icon = category.icon;
   const count = countToolsInCategory(category.slug);
+
+  if (variant === "compact") {
+    return (
+      <Link
+        href={`/categories/${category.slug}`}
+        className="group flex items-center gap-3 rounded-2xl border border-ink-200 bg-white p-3 shadow-card transition active:scale-[0.99] hover:border-brand-300"
+      >
+        <IconTile icon={Icon} solid />
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-sm font-bold text-ink-900">
+            {category.title}
+          </span>
+          <span className="mt-0.5 block text-[11px] text-ink-500">
+            {toPersianDigits(count)} ابزار
+          </span>
+        </span>
+        <ArrowLeft
+          className="h-4 w-4 shrink-0 text-brand-500 transition-transform group-hover:-translate-x-0.5"
+          aria-hidden="true"
+        />
+      </Link>
+    );
+  }
 
   return (
     <Link

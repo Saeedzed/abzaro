@@ -12,6 +12,7 @@ import { Hero } from "@/components/home/Hero";
 import { RecentTools } from "@/components/tools/RecentTools";
 import { ToolGrid } from "@/components/tools/ToolGrid";
 import { CategoryCard } from "@/components/categories/CategoryCard";
+import { CategoryRail } from "@/components/categories/CategoryRail";
 import { categories } from "@/data/categories";
 import { popularTools, recentTools } from "@/data/tools";
 import { siteConfig } from "@/config/site";
@@ -41,7 +42,7 @@ function SectionHeading({
       <div>
         <h2
           id={id}
-          className="text-2xl font-extrabold text-ink-900 sm:text-3xl"
+          className="text-lg font-extrabold text-ink-900 sm:text-3xl"
         >
           {title}
         </h2>
@@ -98,7 +99,7 @@ export default function HomePage() {
       </Container>
 
       {/* Categories */}
-      <section className="bg-ink-50 py-14 sm:py-16" aria-labelledby="categories-heading">
+      <section className="bg-ink-50 py-10 sm:py-16" aria-labelledby="categories-heading">
         <Container>
           <SectionHeading
             id="categories-heading"
@@ -107,7 +108,19 @@ export default function HomePage() {
             href="/categories"
             linkLabel="همه دسته‌بندی‌ها"
           />
-          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
+          {/* Phones: swipeable chips, no giant stacked cards */}
+          <CategoryRail className="mt-5 sm:hidden" />
+          <div className="mt-4 grid grid-cols-2 gap-3 sm:hidden">
+            {categories.slice(0, 4).map((category) => (
+              <CategoryCard
+                key={category.slug}
+                category={category}
+                variant="compact"
+              />
+            ))}
+          </div>
+
+          <div className="mt-8 hidden grid-cols-2 gap-5 sm:grid lg:grid-cols-3">
             {categories.map((category) => (
               <CategoryCard key={category.slug} category={category} />
             ))}
@@ -116,7 +129,7 @@ export default function HomePage() {
       </section>
 
       {/* Popular tools */}
-      <section className="py-14 sm:py-16" aria-labelledby="popular-tools-heading">
+      <section className="py-10 sm:py-16" aria-labelledby="popular-tools-heading">
         <Container>
           <SectionHeading
             id="popular-tools-heading"
@@ -130,7 +143,7 @@ export default function HomePage() {
       </section>
 
       {/* Recently added */}
-      <section className="py-14 sm:py-16" aria-labelledby="recent-tools-heading">
+      <section className="py-10 sm:py-16" aria-labelledby="recent-tools-heading">
         <Container>
           <SectionHeading
             id="recent-tools-heading"
@@ -144,7 +157,7 @@ export default function HomePage() {
       </section>
 
       {/* About Abzaro */}
-      <section className="border-t border-ink-200 bg-ink-50 py-14 sm:py-16" aria-labelledby="about-heading">
+      <section className="border-t border-ink-200 bg-ink-50 py-10 sm:py-16" aria-labelledby="about-heading">
         <Container>
           <div className="grid items-center gap-10 lg:grid-cols-2">
             <div>
@@ -173,7 +186,7 @@ export default function HomePage() {
                 <ArrowLeft className="h-4 w-4" aria-hidden="true" />
               </Link>
             </div>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="hidden grid-cols-1 gap-4 sm:grid sm:grid-cols-2">
               {ABOUT_FEATURES.map((feature) => {
                 const Icon = feature.icon;
                 return (

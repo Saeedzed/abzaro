@@ -34,7 +34,11 @@ const videoOk = (() => {
 })();
 
 const browser = await chromium.launch({ args: ["--no-sandbox"] });
-const page = await browser.newPage({ acceptDownloads: true });
+// Tall enough that the crop editor and its handles are inside the viewport.
+const page = await browser.newPage({
+  acceptDownloads: true,
+  viewport: { width: 1280, height: 1000 },
+});
 const errors = [];
 page.on("pageerror", (e) => errors.push("PAGEERROR: " + e));
 page.on("console", (m) => {
@@ -44,7 +48,9 @@ page.on("console", (m) => {
 });
 
 async function open(slug) {
-  await page.goto(`${BASE}/tools/${slug}`, { waitUntil: "domcontentloaded", timeout: 60000 });
+  // "" opens the homepage, so plain pages (/, /tools, /categories) are testable too.
+  const path = slug === "" ? "/" : slug.startsWith("/") ? slug : `/tools/${slug}`;
+  await page.goto(`${BASE}${path}`, { waitUntil: "domcontentloaded", timeout: 60000 });
   await page.waitForTimeout(1500);
 }
 const text = async (sel) => (await page.locator(sel).innerText()).trim();
@@ -150,10 +156,44 @@ check(
   await text("[data-testid='color-out-hsl']"),
 );
 
-/* ---------------- 10. image crop ---------------- */
+/* ---------------- 10. image crop (interactive editor) ---------------- */
 await open("image-crop");
 await page.locator("[data-testid='crop-input']").setInputFiles(TEST_IMAGE);
 await page.waitForTimeout(1200);
+await page.locator("[data-testid='crop-editor']").scrollIntoViewIfNeeded();
+check("image-crop: crop box is drawn on the image", (await page.locator("[data-testid='crop-box']").count()) === 1);
+
+// Drag the box itself — the rect must move.
+const boxBefore = await page.locator("[data-testid='crop-box']").boundingBox();
+await page.mouse.move(boxBefore.x + boxBefore.width / 2, boxBefore.y + boxBefore.height / 2);
+await page.mouse.down();
+await page.mouse.move(boxBefore.x + boxBefore.width / 2 - 25, boxBefore.y + boxBefore.height / 2 + 10, { steps: 8 });
+await page.mouse.up();
+const boxMoved = await page.locator("[data-testid='crop-box']").boundingBox();
+check("image-crop: dragging moves the box", Math.abs(boxMoved.x - boxBefore.x) > 5, `${Math.round(boxBefore.x)} → ${Math.round(boxMoved.x)}`);
+
+// Drag a corner handle — the box must resize.
+const sizeBefore = boxMoved.width;
+const handle = await page.locator("[data-testid='crop-handle-se']").boundingBox();
+await page.locator("[data-testid='crop-handle-se']").scrollIntoViewIfNeeded();
+await page.mouse.move(handle.x + handle.width / 2, handle.y + handle.height / 2);
+await page.mouse.down();
+await page.mouse.move(handle.x + handle.width / 2 - 40, handle.y + handle.height / 2 - 40, { steps: 8 });
+await page.mouse.up();
+const sizeAfter = (await page.locator("[data-testid='crop-box']").boundingBox()).width;
+check("image-crop: corner handle resizes the box", Math.abs(sizeAfter - sizeBefore) > 5, `${Math.round(sizeBefore)} → ${Math.round(sizeAfter)}`);
+
+// Free crop must be a real free rectangle (not locked to one ratio).
+await page.locator("[data-testid='crop-ratio-free']").click();
+await page.waitForTimeout(300);
+const freeHandle = await page.locator("[data-testid='crop-handle-nw']").boundingBox();
+await page.mouse.move(freeHandle.x + freeHandle.width / 2, freeHandle.y + freeHandle.height / 2);
+await page.mouse.down();
+await page.mouse.move(freeHandle.x + freeHandle.width / 2 + 60, freeHandle.y + freeHandle.height / 2 + 5, { steps: 8 });
+await page.mouse.up();
+const freeBox = await page.locator("[data-testid='crop-box']").boundingBox();
+check("image-crop: «آزاد» keeps a free (non-square) box", Math.abs(freeBox.width - freeBox.height) > 10, `${Math.round(freeBox.width)}×${Math.round(freeBox.height)}`);
+
 await page.locator("[data-testid='crop-ratio-9:16']").click();
 await page.locator("[data-testid='crop-run']").click();
 await page.waitForTimeout(1500);
@@ -235,6 +275,45 @@ for (const slug of ["video-compressor", "video-to-gif", "video-to-audio", "video
   }
 }
 
+/* ---------------- 14b-2. video → GIF (two-pass palette) produces a real GIF ---------------- */
+if (videoOk) {
+  await open("video-to-gif");
+  await page.locator("[data-testid='video-to-gif-input']").setInputFiles(VIDEO_FIXTURE);
+  await page.locator("[data-testid='video-to-gif-to']").waitFor({ timeout: 20000 });
+  await page.waitForTimeout(600);
+  await page.locator("[data-testid='video-to-gif-from']").fill("0");
+  await page.locator("[data-testid='video-to-gif-to']").fill("2");
+  await page.locator("[data-testid='video-to-gif-run']").click();
+  await page
+    .locator("[data-testid='video-to-gif-download']")
+    .waitFor({ timeout: 180000 })
+    .catch(() => {});
+  const gifReady = (await page.locator("[data-testid='video-to-gif-download']").count()) > 0;
+  let gifBytes = 0;
+  let gifMagic = "";
+  if (gifReady) {
+    const [download] = await Promise.all([
+      page.waitForEvent("download", { timeout: 30000 }).catch(() => null),
+      page.locator("[data-testid='video-to-gif-download']").click(),
+    ]);
+    const path = download ? await download.path().catch(() => null) : null;
+    if (path) {
+      const buffer = fs.readFileSync(path);
+      gifBytes = buffer.length;
+      gifMagic = buffer.subarray(0, 6).toString();
+    }
+  }
+  check(
+    "video-to-gif: produces a real GIF89a",
+    gifReady && gifBytes > 5000 && gifMagic === "GIF89a",
+    `${gifBytes}B ${gifMagic}`,
+  );
+  const gifError = (await page.locator("[data-testid='video-to-gif-error']").count())
+    ? await page.locator("[data-testid='video-to-gif-error']").innerText()
+    : "";
+  check("video-to-gif: no error shown", !gifError, gifError);
+}
+
 /* ---------------- 14c. trim (stream copy) produces a shorter clip ---------------- */
 if (videoOk) {
   await open("video-trimmer");
@@ -290,6 +369,37 @@ const home = await page.goto(`${BASE}/`, { waitUntil: "domcontentloaded" });
 const homeBody = await page.locator("body").innerText();
 check("home: 7 categories incl. video & finance", homeBody.includes("ویدیو و صدا") && homeBody.includes("مالی و حقوق"), "");
 check("registry: no «به‌زودی» placeholders", !(await page.locator("body").innerText()).includes("به‌زودی"));
+
+/* ---------------- 17. no size limits on PDF watermark / page numbers ---------------- */
+await open("pdf-watermark");
+const watermarkBody = await page.locator("main").innerText();
+check(
+  "pdf-watermark: no 40 MB size limit is advertised",
+  !watermarkBody.includes("۴۰ مگابایت") && watermarkBody.includes("بدون محدودیت حجم"),
+  "",
+);
+
+/* ---------------- 18. mobile layout ---------------- */
+await page.setViewportSize({ width: 390, height: 844 });
+await open("");
+await page.waitForTimeout(600);
+check("mobile: bottom tab bar is visible", (await page.locator("[data-testid='mobile-tabbar']").count()) === 1);
+// The phone layout must not be a column of 7 tall (illustrated) cards.
+const tallCategoryCards = await page.evaluate(() =>
+  Array.from(document.querySelectorAll("main a[href^='/categories/']")).filter(
+    (el) => el.getBoundingClientRect().height > 220,
+  ).length,
+);
+check("mobile: home shows no giant stacked category cards", tallCategoryCards === 0, String(tallCategoryCards));
+const railScrollable = await page.evaluate(() => {
+  const list = document.querySelector("main nav[aria-label='دسته‌بندی‌ها'] ul");
+  return list ? list.scrollWidth > list.clientWidth : false;
+});
+check("mobile: category chips are a horizontal rail", railScrollable);
+await open("/categories");
+await page.waitForTimeout(600);
+const catLinks = await page.locator("main a[href^='/tools/']").count();
+check("mobile: /categories lists tools in compact rows", catLinks >= 20, String(catLinks));
 
 check("no uncaught JS errors", errors.length === 0, errors.slice(0, 4).join(" || "));
 
