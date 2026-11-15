@@ -3,7 +3,6 @@ import {
   CalendarSync,
   Clapperboard,
   FileArchive,
-  Gift,
   Percent,
   QrCode,
   Type,
@@ -75,13 +74,6 @@ export const popularQuestions: QuestionLink[] = [
     toolLabel: "مبدل تاریخ",
     hint: "شمسی ⇄ میلادی ⇄ قمری",
     icon: CalendarSync,
-  },
-  {
-    question: "عیدی و سنوات چقدر است؟",
-    slug: "eidi-sanavat",
-    toolLabel: "محاسبهٔ عیدی و سنوات",
-    hint: "طبق قانون کار",
-    icon: Gift,
   },
   {
     question: "چطور ویدیو را به GIF تبدیل کنم؟",

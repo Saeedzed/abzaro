@@ -8,6 +8,7 @@ import { Container } from "@/components/layout/Container";
 import { Logo } from "@/components/layout/Logo";
 import { SearchTrigger } from "@/components/search/SearchTrigger";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
+import { HeaderAccount } from "@/components/auth/HeaderAccount";
 import { siteConfig } from "@/config/site";
 import { cn } from "@/lib/utils";
 
@@ -79,6 +80,9 @@ export function Header() {
           <div className="hidden md:block">
             <ThemeToggle />
           </div>
+
+          {/* Account: login button or profile chip */}
+          <HeaderAccount />
 
           {/* Mobile menu button */}
           <button

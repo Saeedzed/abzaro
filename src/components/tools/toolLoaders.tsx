@@ -54,13 +54,9 @@ const Impl_docletter = dynamic(() => import("@/components/tools/impl/doc-letter"
 const Impl_doclease = dynamic(() => import("@/components/tools/impl/doc-lease"), { loading });
 const Impl_docexperience = dynamic(() => import("@/components/tools/impl/doc-experience"), { loading });
 const Impl_addresstransliterator = dynamic(() => import("@/components/tools/impl/address-transliterator"), { loading });
-const Impl_contactextractor = dynamic(() => import("@/components/tools/impl/contact-extractor"), { loading });
-const Impl_textonimage = dynamic(() => import("@/components/tools/impl/text-on-image"), { loading });
 const Impl_pdfencrypt = dynamic(() => import("@/components/tools/impl/pdf-encrypt"), { loading });
 const Impl_pdfdecrypt = dynamic(() => import("@/components/tools/impl/pdf-decrypt"), { loading });
 const Impl_pdftextextractor = dynamic(() => import("@/components/tools/impl/pdf-text-extractor"), { loading });
-const Impl_holidaycalendar = dynamic(() => import("@/components/tools/impl/holiday-calendar"), { loading });
-const Impl_weekdayfinder = dynamic(() => import("@/components/tools/impl/weekday-finder"), { loading });
 const Impl_iranianValidators = dynamic(() => import("@/components/tools/impl/iranian-validators"), { loading });
 
 const Impl_wordcounter = dynamic(() => import("@/components/tools/impl/word-counter"), { loading });
@@ -70,14 +66,12 @@ const Impl_persiantextcleaner = dynamic(() => import("@/components/tools/impl/pe
 const Impl_numbertowords = dynamic(() => import("@/components/tools/impl/number-to-words"), { loading });
 const Impl_percentagecalculator = dynamic(() => import("@/components/tools/impl/percentage-calculator"), { loading });
 const Impl_discountcalculator = dynamic(() => import("@/components/tools/impl/discount-calculator"), { loading });
-const Impl_agecalculator = dynamic(() => import("@/components/tools/impl/age-calculator"), { loading });
 const Impl_pdftoimage = dynamic(() => import("@/components/tools/impl/pdf-to-image"), { loading });
 const Impl_pdfcompressor = dynamic(() => import("@/components/tools/impl/pdf-compressor"), { loading });
 const Impl_pdfmerger = dynamic(() => import("@/components/tools/impl/pdf-merger"), { loading });
 const Impl_profilepicture = dynamic(() => import("@/components/tools/impl/profile-picture"), { loading });
 const Impl_loancalculator = dynamic(() => import("@/components/tools/impl/loan-calculator"), { loading });
 const Impl_bmicalculator = dynamic(() => import("@/components/tools/impl/bmi-calculator"), { loading });
-const Impl_datediff = dynamic(() => import("@/components/tools/impl/date-diff"), { loading });
 const Impl_exactage = dynamic(() => import("@/components/tools/impl/exact-age"), { loading });
 const Impl_qrcodegenerator = dynamic(() => import("@/components/tools/impl/qr-code-generator"), { loading });
 const Impl_jsonformatter = dynamic(() => import("@/components/tools/impl/json-formatter"), { loading });
@@ -89,8 +83,6 @@ const Impl_dateconverter = dynamic(() => import("@/components/tools/impl/date-co
 const Impl_unitconverter = dynamic(() => import("@/components/tools/impl/unit-converter"), { loading });
 const Impl_bankinterest = dynamic(() => import("@/components/tools/impl/bank-interest"), { loading });
 const Impl_heictojpg = dynamic(() => import("@/components/tools/impl/heic-to-jpg"), { loading });
-const Impl_pdfrotate = dynamic(() => import("@/components/tools/impl/pdf-rotate"), { loading });
-const Impl_pdfdeletepages = dynamic(() => import("@/components/tools/impl/pdf-delete-pages"), { loading });
 const Impl_pdfsplit = dynamic(() => import("@/components/tools/impl/pdf-split"), { loading });
 const Impl_jwtdecoder = dynamic(() => import("@/components/tools/impl/jwt-decoder"), { loading });
 const Impl_hashgenerator = dynamic(() => import("@/components/tools/impl/hash-generator"), { loading });
@@ -100,8 +92,6 @@ const Impl_videotoaudio = dynamic(() => import("@/components/tools/impl/video-to
 const Impl_videotrimmer = dynamic(() => import("@/components/tools/impl/video-trimmer"), { loading });
 const Impl_videoresizer = dynamic(() => import("@/components/tools/impl/video-resizer"), { loading });
 const Impl_salarytax = dynamic(() => import("@/components/tools/impl/salary-tax"), { loading });
-const Impl_eidisanavat = dynamic(() => import("@/components/tools/impl/eidi-sanavat"), { loading });
-const Impl_monthcalendar = dynamic(() => import("@/components/tools/impl/month-calendar"), { loading });
 const Impl_timestampconverter = dynamic(() => import("@/components/tools/impl/timestamp-converter"), { loading });
 const Impl_csvjson = dynamic(() => import("@/components/tools/impl/csv-json"), { loading });
 const Impl_colorpicker = dynamic(() => import("@/components/tools/impl/color-picker"), { loading });
@@ -113,17 +103,13 @@ const Impl_pdfwatermark = dynamic(() => import("@/components/tools/impl/pdf-wate
 const Impl_favicongenerator = dynamic(() => import("@/components/tools/impl/favicon-generator"), { loading });
 
 /**
- * The six Iranian validators share one lazily-loaded component and differ only
- * by which field they show, so they are resolved through a small registry
+ * The remaining Iranian validators (national ID) share one lazily-loaded
+ * component, so they are resolved through a small registry.
+ *  * by which field they show, so they are resolved through a small registry
  * instead of six near-identical modules.
  */
 const validatorKinds = [
   "national-id",
-  "mobile",
-  "bank-card",
-  "sheba",
-  "postal-code",
-  "plate",
 ] as const;
 
 type ValidatorKind = (typeof validatorKinds)[number];
@@ -154,8 +140,6 @@ export function getToolComponent(slug: string): ComponentType | null {
       return Impl_percentagecalculator;
     case "discount-calculator":
       return Impl_discountcalculator;
-    case "age-calculator":
-      return Impl_agecalculator;
     case "image-resizer":
       return Impl_imageresizer;
     case "image-compressor":
@@ -178,8 +162,6 @@ export function getToolComponent(slug: string): ComponentType | null {
       return Impl_loancalculator;
     case "bmi-calculator":
       return Impl_bmicalculator;
-    case "date-diff":
-      return Impl_datediff;
     case "exact-age":
       return Impl_exactage;
     case "qr-code-generator":
@@ -228,30 +210,18 @@ export function getToolComponent(slug: string): ComponentType | null {
       return Impl_docexperience;
     case "address-transliterator":
       return Impl_addresstransliterator;
-    case "contact-extractor":
-      return Impl_contactextractor;
-    case "text-on-image":
-      return Impl_textonimage;
     case "pdf-encrypt":
       return Impl_pdfencrypt;
     case "pdf-decrypt":
       return Impl_pdfdecrypt;
     case "pdf-text-extractor":
       return Impl_pdftextextractor;
-    case "holiday-calendar":
-      return Impl_holidaycalendar;
-    case "weekday-finder":
-      return Impl_weekdayfinder;
     case "unit-converter":
       return Impl_unitconverter;
     case "bank-interest":
       return Impl_bankinterest;
     case "heic-to-jpg":
       return Impl_heictojpg;
-    case "pdf-rotate":
-      return Impl_pdfrotate;
-    case "pdf-delete-pages":
-      return Impl_pdfdeletepages;
     case "pdf-split":
       return Impl_pdfsplit;
     case "jwt-decoder":
@@ -270,12 +240,8 @@ export function getToolComponent(slug: string): ComponentType | null {
       return Impl_videoresizer;
     case "salary-tax":
       return Impl_salarytax;
-    case "eidi-sanavat":
-      return Impl_eidisanavat;
     case "image-crop":
       return Impl_imagecrop;
-    case "month-calendar":
-      return Impl_monthcalendar;
     case "timestamp-converter":
       return Impl_timestampconverter;
     case "csv-json":
@@ -320,16 +286,6 @@ export function getToolComponent(slug: string): ComponentType | null {
       return Impl_urlsluganalyzer;
     case "national-id-validator":
       return validatorComponents["national-id"] ?? null;
-    case "mobile-validator":
-      return validatorComponents["mobile"] ?? null;
-    case "bank-card-validator":
-      return validatorComponents["bank-card"] ?? null;
-    case "sheba-validator":
-      return validatorComponents["sheba"] ?? null;
-    case "postal-code-validator":
-      return validatorComponents["postal-code"] ?? null;
-    case "plate-validator":
-      return validatorComponents["plate"] ?? null;
     default:
       return null;
   }

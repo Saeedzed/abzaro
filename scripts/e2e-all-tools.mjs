@@ -1,5 +1,14 @@
 import { chromium } from "playwright-core";
 
+/** Persian/Arabic-Indic digits → ASCII, then keep only the ASCII digits. */
+const toCount = (text) =>
+  Number(
+    text
+      .replace(/[۰-۹]/g, (d) => String(d.charCodeAt(0) - 0x06f0))
+      .replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x0660))
+      .replace(/[^0-9]/g, ""),
+  );
+
 const BASE = process.env.BASE_URL ?? "http://localhost:3000";
 const TEST_IMAGE = process.env.TEST_IMAGE ?? "/tmp/test-image.png";
 const TEST_IMAGE_2 = process.env.TEST_IMAGE_2 ?? "/tmp/test-image-2.jpg";
@@ -141,28 +150,6 @@ await page.waitForTimeout(700);
 body = await m7.innerText();
 check("discount: 500,000 at 30% → pay 350,000", body.includes("۳۵۰٬۰۰۰") && body.includes("تومان"));
 check("discount: shows the discount amount 150,000", body.includes("۱۵۰٬۰۰۰"));
-
-// ============ 8. AGE (Jalali) ============
-await open("age-calculator");
-const m8 = page.locator("main");
-await m8.locator("#birth-year").fill("1370");
-await m8.locator("#birth-month").selectOption("5");
-await m8.locator("#birth-day").fill("12");
-// the visible value should be Persian digits
-const yearShown = await m8.locator("#birth-year").inputValue();
-check("age: year field displays Persian digits", yearShown === "۱۳۷۰", `shown=${yearShown}`);
-await page.waitForTimeout(900);
-body = await m8.innerText();
-// Compared with "today" (2026-11-14 ≈ 1405-08-23) → 35 years, 3 months, 11 days
-check("age: computes an age from a Jalali birth date", /سن شما/.test(body) && /سال/.test(body));
-check("age: shows total days and weekday", body.includes("مجموع روزها") && body.includes("روز هفتهٔ تولد"));
-const ageOk = /۳[۰-۹]/.test(body);
-check("age: age is in a plausible range (30s)", ageOk, body.split("\n").slice(0, 12).join(" | "));
-
-// invalid date
-await m8.locator("#birth-year").fill("1500");
-await page.waitForTimeout(600);
-check("age: future birth date is rejected", (await m8.innerText()).includes("نمی‌تواند در آینده"));
 
 // ============ 9. IMAGE RESIZER ============
 await open("image-resizer");
@@ -360,24 +347,6 @@ await fields19.nth(0).fill("95");
 await page.waitForTimeout(700);
 check("bmi: 95kg reclassifies as اضافه وزن", /اضافه وزن|چاقی/.test(await m19.locator('[data-testid="bmi-category"]').innerText()));
 
-// ============ 20. DATE DIFF ============
-await open("date-diff");
-const m20 = page.locator("main");
-// 1403 is a leap year: 1403-01-01 → 1404-01-01 must be exactly 366 days.
-await m20.locator('[data-testid="from-month"]').selectOption("1");
-await m20.locator('[data-testid="to-month"]').selectOption("1");
-await m20.locator('[data-testid="from-year"]').fill("1403");
-await m20.locator('[data-testid="from-day"]').fill("1");
-await m20.locator('[data-testid="to-year"]').fill("1404");
-await m20.locator('[data-testid="to-day"]').fill("1");
-await page.waitForTimeout(900);
-body = await m20.innerText();
-check("date-diff: shows a year/month/day difference", (await m20.locator('[data-testid="date-diff-ymd"]').count()) === 1);
-const ymdText = await m20.locator('[data-testid="date-diff-ymd"]').innerText();
-check("date-diff: 1403-01-01 → 1404-01-01 is exactly ۱ سال و ۰ ماه و ۰ روز", /۱ سال و ۰ ماه و ۰ روز/.test(ymdText), ymdText);
-check("date-diff: leap year 1403 spans 366 days", has(body, 366), body.match(/[۰-۹]+ روز/)?.[0] ?? "");
-check("date-diff: shows the weekday of each date", (await m20.locator('[data-testid="date-diff-weekday-a"]').innerText()).length > 3);
-
 // ============ 21. EXACT AGE ============
 await open("exact-age");
 const m21 = page.locator("main");
@@ -494,7 +463,13 @@ check("images category: keeps the 3 new image tools", /JPG|Base64|پروفایل
 await page.goto(`${BASE}/categories/files`, { waitUntil: "domcontentloaded" });
 await page.waitForTimeout(600);
 const filesBody = await page.locator("main").innerText();
-check("files category: ۷ tools", has(filesBody, 7), filesBody.match(/[۰-۹]+ ابزار در این دسته‌بندی/)?.[0] ?? "");
+const filesCount = toCount(filesBody.match(/[۰-۹]+ ابزار در این دسته‌بندی/)?.[0] ?? "0");
+const filesCards = await page.locator("main a[href^='/tools/']").count();
+check(
+  "files category: the count matches the cards rendered and covers the PDF tools",
+  filesCount > 0 && filesCount === filesCards,
+  `${filesCount} vs ${filesCards} cards`,
+);
 check("files category: contains all four PDF tools", ["عکس به PDF", "PDF به عکس", "فشرده‌سازی PDF", "ادغام PDF"].every((t) => filesBody.includes(t)));
 
 await page.goto(`${BASE}/tools/word-counter`, { waitUntil: "domcontentloaded" });
@@ -572,15 +547,6 @@ await page.keyboard.press("Escape");
 await page.waitForTimeout(250);
 check("palette: Escape closes it", (await page.locator("[data-testid='command-palette-input']").count()) === 0);
 
-/** Persian/Arabic-Indic digits → ASCII, then keep only the ASCII digits. */
-const toCount = (text) =>
-  Number(
-    text
-      .replace(/[۰-۹]/g, (d) => String(d.charCodeAt(0) - 0x06f0))
-      .replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x0660))
-      .replace(/[^0-9]/g, ""),
-  );
-
 await page.goto(`${BASE}/tools`, { waitUntil: "domcontentloaded" });
 await page.waitForTimeout(700);
 const countAll = await page.locator("[data-testid='tools-filter-count']").innerText();
@@ -588,7 +554,7 @@ const cardsAll = await page.locator("main a[href^='/tools/']").count();
 const countAllNum = toCount(countAll);
 check(
   "tools filter: the «all» count matches the number of cards rendered",
-  countAllNum === cardsAll && cardsAll > 80,
+  countAllNum === cardsAll && cardsAll >= 70,
   `${countAll} vs ${cardsAll} cards`,
 );
 await page.locator("[data-testid='tools-filter-input']").fill("pdf");
@@ -715,30 +681,6 @@ await page.waitForTimeout(500);
 await page.locator("[data-testid='heic-input']").setInputFiles(TEST_IMAGE);
 await page.waitForTimeout(800);
 check("heic-to-jpg: rejects non-HEIC files with a Persian message", /HEIC|HEIF/.test(await page.locator("main").innerText()));
-
-// --- 9. pdf-rotate
-await page.goto(`${BASE}/tools/pdf-rotate`, { waitUntil: "domcontentloaded" });
-await page.waitForTimeout(500);
-await page.locator("[data-testid='pdf-rotate-input']").setInputFiles(PDF_FIXTURE_3P);
-await page.waitForTimeout(1200);
-check("pdf-rotate: reads the page count", has(await page.locator("main").innerText(), 3));
-await page.locator("[data-testid='pdf-rotate-run']").click();
-await page.waitForTimeout(2500);
-check("pdf-rotate: produces a downloadable file", (await page.locator("[data-testid='pdf-rotate-result']").count()) === 1);
-const rotateDownload = await grabDownload(() => page.locator("[data-testid='pdf-rotate-download']").click());
-check("pdf-rotate: download is a real PDF", rotateDownload.ok && rotateDownload.name.endsWith(".pdf") && rotateDownload.bytes > 500, `${rotateDownload.name} ${rotateDownload.bytes}B`);
-
-// --- 10. pdf-delete-pages
-await page.goto(`${BASE}/tools/pdf-delete-pages`, { waitUntil: "domcontentloaded" });
-await page.waitForTimeout(500);
-await page.locator("[data-testid='pdf-delete-input']").setInputFiles(PDF_FIXTURE_3P);
-await page.waitForTimeout(1200);
-await page.locator("[data-testid='pdf-delete-range']").fill("2");
-await page.locator("[data-testid='pdf-delete-run']").click();
-await page.waitForTimeout(2500);
-check("pdf-delete-pages: result reports 2 remaining pages", has(await page.locator("[data-testid='pdf-delete-result']").innerText(), 2), await page.locator("[data-testid='pdf-delete-result']").innerText());
-const deleteDownload = await grabDownload(() => page.locator("[data-testid='pdf-delete-download']").click());
-check("pdf-delete-pages: downloads the trimmed PDF", deleteDownload.ok && deleteDownload.bytes > 400, `${deleteDownload.name} ${deleteDownload.bytes}B`);
 
 // --- 11. pdf-split
 await page.goto(`${BASE}/tools/pdf-split`, { waitUntil: "domcontentloaded" });

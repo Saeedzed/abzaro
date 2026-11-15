@@ -61,7 +61,7 @@ export const landings: Landing[] = [
         a: "نه. محاسبه کاملاً در مرورگر شما اجرا می‌شود و هیچ مبلغی به سرور ارسال نمی‌شود.",
       },
     ],
-    related: ["eidi-sanavat", "loan-calculator", "bank-interest", "discount-calculator"],
+    related: ["loan-calculator", "bank-interest", "discount-calculator"],
     embed: true,
   },
   {

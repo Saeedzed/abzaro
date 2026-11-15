@@ -68,25 +68,6 @@ check(
 );
 
 
-/* ---------------- 2. eidi ---------------- */
-await open("eidi-sanavat");
-check(
-  "eidi-sanavat: total and sanavat are shown",
-  (await text("[data-testid='eidi-total']")).length > 0 &&
-    (await text("[data-testid='sanavat']")).includes("۱۰٬۳۹۰٬۹۶۸"),
-  `${await text("[data-testid='eidi-net']")} / ${await text("[data-testid='sanavat']")}`,
-);
-
-/* ---------------- 3. month calendar ---------------- */
-await open("month-calendar");
-const title = await text("[data-testid='calendar-title']");
-const cells = await page.locator("[data-testid='calendar-grid'] > div").count();
-check("month-calendar: current month title", /[۰-۹]+/.test(title), title);
-check("month-calendar: grid is a whole number of weeks", cells % 7 === 0 && cells >= 28, `${cells} cells`);
-await page.locator("[data-testid='calendar-next']").click();
-await page.waitForTimeout(400);
-check("month-calendar: arrow changes the month", (await text("[data-testid='calendar-title']")) !== title);
-
 /* ---------------- 4. timestamp ---------------- */
 await open("timestamp-converter");
 await page.locator("[data-testid='timestamp-input']").fill("1704067200");
