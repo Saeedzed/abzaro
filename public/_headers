@@ -1,0 +1,23 @@
+# Cloudflare Pages / Netlify header rules — copied verbatim into out/.
+# Docs: https://developers.cloudflare.com/pages/configuration/headers/
+
+# The gzipped ffmpeg core is content-addressed by the pinned npm version, so it
+# is safe to cache for a month. 9.75 MiB, under the 25 MiB per-file cap.
+/ffmpeg/*
+  Cache-Control: public, max-age=2592000
+  Access-Control-Allow-Origin: *
+
+# Hashed build assets never change.
+/_next/static/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# HTML must revalidate so a new deploy is visible immediately.
+/*.html
+  Cache-Control: public, max-age=0, must-revalidate
+
+# Everything else: security headers. X-Frame-Options is intentionally absent so
+# the site can be embedded in previews (see next.config.ts).
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), interest-cohort=()

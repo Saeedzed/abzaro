@@ -5,8 +5,9 @@
  *  - Static assets under /_next/static and the icons: cache-first (immutable).
  *  - Page navigations: network-first, falling back to the cached copy so the
  *    last visited tools keep working offline.
- *  - /ffmpeg/* is deliberately NOT cached: the core is 31 MB and would blow
- *    through the browser storage quota.
+ *  - /ffmpeg/* is deliberately NOT cached: the core is 30.6 MB raw (9.75 MB
+ *    gzipped, which is what ships) and would blow through the browser storage
+ *    quota. The browser's own HTTP cache covers it via the /ffmpeg/* headers.
  */
 
 const VERSION = "abzaro-v1";

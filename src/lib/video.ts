@@ -141,7 +141,42 @@ interface FFmpegUmdNamespace {
 /** Everything in /ffmpeg is copied straight from the npm packages. */
 const FFMPEG_SCRIPT_URL = "/ffmpeg/ffmpeg.js";
 const FFMPEG_CORE_URL = "/ffmpeg/ffmpeg-core.js";
+/**
+ * The 30.6 MB core is shipped gzipped (9.7 MB) because static hosts cap a
+ * single asset at 25 MiB — Cloudflare Pages/Workers enforce that on every plan.
+ * We fetch the .gz, inflate it in the browser with `DecompressionStream`, and
+ * hand ffmpeg.wasm a `blob:` URL, so nothing is decompressed by the host and
+ * the whole thing still runs locally. Hosts without the cap (and `next dev`)
+ * keep the raw `.wasm` and are used as a fallback.
+ */
+const FFMPEG_WASM_GZ_URL = "/ffmpeg/ffmpeg-core.wasm.gz";
 const FFMPEG_WASM_URL = "/ffmpeg/ffmpeg-core.wasm";
+
+/** Fetch the gzipped core and inflate it into a Blob URL. Null if unavailable. */
+async function gzippedCoreUrl(): Promise<string | null> {
+  if (typeof DecompressionStream === "undefined") return null; // Safari < 16.4
+  try {
+    const response = await fetch(FFMPEG_WASM_GZ_URL);
+    if (!response.ok || !response.body) return null;
+    // `fetch` already undoes any transport Content-Encoding (Cloudflare may
+    // gzip/br this response), so `response.body` is always the .gz file itself.
+    const inflated = response.body.pipeThrough(new DecompressionStream("gzip"));
+    const blob = await new Response(inflated, {
+      headers: { "Content-Type": "application/wasm" },
+    }).blob();
+    // Guard against a host that 200s an HTML error page instead of the file:
+    // a real wasm module starts with 0x00 0x61 0x73 0x6d ("\0asm").
+    const magic = new Uint8Array(await blob.slice(0, 4).arrayBuffer());
+    if (magic[0] !== 0x00 || magic[1] !== 0x61 || magic[2] !== 0x73 || magic[3] !== 0x6d) {
+      return null;
+    }
+    // ffmpeg.wasm's core fetches `wasmURL` itself, so the bytes must be
+    // addressable as a URL rather than passed as an ArrayBuffer.
+    return URL.createObjectURL(blob);
+  } catch {
+    return null;
+  }
+}
 
 let scriptPromise: Promise<FFmpegUmdNamespace> | null = null;
 
@@ -179,8 +214,9 @@ let ffmpegPromise: Promise<LoadedFFmpeg> | null = null;
 
 /**
  * Load ffmpeg once and reuse it for every conversion in the session. The worker
- * and the 31 MB core are fetched from /ffmpeg (our own origin), so the site
- * needs no COOP/COEP headers and the wasm stays out of the JS bundle.
+ * and the (gzipped, locally inflated) core are fetched from /ffmpeg on our own
+ * origin, so the site needs no COOP/COEP headers and the 9.7 MB wasm stays out
+ * of the JS bundle.
  */
 export function loadFFmpeg(onLog?: (line: string) => void): Promise<LoadedFFmpeg> {
   if (ffmpegPromise) return ffmpegPromise;
@@ -192,9 +228,11 @@ export function loadFFmpeg(onLog?: (line: string) => void): Promise<LoadedFFmpeg
 
     if (onLog) ffmpeg.on("log", ({ message }) => onLog(message));
 
+    const wasmURL = (await gzippedCoreUrl()) ?? FFMPEG_WASM_URL;
+
     await ffmpeg.load({
       coreURL: FFMPEG_CORE_URL,
-      wasmURL: FFMPEG_WASM_URL,
+      wasmURL,
     });
 
     return { ffmpeg };

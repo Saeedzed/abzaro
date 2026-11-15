@@ -1,20 +1,87 @@
+# Netlify deploy config — STATIC EXPORT (no server, no login, no functions).
+#
+# The site is a plain `output: "export"` Next.js build: `next build` writes a
+# fully static `out/` directory and Netlify only serves files. There is no
+# Next.js runtime, no serverless function and no database.
+#
+# Why the old config broke (build exit code 2):
+#   * `command = "npm run build"` did NOT set ABZARO_EXPORT, so Next.js produced
+#     a normal server build in `.next/` while Netlify was told to publish `.next`
+#     and to run @netlify/plugin-nextjs on it.
+#   * `@netlify/plugin-nextjs` then failed, because it needs a `.next/`
+#     directory produced by a server build with the runtime available.
+
 [build]
-  command = "npm run build"
+  command = "ABZARO_EXPORT=1 npm run build"
+  # prune-static drops the 30.6 MiB raw wasm; the browser loads the 9.75 MiB
+  # .wasm.gz instead (see scripts/prune-static.mjs and src/lib/video.ts).
   publish = "out"
 
-# Netlify's default is Node 22 these days, but pinning it makes the build
-# reproducible and avoids a silent toolchain switch.
 [build.environment]
-  NODE_VERSION = "22"
-  NEXT_TELEMETRY_DISABLED = "1"
-  # The site is a pure static export: no API routes, no server rendering.
-  # This is the same switch the local `npm run build:static` uses.
+  # Keep this in sync with "engines" in package.json (>=20.9.0).
+  NODE_VERSION = "20"
+  # Belt and braces: the build command already sets this, but making it an
+  # environment variable means `npm run build` alone also exports statically.
   ABZARO_EXPORT = "1"
+  # The canonical origin, baked into canonical tags, Open Graph URLs and the
+  # sitemap at build time.
+  NEXT_PUBLIC_SITE_URL = "https://abzaro.netlify.app"
 
-# Next's static export emits directory-style URLs (/tools/doc-invoice/index.html),
-# so clean URLs need no rewrite rules. Anything unknown should land on the 404
-# page Next generated rather than Netlify's own.
+# NOTE: @netlify/plugin-nextjs is deliberately NOT installed. Static export
+# needs no Node runtime and the plugin is what made the build fail. If server
+# rendering ever comes back: delete ABZARO_EXPORT, set publish = ".next", add
+#   [[plugins]]
+#     package = "@netlify/plugin-nextjs"
+
+# The ffmpeg.wasm core is content-addressed (npm packages are exact-pinned), so
+# it can be cached for a month. The browser streams the .wasm with range
+# requests — Netlify serves range requests for static files natively.
+[[headers]]
+  for = "/ffmpeg/*"
+  [headers.values]
+    Cache-Control = "public, max-age=2592000"
+
+# Long-cache the immutable build assets (hashed file names).
+[[headers]]
+  for = "/_next/static/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# HTML must revalidate so a new deploy is visible immediately.
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# Security headers. X-Frame-Options is intentionally absent so the site can be
+# embedded in previews; see the note in next.config.ts.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+
+# A trailing-slash export writes `path/index.html`. Netlify resolves the
+# slash-free form itself, but an explicit 301 keeps URLs canonical and avoids a
+# duplicate-content pair. `!` forces the rule even though the file exists.
 [[redirects]]
-  from = "/*"
-  to = "/404.html"
-  status = 404
+  from = "/tools/:slug"
+  to = "/tools/:slug/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/blog/:slug"
+  to = "/blog/:slug/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/categories/:slug"
+  to = "/categories/:slug/"
+  status = 301
+  force = true
+
+# SPA-style fallback is NOT enabled: every route is prerendered to its own
+# index.html, so a 404 should stay a 404.

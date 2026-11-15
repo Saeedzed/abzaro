@@ -13,9 +13,10 @@
     "test": "node --import tsx --test $(find src -name '*.test.ts')",
     "test:e2e": "node scripts/e2e-check.mjs",
     "test:e2e:all": "node scripts/e2e-all-tools.mjs",
-    "build:static": "ABZARO_EXPORT=1 next build",
+    "build:static": "ABZARO_EXPORT=1 next build && node scripts/prune-static.mjs",
     "package:static": "node scripts/package-static.mjs",
-    "fixtures": "node scripts/make-fixtures.mjs"
+    "fixtures": "node scripts/make-fixtures.mjs",
+    "prune:static": "node scripts/prune-static.mjs"
   },
   "dependencies": {
     "@cantoo/pdf-lib": "^2.11.1",
