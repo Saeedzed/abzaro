@@ -1,8 +1,0 @@
-# Cloudflare Pages redirect rules — copied verbatim into out/.
-# The export uses trailingSlash: true, so every route is `path/index.html`.
-# Cloudflare resolves `/tools/x` to `/tools/x/` by itself; these rules make the
-# slash-free form a permanent redirect so URLs stay canonical (one URL per page,
-# not two). `301` is cheaper than `200` here because nothing is rewritten.
-/tools/:slug  /tools/:slug/  301
-/blog/:slug  /blog/:slug/  301
-/categories/:slug  /categories/:slug/  301
