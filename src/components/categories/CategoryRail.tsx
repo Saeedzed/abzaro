@@ -26,7 +26,7 @@ export function CategoryRail({ className, chipClassName }: CategoryRailProps) {
               <a
                 href={`#cat-${category.slug}`}
                 className={cn(
-                  "flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-ink-200 bg-white px-3 py-2 text-xs font-semibold text-ink-700 shadow-card transition active:scale-95",
+                  "flex min-h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border border-ink-200 bg-white px-3.5 py-2 text-xs font-semibold text-ink-700 shadow-card transition active:scale-95",
                   chipClassName,
                 )}
               >

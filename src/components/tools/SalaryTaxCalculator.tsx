@@ -1,17 +1,18 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { BadgeCheck, Receipt, Wallet } from "lucide-react";
 import {
   EMPLOYEE_INSURANCE_RATE,
   HOUSING_ALLOWANCE_1404,
-  MIN_MONTHLY_WAGE_1404,
+  getPayrollYear,
   PAYROLL_YEAR,
   calculateSalary,
 } from "@/lib/payroll";
 import { ResultHint, ResultRow, ToolPanel, formatFa, formatToman } from "./shared";
 import { NumberField } from "./shared";
 import { ShareResult, useSharedInput } from "./ShareResult";
+import { PayrollYearTabs } from "./PayrollYearTabs";
 
 /** Parse a Persian/Latin number with separators; empty → 0. */
 function parseAmount(value: string): number {
@@ -29,9 +30,15 @@ function parseAmount(value: string): number {
  * Payslip view: gross → insurance → taxable → bracketed tax → net.
  */
 export function SalaryTaxCalculator() {
+  const [year, setYear] = useState(PAYROLL_YEAR);
+  const yearData = getPayrollYear(year);
   const [base, setBase] = useSharedInput("base", "30000000");
   const [extras, setExtras] = useSharedInput("extras", "0");
   const [exempt, setExempt] = useSharedInput("exempt", String(HOUSING_ALLOWANCE_1404));
+  // When the year changes, re-seed the exempt field with that year's housing allowance
+  useEffect(() => {
+    setExempt(String(yearData.housingAllowance));
+  }, [year, yearData.housingAllowance, setExempt]);
 
   const result = useMemo(
     () =>
@@ -39,20 +46,22 @@ export function SalaryTaxCalculator() {
         baseSalary: parseAmount(base),
         taxableExtras: parseAmount(extras),
         exemptExtras: parseAmount(exempt),
+        year,
       }),
-    [base, extras, exempt],
+    [base, extras, exempt, year],
   );
 
-  const belowMinWage = parseAmount(base) > 0 && parseAmount(base) < MIN_MONTHLY_WAGE_1404;
+  const belowMinWage = parseAmount(base) > 0 && parseAmount(base) < yearData.minMonthlyWage;
 
   return (
     <div className="grid gap-4 lg:grid-cols-2">
       <ToolPanel
         title="اطلاعات حقوق"
-        description={`معافیت‌ها و پله‌های مالیاتی سال ${formatFa(PAYROLL_YEAR, 0)}`}
+        description={`معافیت‌ها و پله‌های مالیاتی سال ${formatFa(year, 0)}`}
         icon={<Wallet className="h-4 w-4 text-brand-600" aria-hidden="true" />}
       >
         <div className="space-y-4">
+          <PayrollYearTabs value={year} onChange={setYear} />
           <NumberField
             thousands
             label="حقوق پایه و مزایای مشمول (تومان)"
@@ -75,7 +84,7 @@ export function SalaryTaxCalculator() {
             label="مزایای معاف از مالیات (حق مسکن، بن)"
             value={exempt}
             onChange={setExempt}
-            placeholder={String(HOUSING_ALLOWANCE_1404)}
+            placeholder={String(yearData.housingAllowance)}
             suffix="تومان"
           />
 
@@ -87,7 +96,7 @@ export function SalaryTaxCalculator() {
             <li>تا ۲۴ میلیون تومان درآمد ماهانه مشمول مالیات نیست.</li>
             <li>پله‌ها: ۱۰٪ (۲۴ تا ۳۰) · ۱۵٪ (۳۰ تا ۳۸) · ۲۰٪ (۳۸ تا ۵۰) · ۲۵٪ (۵۰ تا ۶۶٫۶) · ۳۰٪ (بالاتر).</li>
             <li>
-              حداقل حقوق مصوب {formatFa(PAYROLL_YEAR, 0)}: {formatToman(MIN_MONTHLY_WAGE_1404)}
+              حداقل حقوق مصوب {formatFa(year, 0)}: {formatToman(yearData.minMonthlyWage)}
             </li>
           </ul>
 

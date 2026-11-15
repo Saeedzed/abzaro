@@ -236,3 +236,23 @@ input[inputmode="decimal"] {
   text-align: start;
   font-variant-numeric: tabular-nums;
 }
+
+/* Footer, phones only: the three link groups collapse to <details> so the footer
+   is three tappable rows instead of ~25 tiny two-word ones. From `sm` up the
+   sections are always open and the summary is inert (see Footer.tsx). */
+@media (max-width: 639px) {
+  footer details > .footer-nav {
+    display: none;
+  }
+  footer details[open] > .footer-nav {
+    display: block;
+  }
+  footer details summary {
+    min-height: 44px;
+  }
+  footer details:not([open]) > .footer-nav {
+    display: none;
+  }
+  /* Closed sections must stay closed on phones even though the marker is inert
+     from sm up: `sm:open` has no effect below sm, so this is the default state. */
+}

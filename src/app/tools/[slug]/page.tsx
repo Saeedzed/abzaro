@@ -3,50 +3,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Container } from "@/components/layout/Container";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
-import { DuplicateLineRemover } from "@/components/tools/DuplicateLineRemover";
-import { LineSorter } from "@/components/tools/LineSorter";
-import { KeywordDensity } from "@/components/tools/KeywordDensity";
-import { SlugGenerator } from "@/components/tools/SlugGenerator";
-import { DateConverter } from "@/components/tools/DateConverter";
-import { UnitConverter } from "@/components/tools/UnitConverter";
-import { BankInterestCalculator } from "@/components/tools/BankInterestCalculator";
-import { JwtDecoder } from "@/components/tools/JwtDecoder";
-import { HashGenerator } from "@/components/tools/HashGenerator";
 import { RelatedTools } from "@/components/tools/RelatedTools";
+import { ToolFaq } from "@/components/tools/ToolFaq";
+import { SiblingTabs } from "@/components/tools/SiblingTabs";
 import { RecentToolsTracker } from "@/components/tools/RecentToolsTracker";
+import { ToolSlot } from "@/components/tools/ToolSlot";
 import { toPersianDigits } from "@/lib/persian";
-import { WordCounter } from "@/components/tools/WordCounter";
-import { CharacterCounter } from "@/components/tools/CharacterCounter";
-import { PersianNumberConverter } from "@/components/tools/PersianNumberConverter";
-import { PersianTextCleaner } from "@/components/tools/PersianTextCleaner";
-import { NumberToWords } from "@/components/tools/NumberToWords";
-import { PercentageCalculator } from "@/components/tools/PercentageCalculator";
-import { DiscountCalculator } from "@/components/tools/DiscountCalculator";
-import { AgeCalculator } from "@/components/tools/AgeCalculator";
-import { ImageResizer } from "@/components/tools/ImageResizer";
-import { ImageCompressor } from "@/components/tools/ImageCompressor";
-import { ImageFormatConverter } from "@/components/tools/ImageFormatConverter";
-import { ImageToBase64 } from "@/components/tools/ImageToBase64";
-import { ProfilePicture } from "@/components/tools/ProfilePicture";
-import { LoanCalculator } from "@/components/tools/LoanCalculator";
-import { BmiCalculator } from "@/components/tools/BmiCalculator";
-import { DateDiffCalculator } from "@/components/tools/DateDiffCalculator";
-import { ExactAgeCalculator } from "@/components/tools/ExactAgeCalculator";
-import { JsonFormatter } from "@/components/tools/JsonFormatter";
-import { Base64Tool } from "@/components/tools/Base64Tool";
-import { UrlEncoder } from "@/components/tools/UrlEncoder";
-import { SalaryTaxCalculator } from "@/components/tools/SalaryTaxCalculator";
-import { EidiSanavatCalculator } from "@/components/tools/EidiSanavatCalculator";
-import { ImageCropper } from "@/components/tools/ImageCropper";
-import { MonthCalendar } from "@/components/tools/MonthCalendar";
-import { TimestampConverter } from "@/components/tools/TimestampConverter";
-import { CsvJsonConverter } from "@/components/tools/CsvJsonConverter";
-import { ColorPicker } from "@/components/tools/ColorPicker";
-import { FindReplace } from "@/components/tools/FindReplace";
-import { PasswordGenerator } from "@/components/tools/PasswordGenerator";
-import { PersianLorem } from "@/components/tools/PersianLorem";
-import { ToolPlaceholder } from "@/components/tools/ToolPlaceholder";
-import { HeavyTool, PdfPageToolLoader } from "@/components/tools/HeavyTools";
 import { getCategory } from "@/data/categories";
 import { categoriesOf, getToolBySlug, tools } from "@/data/tools";
 import { siteConfig } from "@/config/site";
@@ -79,129 +41,6 @@ export async function generateMetadata({
       description: tool.seoDescription,
     },
   };
-}
-
-/** Renders the real implementation for live tools, placeholder otherwise. */
-function ToolImplementation({ slug }: { slug: string }) {
-  switch (slug) {
-    case "word-counter":
-      return <WordCounter />;
-    case "character-counter":
-      return <CharacterCounter />;
-    case "persian-number-converter":
-      return <PersianNumberConverter />;
-    case "persian-text-cleaner":
-      return <PersianTextCleaner />;
-    case "number-to-words":
-      return <NumberToWords />;
-    case "percentage-calculator":
-      return <PercentageCalculator />;
-    case "discount-calculator":
-      return <DiscountCalculator />;
-    case "age-calculator":
-      return <AgeCalculator />;
-    case "image-resizer":
-      return <ImageResizer />;
-    case "image-compressor":
-      return <ImageCompressor />;
-    case "image-to-pdf":
-      return <HeavyTool slug="image-to-pdf" />;
-    case "pdf-to-image":
-      return <HeavyTool slug="pdf-to-image" />;
-    case "pdf-compressor":
-      return <HeavyTool slug="pdf-compressor" />;
-    case "pdf-merger":
-      return <HeavyTool slug="pdf-merger" />;
-    case "image-format-converter":
-      return <ImageFormatConverter />;
-    case "image-to-base64":
-      return <ImageToBase64 />;
-    case "profile-picture":
-      return <ProfilePicture />;
-    case "loan-calculator":
-      return <LoanCalculator />;
-    case "bmi-calculator":
-      return <BmiCalculator />;
-    case "date-diff":
-      return <DateDiffCalculator />;
-    case "exact-age":
-      return <ExactAgeCalculator />;
-    case "qr-code-generator":
-      return <HeavyTool slug="qr-code-generator" />;
-    case "json-formatter":
-      return <JsonFormatter />;
-    case "base64-encoder":
-      return <Base64Tool />;
-    case "url-encoder":
-      return <UrlEncoder />;
-
-    case "duplicate-line-remover":
-      return <DuplicateLineRemover />;
-    case "line-sorter":
-      return <LineSorter />;
-    case "keyword-density":
-      return <KeywordDensity />;
-    case "slug-generator":
-      return <SlugGenerator />;
-    case "date-converter":
-      return <DateConverter />;
-    case "unit-converter":
-      return <UnitConverter />;
-    case "bank-interest":
-      return <BankInterestCalculator />;
-    case "heic-to-jpg":
-      return <HeavyTool slug="heic-to-jpg" />;
-    case "pdf-rotate":
-      return <PdfPageToolLoader kind="rotate" />;
-    case "pdf-delete-pages":
-      return <PdfPageToolLoader kind="delete" />;
-    case "pdf-split":
-      return <PdfPageToolLoader kind="split" />;
-    case "jwt-decoder":
-      return <JwtDecoder />;
-    case "hash-generator":
-      return <HashGenerator />;
-    case "video-compressor":
-      return <HeavyTool slug="video-compressor" />;
-    case "video-to-gif":
-      return <HeavyTool slug="video-to-gif" />;
-    case "video-to-audio":
-      return <HeavyTool slug="video-to-audio" />;
-    case "video-trimmer":
-      return <HeavyTool slug="video-trimmer" />;
-    case "video-resizer":
-      return <HeavyTool slug="video-resizer" />;
-    case "salary-tax":
-      return <SalaryTaxCalculator />;
-    case "eidi-sanavat":
-      return <EidiSanavatCalculator />;
-    case "image-crop":
-      return <ImageCropper />;
-    case "month-calendar":
-      return <MonthCalendar />;
-    case "timestamp-converter":
-      return <TimestampConverter />;
-    case "csv-json":
-      return <CsvJsonConverter />;
-    case "color-picker":
-      return <ColorPicker />;
-    case "find-replace":
-      return <FindReplace />;
-    case "password-generator":
-      return <PasswordGenerator />;
-    case "persian-lorem":
-      return <PersianLorem />;
-    case "pdf-reorder":
-      return <HeavyTool slug="pdf-reorder" />;
-    case "pdf-watermark":
-      return <HeavyTool slug="pdf-watermark" />;
-    case "favicon-generator":
-      return <HeavyTool slug="favicon-generator" />;
-    default: {
-      const tool = getToolBySlug(slug);
-      return tool ? <ToolPlaceholder tool={tool} /> : null;
-    }
-  }
 }
 
 export default async function ToolPage({
@@ -281,11 +120,13 @@ export default async function ToolPage({
         </div>
       </header>
 
+      <SiblingTabs slug={tool.slug} />
+
       <section
-        className="mt-4 rounded-2xl border border-ink-200 bg-ink-50/60 p-2.5 shadow-card sm:mt-8 sm:rounded-3xl sm:p-6 lg:p-8"
+        className="mt-3 rounded-2xl border border-ink-200 bg-ink-50/60 p-2.5 shadow-card sm:mt-4 sm:rounded-3xl sm:p-6 lg:p-8"
         aria-label={`ابزار ${tool.title}`}
       >
-        <ToolImplementation slug={tool.slug} />
+        <ToolSlot slug={tool.slug} />
       </section>
 
       <section className="mt-8 sm:mt-12" aria-labelledby="how-to-heading">
@@ -312,6 +153,8 @@ export default async function ToolPage({
           ))}
         </ol>
       </section>
+
+      <ToolFaq slug={tool.slug} title={tool.title} />
 
       <section className="mt-12" aria-labelledby="about-tool-heading">
         <h2

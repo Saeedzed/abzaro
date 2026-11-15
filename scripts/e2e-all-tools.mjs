@@ -572,19 +572,46 @@ await page.keyboard.press("Escape");
 await page.waitForTimeout(250);
 check("palette: Escape closes it", (await page.locator("[data-testid='command-palette-input']").count()) === 0);
 
+/** Persian/Arabic-Indic digits → ASCII, then keep only the ASCII digits. */
+const toCount = (text) =>
+  Number(
+    text
+      .replace(/[۰-۹]/g, (d) => String(d.charCodeAt(0) - 0x06f0))
+      .replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x0660))
+      .replace(/[^0-9]/g, ""),
+  );
+
 await page.goto(`${BASE}/tools`, { waitUntil: "domcontentloaded" });
 await page.waitForTimeout(700);
 const countAll = await page.locator("[data-testid='tools-filter-count']").innerText();
-check("tools filter: shows all 56 tools by default", has(countAll, 56), countAll);
+const cardsAll = await page.locator("main a[href^='/tools/']").count();
+const countAllNum = toCount(countAll);
+check(
+  "tools filter: the «all» count matches the number of cards rendered",
+  countAllNum === cardsAll && cardsAll > 80,
+  `${countAll} vs ${cardsAll} cards`,
+);
 await page.locator("[data-testid='tools-filter-input']").fill("pdf");
 await page.waitForTimeout(400);
 const countSearch = await page.locator("[data-testid='tools-filter-count']").innerText();
-check("tools filter: live search narrows the grid", has(countSearch, 9), countSearch);
+const countSearchNum = toCount(countSearch);
+const cardsSearch = await page.locator("main a[href^='/tools/']").count();
+check(
+  "tools filter: live search narrows the grid",
+  countSearchNum > 0 && countSearchNum < countAllNum && countSearchNum === cardsSearch,
+  `${countSearch} vs ${cardsSearch} cards`,
+);
 await page.locator("[data-testid='tools-filter-input']").fill("");
 await page.getByRole("button", { name: /^تصاویر \(/ }).first().click();
 await page.waitForTimeout(400);
 const countCat = await page.locator("[data-testid='tools-filter-count']").innerText();
-check("tools filter: category chip filters to 8 image tools", has(countCat, 8), countCat);
+const countCatNum = toCount(countCat);
+const cardsCat = await page.locator("main a[href^='/tools/']").count();
+check(
+  "tools filter: the category chip count matches the cards it shows",
+  countCatNum > 0 && countCatNum < countAllNum && countCatNum === cardsCat,
+  `${countCat} vs ${cardsCat} cards`,
+);
 check(
   "tools filter: no PDF tool card leaks into the images filter",
   (await page.locator("main a[href^='/tools/pdf-']").count()) === 0 &&
@@ -754,7 +781,10 @@ check("hash-generator: uuids look like v4", /[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3
 const reg = await page.goto(`${BASE}/tools`, { waitUntil: "domcontentloaded" });
 check("tools page loads", reg?.status() === 200);
 body = await page.locator("body").innerText();
-check("all 56 tools listed, none marked «به‌زودی»", !body.includes("به‌زودی") && (await page.locator("main a[href^='/tools/']").count()) >= 56);
+check(
+  "every registered tool is listed and none is marked «به‌زودی»",
+  !body.includes("به‌زودی") && (await page.locator("main a[href^='/tools/']").count()) >= 80,
+);
 
 check("no uncaught JS errors", errors.length === 0, errors.slice(0, 4).join(" || "));
 

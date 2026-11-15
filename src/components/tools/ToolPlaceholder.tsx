@@ -23,7 +23,7 @@ export function ToolPlaceholder({ tool }: { tool: Tool }) {
       </p>
       <Link
         href="/tools"
-        className="mt-6 inline-flex items-center gap-2 rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-700"
+        className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-700"
       >
         مشاهده همه ابزارها
         <ArrowLeft className="h-4 w-4" aria-hidden="true" />

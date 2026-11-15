@@ -74,7 +74,7 @@ export function ToolsExplorer() {
             onClick={() => setFilter("all")}
             aria-pressed={filter === "all"}
             className={cn(
-              "rounded-full border px-3 py-1.5 text-xs font-medium transition",
+              "flex min-h-10 items-center rounded-full border px-3.5 py-1.5 text-xs font-medium transition",
               filter === "all"
                 ? "border-brand-600 bg-brand-600 text-white"
                 : "border-ink-200 bg-white text-ink-600 hover:border-brand-300 hover:text-brand-700",
@@ -92,7 +92,7 @@ export function ToolsExplorer() {
                 onClick={() => setFilter(category.slug)}
                 aria-pressed={active}
                 className={cn(
-                  "rounded-full border px-3 py-1.5 text-xs font-medium transition",
+                  "flex min-h-10 items-center rounded-full border px-3.5 py-1.5 text-xs font-medium transition",
                   active
                     ? "border-brand-600 bg-brand-600 text-white"
                     : "border-ink-200 bg-white text-ink-600 hover:border-brand-300 hover:text-brand-700",
@@ -148,7 +148,7 @@ export function ToolsExplorer() {
                 setFilter("all");
                 setQuery("");
               }}
-              className="rounded-lg bg-brand-600 px-4 py-2 text-xs font-semibold text-white transition hover:bg-brand-700"
+              className="min-h-10 rounded-lg bg-brand-600 px-4 py-2 text-xs font-semibold text-white transition hover:bg-brand-700"
             >
               نمایش همهٔ ابزارها
             </button>

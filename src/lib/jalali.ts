@@ -187,10 +187,14 @@ export const WEEKDAYS = [
 /** JDN of a known reference date: 2000-01-01 was a Saturday. */
 const REFERENCE_JDN = gregorianToJdn(2000, 1, 1);
 
+/** 0 = شنبه … 6 = جمعه, for a JDN (week starts on Saturday). */
+export function weekdayIndexOfJdn(jdn: number): number {
+  return mod(jdn - REFERENCE_JDN, 7);
+}
+
 /** Persian weekday name for a JDN (week starts on Saturday). */
 export function weekdayFromJdn(jdn: number): string {
-  const index = mod(jdn - REFERENCE_JDN, 7);
-  return WEEKDAYS[index] ?? "";
+  return WEEKDAYS[weekdayIndexOfJdn(jdn)] ?? "";
 }
 
 export interface AgeResult {

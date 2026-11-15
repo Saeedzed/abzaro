@@ -364,7 +364,7 @@ const sw = await page.goto(`${BASE}/sw.js`);
 check("pwa: service worker is served", sw?.status() === 200, String(sw?.status()));
 await page.goto(`${BASE}/tools`, { waitUntil: "domcontentloaded" });
 await page.waitForTimeout(800);
-check("registry: 56 tools listed", (await page.locator("main a[href^='/tools/']").count()) >= 56, String(await page.locator("main a[href^='/tools/']").count()));
+check("registry: 74 tools listed", (await page.locator("main a[href^='/tools/']").count()) >= 74, String(await page.locator("main a[href^='/tools/']").count()));
 const home = await page.goto(`${BASE}/`, { waitUntil: "domcontentloaded" });
 const homeBody = await page.locator("body").innerText();
 check("home: 7 categories incl. video & finance", homeBody.includes("ویدیو و صدا") && homeBody.includes("مالی و حقوق"), "");
@@ -400,6 +400,77 @@ await open("/categories");
 await page.waitForTimeout(600);
 const catLinks = await page.locator("main a[href^='/tools/']").count();
 check("mobile: /categories lists tools in compact rows", catLinks >= 20, String(catLinks));
+
+// ─── Group A: intent entry points, popular questions, landings, FAQ schema ───
+await open("/");
+await page.waitForTimeout(700);
+const intents = await page.locator("[data-testid='hero-intents'] a").count();
+check("A1: hero shows intent entry points", intents >= 6, String(intents));
+const intentHrefs = await page.evaluate(() =>
+  Array.from(document.querySelectorAll("[data-testid='hero-intents'] a")).map((a) => a.getAttribute("href")),
+);
+check("A1: every intent points at a tool route", intentHrefs.every((h) => /^\/tools\/[a-z0-9-]+$/.test(h)), intentHrefs.join(","));
+
+const popular = await page.locator("[data-testid='popular-questions'] a").count();
+check("A3: popular questions block is on the homepage", popular >= 8, String(popular));
+
+// Landing pages: real H1, self-canonical, FAQPage JSON-LD, and a working tool.
+for (const [path, expectEmbed] of [["/salary", true], ["/pdf", true], ["/word-count", true], ["/loan", false], ["/interest", false]]) {
+  const res = await page.goto(BASE + path, { waitUntil: "domcontentloaded" });
+  await page.waitForTimeout(900);
+  check(`A4: ${path} returns 200`, res?.status() === 200, String(res?.status()));
+  const h1 = await page.locator("h1").first().innerText();
+  check(`A4: ${path} has its own H1`, h1.trim().length > 8, h1.slice(0, 40));
+  const canonical = await page.getAttribute("link[rel='canonical']", "href");
+  check(`A4: ${path} canonical points at itself`, (canonical ?? "").endsWith(path), String(canonical));
+  const hasFaqSchema = await page.evaluate(() =>
+    Array.from(document.querySelectorAll("script[type='application/ld+json']")).some((s) =>
+      s.textContent.includes('"FAQPage"'),
+    ),
+  );
+  check(`A4: ${path} emits FAQPage schema`, hasFaqSchema);
+  const visibleFaq = await page.locator("section[aria-labelledby='landing-faq'] details").count();
+  check(`A4: ${path} renders the FAQ visibly`, visibleFaq >= 2, String(visibleFaq));
+  const tools = await page.locator("main input, main textarea").count();
+  check(`A4: ${path} ${expectEmbed ? "embeds the real tool" : "links to the tool"}`, expectEmbed ? tools > 0 : (await page.locator("[data-testid='landing-open-tool']").count()) === 1, String(tools));
+}
+
+// The words actually get counted on the embedded tool.
+await page.goto(BASE + "/word-count", { waitUntil: "domcontentloaded" });
+await page.waitForTimeout(1200);
+const counter = page.locator("textarea").first();
+await counter.fill("یک دو سه چهار پنج");
+await page.waitForTimeout(700);
+const counted = await page.locator("main").innerText();
+check("A4: /word-count counts live", /۵|5/.test(counted.replace(/[۰-۹]/g, (d) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d)))), counted.slice(0, 60).replace(/\n/g, " "));
+
+// A5: FAQ on the ten top tools, visible AND in structured data.
+for (const slug of ["word-counter", "pdf-compressor", "salary-tax", "video-compressor"]) {
+  await page.goto(`${BASE}/tools/${slug}`, { waitUntil: "domcontentloaded" });
+  await page.waitForTimeout(700);
+  const visible = await page.locator("[data-testid='tool-faq'] details").count();
+  const schema = await page.evaluate(() =>
+    Array.from(document.querySelectorAll("script[type='application/ld+json']")).some((s) => s.textContent.includes('"FAQPage"')),
+  );
+  check(`A5: /tools/${slug} FAQ visible + schema`, visible >= 2 && schema, `visible=${visible} schema=${schema}`);
+}
+
+// A2: the transparency page exists, is linked and states numbers.
+await page.goto(BASE + "/how-it-works", { waitUntil: "domcontentloaded" });
+await page.waitForTimeout(600);
+check("A2: /how-it-works loads", (await page.locator("h1").count()) === 1);
+const hiw = await page.locator("main").innerText();
+check("A2: states the test, route and weight numbers", /۲۸۲|282/.test(hiw) && /۹۵|95/.test(hiw) && /۲۰۶|206/.test(hiw) && /۱۹۷|197/.test(hiw), hiw.slice(0, 40).replace(/\n/g, " "));
+const linked = await page.evaluate(() => Array.from(document.querySelectorAll("footer a")).some((a) => a.getAttribute("href") === "/how-it-works"));
+check("A2: footer links to /how-it-works", linked);
+
+// A7: footer columns collapse on phones.
+await page.setViewportSize({ width: 390, height: 844 });
+await page.goto(BASE + "/", { waitUntil: "domcontentloaded" });
+await page.waitForTimeout(700);
+const footerDetails = await page.locator("footer details").count();
+check("A7: footer uses collapsible sections", footerDetails >= 3, String(footerDetails));
+await page.setViewportSize({ width: 1280, height: 1000 });
 
 check("no uncaught JS errors", errors.length === 0, errors.slice(0, 4).join(" || "));
 

@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { Container } from "@/components/layout/Container";
 import { Hero } from "@/components/home/Hero";
+import { PopularQuestions } from "@/components/home/PopularQuestions";
 import { RecentTools } from "@/components/tools/RecentTools";
 import { ToolGrid } from "@/components/tools/ToolGrid";
 import { CategoryCard } from "@/components/categories/CategoryCard";
@@ -55,7 +56,7 @@ function SectionHeading({
       {href && linkLabel && (
         <Link
           href={href}
-          className="flex items-center gap-1.5 text-sm font-semibold text-brand-600 transition hover:text-brand-700"
+          className="flex min-h-9 items-center gap-1.5 text-sm font-semibold text-brand-600 transition hover:text-brand-700"
         >
           {linkLabel}
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
@@ -140,6 +141,11 @@ export default function HomePage() {
           />
           <ToolGrid tools={popularTools} className="mt-8" />
         </Container>
+      </section>
+
+      {/* Real questions → one-click tools */}
+      <section className="pb-10 pt-2 sm:pb-12" aria-labelledby="popular-questions-heading">
+        <PopularQuestions />
       </section>
 
       {/* Recently added */}

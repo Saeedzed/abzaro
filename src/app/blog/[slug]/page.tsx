@@ -5,6 +5,7 @@ import { ArrowRight, CalendarDays, Clock } from "lucide-react";
 import { Container } from "@/components/layout/Container";
 import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { getPostBySlug, posts } from "@/data/posts";
+import { tools } from "@/data/tools";
 import { toPersianDigits } from "@/lib/persian";
 import { siteConfig } from "@/config/site";
 
@@ -53,6 +54,11 @@ export default async function BlogPostPage({
   const post = getPostBySlug(slug);
   if (!post) notFound();
 
+  const linkedTool = post.tool ? tools.find((tool) => tool.slug === post.tool) : undefined;
+  const relatedTools = (post.related ?? [])
+    .map((relatedSlug) => tools.find((tool) => tool.slug === relatedSlug))
+    .filter((tool): tool is (typeof tools)[number] => Boolean(tool));
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Article",
@@ -100,6 +106,41 @@ export default async function BlogPostPage({
             <p key={index}>{paragraph}</p>
           ))}
         </div>
+
+        {linkedTool ? (
+          <div
+            data-testid="post-tool-cta"
+            className="mt-10 rounded-2xl border border-brand-200 bg-brand-50 p-6"
+          >
+            <p className="text-sm font-bold text-ink-900">{linkedTool.title}</p>
+            <p className="mt-2 text-sm leading-7 text-ink-600">{linkedTool.description}</p>
+            <Link
+              href={`/tools/${linkedTool.slug}`}
+              className="mt-4 inline-flex items-center gap-2 rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-700"
+            >
+              رفتن به ابزار
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </Link>
+          </div>
+        ) : null}
+
+        {relatedTools.length > 0 ? (
+          <div className="mt-4 space-y-2">
+            <p className="text-xs font-bold text-ink-500">ابزارهای مرتبط</p>
+            <ul className="flex flex-wrap gap-2">
+              {relatedTools.map((tool) => (
+                <li key={tool.slug}>
+                  <Link
+                    href={`/tools/${tool.slug}`}
+                    className="inline-block rounded-full border border-ink-200 px-3 py-1 text-xs text-ink-700 transition hover:border-brand-300 hover:text-brand-700"
+                  >
+                    {tool.title}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
 
         <div className="mt-10 rounded-2xl border border-ink-200 bg-ink-50 p-6">
           <p className="text-sm font-bold text-ink-900">

@@ -5,6 +5,7 @@ import {
   FilePen,
   FileText,
   Image as ImageIcon,
+  SearchCheck,
   Wallet,
   type LucideIcon,
 } from "lucide-react";
@@ -62,6 +63,13 @@ export const categories: Category[] = [
     description:
       "فشرده‌سازی، بریدن، تغییر رزولوشن، تبدیل به GIF و استخراج صدا از ویدیو؛ همه با موتور ffmpeg که داخل مرورگر شما اجرا می‌شود و فایلی آپلود نمی‌شود.",
     icon: Clapperboard,
+  },
+  {
+    slug: "seo",
+    title: "سئو و بهینه‌سازی",
+    description:
+      "بررسی سئوی صفحه، ساخت متا تگ و Schema، پیش‌نمایش نتیجهٔ گوگل، تحلیل تیترها، robots.txt و sitemap — همه محلی و بدون ارسال کد صفحه به سرور.",
+    icon: SearchCheck,
   },
   {
     slug: "dev",

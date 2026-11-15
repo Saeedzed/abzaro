@@ -87,7 +87,7 @@ export default function CategoriesPage() {
                   </h2>
                   <Link
                     href={`/categories/${category.slug}`}
-                    className="flex items-center gap-1 text-[11px] font-semibold text-brand-600"
+                    className="flex min-h-9 items-center gap-1 px-1 text-xs font-semibold text-brand-600"
                   >
                     همه
                     <ArrowLeft className="h-3 w-3" aria-hidden="true" />
@@ -98,7 +98,7 @@ export default function CategoriesPage() {
                     <li key={tool.id}>
                       <Link
                         href={`/tools/${tool.slug}`}
-                        className="flex items-center gap-2 px-3 py-2.5 text-xs font-medium text-ink-700 active:bg-ink-50"
+                        className="flex min-h-11 items-center gap-2 px-3 py-2.5 text-[13px] font-medium text-ink-700 active:bg-ink-50"
                       >
                         <tool.icon
                           className="h-3.5 w-3.5 shrink-0 text-brand-500"
@@ -112,7 +112,7 @@ export default function CategoriesPage() {
                     <li>
                       <Link
                         href={`/categories/${category.slug}`}
-                        className="block px-3 py-2 text-[11px] font-semibold text-brand-600 active:bg-ink-50"
+                        className="flex min-h-11 items-center px-3 text-xs font-semibold text-brand-600 active:bg-ink-50"
                       >
                         {toPersianDigits(list.length - 5)} ابزار دیگر…
                       </Link>

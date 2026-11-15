@@ -3,6 +3,7 @@ import { Lock, ShieldCheck, Zap } from "lucide-react";
 import { Container } from "@/components/layout/Container";
 import { SearchBox } from "@/components/search/SearchBox";
 import { popularTools } from "@/data/tools";
+import { heroIntents, intentPrompt } from "@/data/intents";
 import { siteConfig } from "@/config/site";
 
 const FEATURES = [
@@ -45,6 +46,58 @@ export function Hero() {
             بدون نصب و بدون ثبت‌نام · همهٔ پردازش‌ها در مرورگر شما انجام می‌شود
           </p>
 
+          {/*
+            Intent-first entry points. Phones get a 3-column icon grid (thumb
+            targets, no long Persian sentences); from `sm` up it becomes a row
+            of pill buttons that read as full sentences.
+          */}
+          <div className="mt-6 text-start sm:mt-8" data-testid="hero-intents">
+            <p className="mb-2 text-center text-[11px] font-bold text-ink-400 sm:text-xs">
+              یا بگویید چه کاری می‌خواهید انجام دهید
+            </p>
+
+            {/* Phones: compact 3×2 grid */}
+            <div className="grid grid-cols-3 gap-2 sm:hidden">
+              {heroIntents.map((intent) => {
+                const Icon = intent.icon;
+                return (
+                  <Link
+                    key={intent.id}
+                    href={intent.href}
+                    data-testid={`intent-${intent.id}`}
+                    className="flex min-h-20 flex-col items-center justify-center gap-1.5 rounded-xl border border-ink-200 bg-white px-1.5 py-2 text-center shadow-card transition active:scale-[0.98]"
+                  >
+                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
+                      <Icon className="h-4 w-4" aria-hidden="true" />
+                    </span>
+                    <span className="text-[10px] font-semibold leading-4 text-ink-700">
+                      {intent.shortLabel}
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+
+            {/* Tablet and up: sentence pills */}
+            <ul className="hidden flex-wrap justify-center gap-2 sm:flex">
+              {heroIntents.map((intent) => {
+                const Icon = intent.icon;
+                return (
+                  <li key={intent.id}>
+                    <Link
+                      href={intent.href}
+                      data-testid={`intent-${intent.id}`}
+                      className="flex min-h-10 items-center gap-2 rounded-full border border-ink-200 bg-white px-3.5 text-xs font-medium text-ink-700 shadow-card transition hover:border-brand-300 hover:text-brand-700"
+                    >
+                      <Icon className="h-3.5 w-3.5 text-brand-500" aria-hidden="true" />
+                      {intentPrompt(intent)}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+
           <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
             <span className="text-xs font-medium text-ink-500">
               پرطرفدارها:
@@ -53,7 +106,7 @@ export function Hero() {
               <Link
                 key={tool.id}
                 href={`/tools/${tool.slug}`}
-                className="rounded-full border border-ink-200 bg-white px-3 py-1.5 text-xs font-medium text-ink-700 shadow-card transition hover:border-brand-300 hover:text-brand-700"
+                className="flex min-h-9 items-center rounded-full border border-ink-200 bg-white px-3.5 py-1.5 text-xs font-medium text-ink-700 shadow-card transition hover:border-brand-300 hover:text-brand-700"
               >
                 {tool.title}
               </Link>

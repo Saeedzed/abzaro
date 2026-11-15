@@ -30,7 +30,7 @@ export function Breadcrumbs({ items }: BreadcrumbsProps) {
                 {item.href && !isLast ? (
                   <Link
                     href={item.href}
-                    className="flex items-center gap-1.5 text-ink-500 transition hover:text-brand-600"
+                    className="flex min-h-8 items-center gap-1.5 text-ink-500 transition hover:text-brand-600"
                   >
                     {index === 0 && (
                       <Home className="h-4 w-4" aria-hidden="true" />

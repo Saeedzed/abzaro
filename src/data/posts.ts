@@ -1,3 +1,5 @@
+import { toolPosts } from "@/data/posts-tools";
+
 /**
  * Blog posts. Content is stored as plain paragraphs (no CMS, no database) —
  * the MVP keeps everything in code so it stays fast and dependency-free.
@@ -13,9 +15,13 @@ export interface Post {
   readingMinutes: number;
   /** Article body, one paragraph per entry. */
   content: string[];
+  /** Tool slug the article is about (renders a CTA at the end). */
+  tool?: string;
+  /** Further tool slugs to link at the end of the article. */
+  related?: string[];
 }
 
-export const posts: Post[] = [
+const legacyPosts: Post[] = [
   {
     slug: "how-to-count-words-accurately",
     title: "چطور تعداد کلمات متن را دقیق بشماریم؟",
@@ -62,6 +68,9 @@ export const posts: Post[] = [
     ],
   },
 ];
+
+/** Tool-anchored articles (گروه C3), newest first. */
+export const posts: Post[] = [...toolPosts, ...legacyPosts];
 
 export function getPostBySlug(slug: string): Post | undefined {
   return posts.find((post) => post.slug === slug);
