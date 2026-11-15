@@ -16,7 +16,9 @@
     "build:static": "ABZARO_EXPORT=1 next build && node scripts/prune-static.mjs",
     "package:static": "node scripts/package-static.mjs",
     "fixtures": "node scripts/make-fixtures.mjs",
-    "prune:static": "node scripts/prune-static.mjs"
+    "prune:static": "node scripts/prune-static.mjs",
+    "prebuild:static": "node scripts/copy-ffmpeg.mjs",
+    "remove-auth": "node scripts/remove-auth.mjs --git"
   },
   "dependencies": {
     "@cantoo/pdf-lib": "^2.11.1",

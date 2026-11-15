@@ -12,7 +12,7 @@
 #     directory produced by a server build with the runtime available.
 
 [build]
-  command = "ABZARO_EXPORT=1 npm run build"
+  command = "npm run build:static"
   # prune-static drops the 30.6 MiB raw wasm; the browser loads the 9.75 MiB
   # .wasm.gz instead (see scripts/prune-static.mjs and src/lib/video.ts).
   publish = "out"
