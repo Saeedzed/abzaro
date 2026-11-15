@@ -1,16 +1,7 @@
 {
-  // Cloudflare Pages project config.
-  //
-  // `pages_build_output_dir` lets `npx wrangler pages deploy` (and the Git
-  // integration) publish the exported site without extra flags.
-  //
-  // The build command itself is set in the Cloudflare dashboard
-  // (Settings → Build → Build command), because Pages does not read it from
-  // this file: `ABZARO_EXPORT=1 npm run build`
-  //
-  // `compatibility_date` only affects Pages Functions; this site has none.
-  "$schema": "https://developers.cloudflare.com/workers/wrangler/configuration/",
   "name": "abzaro",
   "compatibility_date": "2026-11-01",
-  "pages_build_output_dir": "out"
+  "assets": {
+    "directory": "./out"
+  }
 }
