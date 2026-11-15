@@ -36,7 +36,7 @@ export function TimestampConverter() {
   const isoParts = fromIso === null ? null : describeTimestamp(fromIso);
 
   return (
-    <div className="grid gap-4 lg:grid-cols-2">
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
       <ToolPanel
         title="Timestamp → تاریخ"
         description="ثانیه یا میلی‌ثانیه؛ خودش تشخیص می‌دهد"

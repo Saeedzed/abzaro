@@ -227,26 +227,29 @@ export default function DocumentBuilder({ kind }: { kind: DocKind }) {
             <h4 className="mb-2 text-sm font-bold text-slate-800 dark:text-slate-200">ردیف‌های فاکتور</h4>
             <div className="space-y-2">
               {items.map((item, index) => (
-                <div key={index} className="grid grid-cols-[1fr_70px_110px_34px] gap-2">
+                <div key={index} className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_44px] gap-2 rounded-xl border border-slate-200 p-2 sm:grid-cols-[minmax(0,1fr)_70px_110px_44px] sm:border-0 sm:p-0">
                   <input
+                    aria-label="شرح کالا یا خدمت"
                     data-testid={`doc-item-name-${index}`}
                     value={item.name}
                     placeholder={config.items!.columns[0]!.label}
                     onChange={(event) =>
                       setItems((prev) => prev.map((row, i) => (i === index ? { ...row, name: event.target.value } : row)))
                     }
-                    className="rounded-lg border border-slate-300 px-2 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                    className="col-span-3 min-w-0 w-full sm:col-span-1 rounded-lg border border-slate-300 px-2 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
                   />
                   <input
+                    aria-label="تعداد"
                     data-testid={`doc-item-qty-${index}`}
                     value={item.qty}
                     inputMode="numeric"
                     onChange={(event) =>
                       setItems((prev) => prev.map((row, i) => (i === index ? { ...row, qty: event.target.value } : row)))
                     }
-                    className="rounded-lg border border-slate-300 px-2 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                    className="min-w-0 w-full rounded-lg border border-slate-300 px-2 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
                   />
                   <input
+                    aria-label="قیمت واحد"
                     data-testid={`doc-item-price-${index}`}
                     value={item.price}
                     inputMode="numeric"
@@ -254,7 +257,7 @@ export default function DocumentBuilder({ kind }: { kind: DocKind }) {
                     onChange={(event) =>
                       setItems((prev) => prev.map((row, i) => (i === index ? { ...row, price: event.target.value } : row)))
                     }
-                    className="rounded-lg border border-slate-300 px-2 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                    className="min-w-0 w-full rounded-lg border border-slate-300 px-2 py-1.5 text-sm dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
                   />
                   <button
                     type="button"

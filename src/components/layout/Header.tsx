@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { Container } from "@/components/layout/Container";
@@ -23,6 +23,15 @@ const NAV_LINKS = [
 export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
+
+  useEffect(() => {
+    if (!mobileOpen) return;
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setMobileOpen(false);
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [mobileOpen]);
 
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href);
@@ -87,7 +96,8 @@ export function Header() {
             onClick={() => setMobileOpen((open) => !open)}
             aria-expanded={mobileOpen}
             aria-label={mobileOpen ? "بستن منو" : "باز کردن منو"}
-            className="ms-auto flex h-10 w-10 items-center justify-center rounded-lg text-ink-700 transition hover:bg-ink-100 md:ms-0 lg:hidden"
+            aria-controls="mobile-navigation-panel"
+            className="ms-auto flex h-11 w-11 items-center justify-center rounded-lg text-ink-700 transition hover:bg-ink-100 md:ms-0 lg:hidden"
           >
             {mobileOpen ? (
               <X className="h-5 w-5" aria-hidden="true" />
@@ -100,10 +110,9 @@ export function Header() {
 
       {/* Mobile panel */}
       <div
-        className={cn(
-          "overflow-hidden border-ink-200/70 transition-[max-height] duration-300 lg:hidden",
-          mobileOpen ? "max-h-96 border-t" : "max-h-0",
-        )}
+        id="mobile-navigation-panel"
+        hidden={!mobileOpen}
+        className="max-h-[calc(100dvh-4rem)] overflow-y-auto border-t border-ink-200/70 lg:hidden"
       >
         <Container className="space-y-4 py-4">
           <div className="flex items-center gap-2">

@@ -256,3 +256,17 @@ input[inputmode="decimal"] {
   /* Closed sections must stay closed on phones even though the marker is inert
      from sm up: `sm:open` has no effect below sm, so this is the default state. */
 }
+
+/* Comfortable touch targets and legible form controls on phones. Avoid hiding
+   horizontal overflow: scrollable tables remain accessible to the user. */
+@media (max-width: 767px) {
+  button { min-width: 44px; min-height: 44px; }
+  a:is(.flex, .inline-flex, .block, .inline-block) { min-width: 44px; min-height: 44px; }
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]):not([type="hidden"]),
+  select { min-height: 44px; min-width: 0; font-size: 16px; }
+  textarea { min-width: 0; font-size: 16px; }
+  input[type="range"] { min-height: 44px; }
+  label:has(> input[type="checkbox"]),
+  label:has(> input[type="radio"]) { min-height: 44px; }
+  main { min-width: 0; }
+}

@@ -52,7 +52,7 @@ export function FindReplace() {
   }
 
   return (
-    <div className="grid gap-4 lg:grid-cols-2">
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
       <ToolPanel
         title="متن اصلی"
         description="متنی که می‌خواهید ویرایش شود"
@@ -77,7 +77,7 @@ export function FindReplace() {
         />
 
         <div className="mt-3 space-y-2">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
             <p className="text-xs font-semibold text-ink-700">
               قواعد جایگزینی ({toPersianDigits(activeRules)} فعال)
             </p>

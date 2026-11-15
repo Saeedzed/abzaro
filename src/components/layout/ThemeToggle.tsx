@@ -44,7 +44,7 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
       aria-label={isDark ? "روشن‌کردن حالت روز" : "تاریک‌کردن حالت شب"}
       title={isDark ? "حالت روز" : "حالت شب"}
       aria-pressed={isDark}
-      className={`flex h-9 w-9 items-center justify-center rounded-lg text-ink-600 transition hover:bg-ink-100 hover:text-ink-900 ${className}`}
+      className={`flex h-11 w-11 items-center justify-center rounded-lg text-ink-600 transition hover:bg-ink-100 hover:text-ink-900 ${className}`}
     >
       {theme === null ? (
         <span className="h-4.5 w-4.5" aria-hidden="true" />

@@ -13,7 +13,7 @@ export function SearchTrigger() {
       onClick={() => window.dispatchEvent(new Event("abzaro:open-search"))}
       aria-label="باز کردن جست‌وجوی سراسری ابزارها"
       data-testid="search-trigger"
-      className="flex w-full items-center gap-2 rounded-xl border border-ink-200 bg-white px-3 py-2 text-start shadow-card transition hover:border-brand-300"
+      className="flex min-h-11 w-full items-center gap-2 rounded-xl border border-ink-200 bg-white px-3 py-2 text-start shadow-card transition hover:border-brand-300"
     >
       <Search className="h-4 w-4 shrink-0 text-brand-500" aria-hidden="true" />
       <span className="flex-1 truncate text-sm text-ink-400">

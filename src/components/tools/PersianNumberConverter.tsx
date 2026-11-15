@@ -34,7 +34,7 @@ export function PersianNumberConverter() {
 
   return (
     <div>
-      <div className="grid gap-5 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
         {/* English → Persian */}
         <div className="rounded-2xl border border-ink-200 bg-white p-5 shadow-card">
           <h3 className="flex items-center gap-2 text-base font-bold text-ink-900">

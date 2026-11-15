@@ -110,16 +110,7 @@ export default function HomePage() {
             linkLabel="همه دسته‌بندی‌ها"
           />
           {/* Phones: swipeable chips, no giant stacked cards */}
-          <CategoryRail className="mt-5 sm:hidden" />
-          <div className="mt-4 grid grid-cols-2 gap-3 sm:hidden">
-            {categories.slice(0, 4).map((category) => (
-              <CategoryCard
-                key={category.slug}
-                category={category}
-                variant="compact"
-              />
-            ))}
-          </div>
+          <CategoryRail className="mt-5 sm:hidden" linkToPages />
 
           <div className="mt-8 hidden grid-cols-2 gap-5 sm:grid lg:grid-cols-3">
             {categories.map((category) => (

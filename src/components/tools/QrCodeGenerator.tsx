@@ -93,7 +93,7 @@ export function QrCodeGenerator() {
   }
 
   return (
-    <div className="grid gap-4 lg:grid-cols-2">
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
       <div className="rounded-2xl border border-ink-200 bg-white p-4 shadow-card sm:p-5">
         <h3 className="flex items-center gap-2 text-sm font-bold text-ink-900">
           <QrCode className="h-4 w-4 text-brand-600" aria-hidden="true" />
