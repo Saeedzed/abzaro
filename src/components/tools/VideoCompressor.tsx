@@ -14,6 +14,7 @@ import { VideoToolShell } from "./VideoToolShell";
 export function VideoCompressor() {
   const [preset, setPreset] = useState<CompressionPreset>(COMPRESSION_PRESETS[1]!);
   const [resolution, setResolution] = useState<string>("source");
+  const [speed, setSpeed] = useState<"veryfast" | "superfast">("veryfast");
 
   return (
     <VideoToolShell
@@ -35,7 +36,7 @@ export function VideoCompressor() {
         args.push(
           "-c:v", "libx264",
           "-crf", String(preset.crf),
-          "-preset", "veryfast",
+          "-preset", speed,
           "-c:a", "aac",
           "-b:a", "128k",
           "-movflags", "+faststart",
@@ -50,7 +51,7 @@ export function VideoCompressor() {
         };
       }}
     >
-      {() => (
+      {({ busy }) => (
         <div className="space-y-4">
           <div>
             <p className="mb-2 text-xs font-semibold text-ink-700">سطح فشرده‌سازی</p>
@@ -75,6 +76,24 @@ export function VideoCompressor() {
               ))}
             </div>
           </div>
+
+          <fieldset>
+            <legend className="mb-2 text-xs font-semibold text-ink-700">سرعت پردازش</legend>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {([
+                { id: "veryfast", label: "حجم کمتر", hint: "پیشنهادی؛ پردازش بیشتر، فایل معمولاً کوچک‌تر" },
+                { id: "superfast", label: "سریع‌تر", hint: "زمان پردازش کمتر؛ حجم خروجی ممکن است بیشتر شود" },
+              ] as const).map((option) => (
+                <button key={option.id} type="button" disabled={busy} aria-pressed={speed === option.id}
+                  data-testid={`video-speed-${option.id}`} onClick={() => setSpeed(option.id)}
+                  className={cn("min-h-11 rounded-xl border px-3 py-2.5 text-start transition disabled:opacity-60",
+                    speed === option.id ? "border-brand-500 bg-brand-50" : "border-ink-200 bg-white hover:border-brand-300")}>
+                  <span className="block text-xs font-bold text-ink-900">{option.label}</span>
+                  <span className="mt-0.5 block text-[11px] leading-5 text-ink-500">{option.hint}</span>
+                </button>
+              ))}
+            </div>
+          </fieldset>
 
           <label className="flex flex-wrap items-center gap-2 text-xs font-semibold text-ink-700">
             حداکثر رزولوشن

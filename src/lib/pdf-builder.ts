@@ -108,6 +108,10 @@ export interface DocSpec {
   sections: DocSection[];
   tables?: DocTable[];
   footer?: string;
+  /** Content below the item table, e.g. invoice totals and notes. */
+  afterTables?: DocSection[];
+  signatures?: string[];
+  variant?: "invoice" | "resume" | "lease" | "experience" | "letter";
   /** A4 by default. */
   pageSize?: [number, number];
 }
@@ -154,10 +158,12 @@ function breakLines(text: string, fontSize: number, maxWidth: number, font: PDFF
     let current = "";
     for (const word of paragraph.split(/\s+/)) {
       const candidate = current === "" ? word : `${current} ${word}`;
-      if (current === "" || width(candidate) <= maxWidth) current = candidate;
-      else {
-        lines.push(current);
-        current = word;
+      if (width(candidate) <= maxWidth) { current = candidate; continue; }
+      if (current) { lines.push(current); current = ""; }
+      // Split exceptionally long unbroken URLs / descriptions instead of clipping.
+      for (const char of Array.from(word)) {
+        if (current && width(current + char) > maxWidth) { lines.push(current); current = char; }
+        else current += char;
       }
     }
     if (current !== "") lines.push(current);
@@ -221,119 +227,132 @@ export async function buildPdf(spec: DocSpec): Promise<Uint8Array> {
   const [pageWidth, pageHeight] = spec.pageSize ?? A4;
   const contentWidth = pageWidth - MARGIN * 2;
 
+  const navy = rgb(0.10, 0.16, 0.25);
+  const muted = rgb(0.32, 0.38, 0.46);
+  const blue = rgb(0.15, 0.34, 0.60);
+  const pale = rgb(0.94, 0.96, 0.98);
+  const border = rgb(0.83, 0.87, 0.91);
+  const rightEdge = pageWidth - MARGIN;
   let page = doc.addPage([pageWidth, pageHeight]);
   let y = pageHeight - MARGIN;
 
-  const newPageIfNeeded = (need: number) => {
-    if (y - need < MARGIN + 20) {
-      page = doc.addPage([pageWidth, pageHeight]);
-      y = pageHeight - MARGIN;
-    }
+  const newPageIfNeeded = (need: number): boolean => {
+    if (y - need >= MARGIN + 25) return false;
+    page = doc.addPage([pageWidth, pageHeight]);
+    y = pageHeight - MARGIN;
+    return true;
   };
+  const rule = (at: number, color = border, thickness = 0.6) => page.drawLine({
+    start: { x: MARGIN, y: at }, end: { x: rightEdge, y: at }, thickness, color,
+  });
 
-  // ── title block ──
-  const titleSize = 20;
-  const rightEdge = pageWidth - MARGIN;
-  const titleLines = breakLines(spec.title, titleSize, contentWidth, fontBold);
-  for (const line of titleLines) {
-    newPageIfNeeded(titleSize * 1.6);
-    drawLine(page, fontBold, line, rightEdge, y - titleSize, titleSize);
-    y -= titleSize * 1.6;
+  // An understated ink-saving identity: one accent bar, clear typography and
+  // plenty of white space. No stock logos, fake signatures or certificates.
+  page.drawRectangle({ x: MARGIN, y: pageHeight - 29, width: contentWidth, height: 3, color: blue });
+  const titleSize = spec.variant === "resume" ? 23 : 20;
+  for (const line of breakLines(spec.title, titleSize, contentWidth, fontBold)) {
+    newPageIfNeeded(titleSize * 1.5);
+    drawLine(page, fontBold, line, rightEdge, y - titleSize, titleSize, navy);
+    y -= titleSize * 1.55;
   }
   if (spec.subtitle) {
-    const subSize = 11;
-    drawLine(page, fontRegular, spec.subtitle, rightEdge, y - subSize, subSize, rgb(0.4, 0.4, 0.45));
-    y -= subSize * 2;
-  }
-  y -= 8;
-  page.drawLine({
-    start: { x: MARGIN, y },
-    end: { x: pageWidth - MARGIN, y },
-    thickness: 1,
-    color: rgb(0.8, 0.8, 0.82),
-  });
-  y -= 18;
-
-  // ── sections ──
-  for (const section of spec.sections) {
-    if (section.heading) {
-      const headingSize = 13;
-      newPageIfNeeded(headingSize * 3);
-      drawLine(page, fontBold, section.heading, rightEdge, y - headingSize, headingSize, rgb(0.05, 0.35, 0.3));
-      y -= headingSize * 2.2;
+    for (const line of breakLines(spec.subtitle, 10, contentWidth, fontRegular)) {
+      newPageIfNeeded(18);
+      drawLine(page, fontRegular, line, rightEdge, y - 10, 10, muted);
+      y -= 18;
     }
-    for (const line of section.lines) {
-      const size = 11 * (line.scale ?? 1);
-      const bold = line.bold ?? false;
-      const font = bold ? fontBold : fontRegular;
-      const paragraphs = breakLines(line.text, size, contentWidth, font);
-      for (const shaped of paragraphs) {
-        const lineHeight = size * 1.75;
-        newPageIfNeeded(lineHeight);
-        drawLine(
-          page,
-          font,
-          shaped,
-          rightEdge,
-          y - size,
-          size,
-          line.color ? rgb(line.color.r, line.color.g, line.color.b) : rgb(0.12, 0.12, 0.15),
-        );
-        y -= lineHeight;
+  }
+  y -= 5; rule(y); y -= 18;
+
+  const renderSections = (sections: DocSection[]) => {
+    for (const section of sections) {
+      if (section.heading) {
+        newPageIfNeeded(56);
+        const headingSize = 12;
+        drawLine(page, fontBold, section.heading, rightEdge, y - headingSize, headingSize, blue);
+        y -= 21;
+        rule(y + 2, border, 0.45);
+        y -= 7;
       }
-      if (line.spaceBefore) y -= size * line.spaceBefore;
+      for (const line of section.lines) {
+        const size = 11 * (line.scale ?? 1);
+        const font = line.bold ? fontBold : fontRegular;
+        if (line.spaceBefore) y -= size * line.spaceBefore;
+        for (const text of breakLines(line.text, size, contentWidth, font)) {
+          const lineHeight = size * 1.8;
+          newPageIfNeeded(lineHeight);
+          drawLine(page, font, text, rightEdge, y - size, size,
+            line.color ? rgb(line.color.r, line.color.g, line.color.b) : navy);
+          y -= lineHeight;
+        }
+      }
+      y -= 12;
     }
-    y -= 10;
-  }
+  };
+  renderSections(spec.sections);
 
-  // ── tables ──
+  // Table cells wrap and split across pages rather than silently losing text.
   for (const table of spec.tables ?? []) {
-    const fontSize = 10.5;
-    const total = (table.widths ?? table.headers.map(() => 1)).reduce((a, b) => a + b, 0);
-    const widths = (table.widths ?? table.headers.map(() => 1)).map(
-      (w) => (w / total) * contentWidth,
-    );
-    const rowHeight = fontSize * 2;
-
-    const drawRow = (cells: string[], isHeader: boolean) => {
-      newPageIfNeeded(rowHeight);
-      let x = pageWidth - MARGIN;
-      cells.forEach((cell, index) => {
-        const width = widths[index] ?? contentWidth / cells.length;
-        x -= width;
-        const font = isHeader ? fontBold : fontRegular;
-        const fitted = breakLines(cell, fontSize, width - 8, isHeader ? fontBold : fontRegular)[0] ?? "";
-        drawLine(page, font, fitted, x + width - 4, y - fontSize * 1.3, fontSize);
+    const fontSize = 10;
+    const units = table.widths ?? table.headers.map(() => 1);
+    const total = units.reduce((a, b) => a + b, 0);
+    const widths = units.map((w) => (w / total) * contentWidth);
+    const lineHeight = 16;
+    const drawSegment = (cells: string[][], start: number, count: number, header: boolean, alternate: boolean) => {
+      const height = count * lineHeight + 12;
+      if (header || alternate) page.drawRectangle({ x: MARGIN, y: y - height, width: contentWidth, height, color: header ? blue : pale });
+      let right = rightEdge;
+      widths.forEach((width, index) => {
+        const lines = cells[index] ?? [];
+        for (let i = 0; i < count; i++) drawLine(page, header ? fontBold : fontRegular,
+          lines[start + i] ?? "", right - 6, y - 7 - fontSize - i * lineHeight, fontSize,
+          header ? rgb(1, 1, 1) : navy);
+        right -= width;
       });
-      if (isHeader) {
-        page.drawLine({
-          start: { x: MARGIN, y: y - rowHeight + fontSize * 0.4 },
-          end: { x: pageWidth - MARGIN, y: y - rowHeight + fontSize * 0.4 },
-          thickness: 0.8,
-          color: rgb(0.75, 0.75, 0.78),
-        });
-      }
-      y -= rowHeight;
+      y -= height; rule(y, border, 0.45);
     };
+    const cellsFor = (row: string[], header: boolean) => widths.map((width, index) =>
+      breakLines(row[index] ?? "", fontSize, Math.max(20, width - 12), header ? fontBold : fontRegular));
+    const headerCells = cellsFor(table.headers, true);
+    const headerCount = Math.max(1, ...headerCells.map(c => c.length));
+    const renderHeader = () => drawSegment(headerCells, 0, headerCount, true, false);
+    newPageIfNeeded(headerCount * lineHeight + 70); renderHeader();
+    table.rows.forEach((row, rowIndex) => {
+      const cells = cellsFor(row, false);
+      const count = Math.max(1, ...cells.map(c => c.length));
+      let done = 0;
+      while (done < count) {
+        if (y - (lineHeight + 12) < MARGIN + 25) {
+          newPageIfNeeded(lineHeight + 12); renderHeader();
+        }
+        const capacity = Math.max(1, Math.floor((y - (MARGIN + 25) - 12) / lineHeight));
+        const take = Math.min(count - done, capacity);
+        drawSegment(cells, done, take, false, rowIndex % 2 === 0);
+        done += take;
+      }
+    });
+    y -= 20;
+  }
+  renderSections(spec.afterTables ?? []);
 
-    drawRow(table.headers, true);
-    for (const row of table.rows) drawRow(row, false);
-    y -= 12;
+  if (spec.signatures?.length) {
+    newPageIfNeeded(80);
+    y -= 8;
+    const columns = spec.signatures.length;
+    spec.signatures.forEach((label, index) => {
+      const width = contentWidth / columns;
+      const right = rightEdge - index * width - 12;
+      drawLine(page, fontBold, label, right, y - 10, 10, muted);
+      page.drawLine({ start: { x: right - width + 30, y: y - 46 }, end: { x: right, y: y - 46 }, thickness: 0.6, color: border });
+    });
+    y -= 66;
   }
 
-  // ── footer ──
+  // A small, understated footer is drawn on each page. Long text wraps.
   if (spec.footer) {
-    const size = 8.5;
     for (const p of doc.getPages()) {
-      drawLine(
-        p,
-        fontRegular,
-        spec.footer,
-        rightEdge,
-        30,
-        size,
-        rgb(0.55, 0.55, 0.6),
-      );
+      const footerLines = breakLines(spec.footer, 8, contentWidth - 28, fontRegular).slice(0, 2);
+      footerLines.forEach((line, i) => drawLine(p, fontRegular, line, rightEdge, 27 - i * 10, 8, muted));
     }
   }
 

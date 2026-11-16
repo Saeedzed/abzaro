@@ -342,6 +342,7 @@ function buildSpec(
   if (kind === "invoice") {
     return {
       title: "فاکتور فروش",
+      variant: "invoice",
       subtitle: [v("number") && `شمارهٔ ${v("number")}`, v("date") && `تاریخ ${v("date")}`]
         .filter(Boolean)
         .join("  ·  "),
@@ -364,13 +365,24 @@ function buildSpec(
             .map((row) => [row.name, row.qty, money(Number(row.price) || 0), money(row.total)]),
         },
       ],
-      footer: `ابزارو — قابل پرداخت: ${money(totals.grand)} تومان`,
+      afterTables: [
+        { heading: "خلاصهٔ مبالغ (تومان)", lines: [
+          { text: `جمع کل: ${money(totals.subtotal)}` },
+          { text: `تخفیف: ${money(totals.discount)}` },
+          { text: `مالیات: ${money(totals.tax)}` },
+          { text: `مبلغ قابل پرداخت: ${money(totals.grand)} تومان`, bold: true },
+        ] },
+        ...(v("notes") ? [{ heading: "توضیحات", lines: [{ text: v("notes") }] }] : []),
+      ],
+      signatures: ["امضای فروشنده", "امضای خریدار"],
+      footer: "فاکتور فروش — مبالغ به تومان",
     };
   }
 
   if (kind === "resume") {
     return {
       title: v("name"),
+      variant: "resume",
       subtitle: [v("role"), v("phone"), v("email"), v("city"), v("links")].filter(Boolean).join("  ·  "),
       sections: [
         ...(v("summary") ? [{ heading: "خلاصهٔ حرفه‌ای", lines: [{ text: v("summary") }] }] : []),
@@ -389,6 +401,7 @@ function buildSpec(
   if (kind === "letter") {
     return {
       title: v("subject") || "نامهٔ اداری",
+      variant: "letter",
       subtitle: [
         v("number") && `شماره: ${v("number")}`,
         v("date") && `تاریخ: ${v("date")}`,
@@ -411,7 +424,8 @@ function buildSpec(
   if (kind === "lease") {
     return {
       title: "قرارداد اجارهٔ مسکونی",
-      subtitle: `تاریخ تنظیم: ${v("start") || "—"}`,
+      variant: "lease",
+      subtitle: `شروع قرارداد: ${v("start") || "—"}`,
       sections: [
         {
           heading: "طرفین",
@@ -451,19 +465,15 @@ function buildSpec(
             ...(v("extra") ? [{ text: v("extra") }] : []),
           ],
         },
-        {
-          lines: [
-            { text: "", spaceBefore: 2 },
-            { text: "امضای موجر: ____________________          امضای مستأجر: ____________________" },
-          ],
-        },
       ],
+      signatures: ["امضای موجر", "امضای مستأجر"],
       footer: "این متن نمونه است و مشاورهٔ حقوقی نیست؛ پیش از امضا با وکیل مشورت کنید.",
     };
   }
 
   return {
     title: "گواهی سابقهٔ کار",
+    variant: "experience",
     subtitle: [v("company"), v("companyInfo")].filter(Boolean).join("  ·  "),
     sections: [
       {
@@ -482,14 +492,8 @@ function buildSpec(
           ...(v("purpose") ? [{ text: `این گواهی بنا به درخواست ایشان جهت ارائه به ${v("purpose")} صادر شده است.` }] : []),
         ],
       },
-      {
-        lines: [
-          { text: "", spaceBefore: 2 },
-          { text: `مهر و امضا: ${v("signer") || v("company")}` },
-          { text: "____________________", spaceBefore: 1 },
-        ],
-      },
     ],
+    signatures: [`مهر و امضا: ${v("signer") || v("company")}`],
     footer: "صادرشده با ابزارو — ابزار آنلاین رایگان",
   };
 }

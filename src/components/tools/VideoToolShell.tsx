@@ -56,6 +56,8 @@ export function VideoToolShell({ id, title, hint, children, run, canRun = true }
   const [info, setInfo] = useState<VideoInfo | null>(null);
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [processingStartedAt, setProcessingStartedAt] = useState<number | null>(null);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [stage, setStage] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<VideoResult | null>(null);
@@ -63,6 +65,14 @@ export function VideoToolShell({ id, title, hint, children, run, canRun = true }
   const [resultUrl, setResultUrl] = useState<string | null>(null);
   const logRef = useRef("");
   const abortRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    if (!busy || processingStartedAt === null) return;
+    const update = () => setElapsedSeconds((Date.now() - processingStartedAt) / 1000);
+    update();
+    const timer = window.setInterval(update, 1000);
+    return () => window.clearInterval(timer);
+  }, [busy, processingStartedAt]);
 
   useEffect(() => {
     if (!file) {
@@ -115,6 +125,8 @@ export function VideoToolShell({ id, title, hint, children, run, canRun = true }
     setError(null);
     setResult(null);
     setProgress(0);
+    setProcessingStartedAt(null);
+    setElapsedSeconds(0);
     setStage("در حال آماده‌سازی موتور ویدیو…");
     logRef.current = "";
 
@@ -122,6 +134,7 @@ export function VideoToolShell({ id, title, hint, children, run, canRun = true }
       const recipe = await run(file, {
         onProgress: (ratio) => {
           setStage("در حال پردازش…");
+          if (ratio > 0) setProcessingStartedAt((started) => started ?? Date.now());
           setProgress(ratio);
         },
         onLog: (line) => {
@@ -138,6 +151,7 @@ export function VideoToolShell({ id, title, hint, children, run, canRun = true }
         signal: controller.signal,
         onProgress: (ratio) => {
           setStage("در حال پردازش…");
+          if (ratio > 0) setProcessingStartedAt((started) => started ?? Date.now());
           setProgress(ratio);
         },
         onLog: (line) => {
@@ -229,9 +243,17 @@ export function VideoToolShell({ id, title, hint, children, run, canRun = true }
                     style={{ width: `${Math.max(4, progress * 100)}%` }}
                   />
                 </div>
+                {id === "video-compressor" && (
+                  <p className="mt-2 text-xs leading-6 text-ink-600" data-testid={`${id}-eta`} aria-live="polite">
+                    {processingStartedAt === null || elapsedSeconds < 5 || progress < 0.02
+                      ? "زمان باقی‌مانده پس از شروع پردازش تخمین زده می‌شود."
+                      : progress >= 0.98
+                        ? "در حال تکمیل فایل؛ زمان باقی‌مانده نامشخص است."
+                        : `زمان تقریبی باقی‌مانده: ${formatDuration(Math.max(1, Math.round(elapsedSeconds * (1 - progress) / progress)))} (ممکن است تغییر کند)`}
+                  </p>
+                )}
                 <p className="mt-2 text-[11px] leading-6 text-ink-500">
-                  بار اول، موتور ویدیو (~۳۱ مگابایت) دانلود می‌شود؛ بعد از آن فوری است.
-                  همهٔ پردازش‌ها داخل مرورگر شما انجام می‌شود.
+                  در استفادهٔ اول، موتور ویدیو حدود ۱۰ مگابایت دانلود می‌شود و سپس پردازش داخل مرورگر انجام می‌شود.
                 </p>
                 <button
                   type="button"

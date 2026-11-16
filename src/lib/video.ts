@@ -307,13 +307,13 @@ export async function convertVideo(
     const seconds = parseProgressSeconds(message);
     if (seconds !== null && options.durationSeconds) {
       progressFromLog = Math.max(progressFromLog, seconds / options.durationSeconds);
-      options.onProgress?.(Math.min(0.99, progressFromLog));
+      options.onProgress?.(Math.min(0.99, Math.max(progressFromLog, progressFromEvents)));
     }
   };
   const progressHandler = ({ progress }: { progress: number }) => {
     if (!Number.isFinite(progress)) return;
     progressFromEvents = Math.max(progressFromEvents, Math.max(0, Math.min(1, progress)));
-    options.onProgress?.(Math.min(0.99, progressFromEvents));
+    options.onProgress?.(Math.min(0.99, Math.max(progressFromLog, progressFromEvents)));
   };
 
   ffmpeg.on("log", logHandler);
