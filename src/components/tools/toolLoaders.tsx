@@ -34,6 +34,7 @@ const Impl_imageseochecker = dynamic(() => import("@/components/tools/impl/image
 const Impl_urlsluganalyzer = dynamic(() => import("@/components/tools/impl/url-slug-analyzer"), { loading });
 const Impl_imageresizer = dynamic(() => import("@/components/tools/impl/image-resizer"), { loading });
 const Impl_imagecompressor = dynamic(() => import("@/components/tools/impl/image-compressor"), { loading });
+const Impl_wordtopdf = dynamic(() => import("@/components/tools/impl/word-to-pdf"), { loading });
 const Impl_imagetopdf = dynamic(() => import("@/components/tools/impl/image-to-pdf"), { loading });
 const Impl_imageformatconverter = dynamic(() => import("@/components/tools/impl/image-format-converter"), { loading });
 const Impl_imagetobase64 = dynamic(() => import("@/components/tools/impl/image-to-base64"), { loading });
@@ -145,6 +146,8 @@ export function getToolComponent(slug: string): ComponentType | null {
       return Impl_imageresizer;
     case "image-compressor":
       return Impl_imagecompressor;
+    case "word-to-pdf":
+      return Impl_wordtopdf;
     case "image-to-pdf":
       return Impl_imagetopdf;
     case "pdf-to-image":

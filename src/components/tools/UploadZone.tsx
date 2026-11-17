@@ -22,6 +22,7 @@ export function UploadZone({
   testId,
   children,
   disabled = false,
+  sampleSkipConfirmation = false,
 }: {
   title: string;
   hint: string;
@@ -34,6 +35,8 @@ export function UploadZone({
   testId?: string;
   children?: ReactNode;
   disabled?: boolean;
+  /** Use when the receiver performs its own replacement confirmation. */
+  sampleSkipConfirmation?: boolean;
 }) {
   const [dragging, setDragging] = useState(false);
   const [sampleError, setSampleError] = useState<string | null>(null);
@@ -42,7 +45,8 @@ export function UploadZone({
 
   // Only offer samples whose real file type is accepted by this specific tool.
   // HEIC and password-protected PDF need different fixtures and are excluded.
-  const sampleType = testId === "audio-converter-input" ? "audio"
+  const sampleType = testId === "word-to-pdf-input" ? "docx"
+    : testId === "audio-converter-input" ? "audio"
     : testId?.startsWith("video-") ? "video"
     : ["format-input", "base64-input", "profile-input"].includes(testId ?? "") ? "image"
     : ["pdf-compress-input", "pdf-merge-input", "pdf-reorder-input", "pdf-split-input", "pdf-watermark-input"].includes(testId ?? "") ? "pdf"
@@ -50,10 +54,12 @@ export function UploadZone({
 
   async function loadSample() {
     if (!sampleType || disabled || sampleBusy) return;
-    if (!window.confirm("فایل نمونه انتخاب شود؟ اگر فایلی انتخاب کرده‌اید ممکن است جایگزین شود.")) return;
+    if (!sampleSkipConfirmation && !window.confirm("فایل نمونه انتخاب شود؟ اگر فایلی انتخاب کرده‌اید ممکن است جایگزین شود.")) return;
     setSampleError(null); setSampleBusy(true);
     try {
-      const specs = sampleType === "audio"
+      const specs = sampleType === "docx"
+        ? [["/samples/sample.docx", "sample.docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"]]
+        : sampleType === "audio"
         ? [["/samples/sample.wav", "sample.wav", "audio/wav"]]
         : sampleType === "video"
         ? [["/samples/sample.mp4", "sample.mp4", "video/mp4"]]

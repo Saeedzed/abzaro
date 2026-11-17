@@ -19,6 +19,7 @@ export function VideoTrimmer() {
   return (
     <VideoToolShell
       id="video-trimmer"
+      indeterminateProgress
       title="ویدیو را برای بریدن انتخاب کنید"
       hint="زمان شروع و پایان را به ثانیه وارد کنید"
       canRun={Number(start) >= 0 && (end.trim() === "" || Number(end) > Number(start))}

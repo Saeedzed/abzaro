@@ -42,6 +42,8 @@ interface VideoToolShellProps {
     /** Extra ffmpeg passes (GIF palette): `args` runs first, then these. */
     passes?: string[][];
   }>;
+  /** Clip-copy progress events do not represent reliable percentage. */
+  indeterminateProgress?: boolean;
   /** Disabled until the options are valid. */
   canRun?: boolean;
 }
@@ -52,7 +54,7 @@ interface VideoToolShellProps {
  * offer the result. The first run also downloads the 31 MB ffmpeg core, so the
  * shell explains that instead of looking frozen.
  */
-export function VideoToolShell({ id, title, hint, children, run, canRun = true }: VideoToolShellProps) {
+export function VideoToolShell({ id, title, hint, children, run, canRun = true, indeterminateProgress = false }: VideoToolShellProps) {
   const [file, setFile] = useState<File | null>(null);
   const [info, setInfo] = useState<VideoInfo | null>(null);
   const [busy, setBusy] = useState(false);
@@ -154,8 +156,11 @@ export function VideoToolShell({ id, title, hint, children, run, canRun = true }
         outputName: recipe.outputName,
         durationSeconds: info?.durationSeconds ?? null,
         signal: controller.signal,
+        onPhase: (phase) => {
+          if (!controller.signal.aborted) setStage(phase === "processing" ? "در حال پردازش…" : "در حال آماده‌سازی فایل خروجی…");
+        },
         onProgress: (ratio) => {
-          setStage("در حال پردازش…");
+          if (controller.signal.aborted) return;
           if (ratio > 0) setProcessingStartedAt((started) => started ?? Date.now());
           setProgress(ratio);
         },
@@ -242,14 +247,15 @@ export function VideoToolShell({ id, title, hint, children, run, canRun = true }
               <div className="mt-3 rounded-xl border border-ink-200 bg-ink-50 px-4 py-3" data-testid={`${id}-progress`}>
                 <div className="flex items-center justify-between gap-2 text-[11px] font-medium text-ink-600">
                   <span>{stage || "در حال پردازش…"}</span>
-                  <span className="tabular-nums">{toPersianDigits(Math.round(progress * 100))}٪</span>
+                  {!indeterminateProgress && <span className="tabular-nums">{toPersianDigits(Math.round(progress * 100))}٪</span>}
                 </div>
                 <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-ink-200">
                   <div
-                    className={cn("h-full rounded-full bg-brand-500 transition-[width] duration-300", progress === 0 && "animate-pulse")}
-                    style={{ width: `${Math.max(4, progress * 100)}%` }}
+                    className={cn("h-full rounded-full bg-brand-500 transition-[width] duration-300", (indeterminateProgress || progress === 0) && "animate-pulse")}
+                    style={{ width: indeterminateProgress ? "35%" : `${Math.max(4, progress * 100)}%` }}
                   />
                 </div>
+                {indeterminateProgress && <p className="mt-2 text-xs leading-6 text-ink-600">درصد دقیق این عملیات قابل محاسبه نیست. تا نمایش دکمهٔ دانلود منتظر بمانید؛ آماده‌سازی فایل‌های بزرگ ممکن است زمان ببرد.</p>}
                 {id === "video-compressor" && (
                   <p className="mt-2 text-xs leading-6 text-ink-600" data-testid={`${id}-eta`} aria-live="polite">
                     {processingStartedAt === null || elapsedSeconds < 5 || progress < 0.02

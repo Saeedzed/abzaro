@@ -298,6 +298,8 @@ export interface ConvertOptions {
   /** Clip length in seconds — lets us turn ffmpeg's time= output into progress. */
   durationSeconds?: number | null;
   onProgress?: (ratio: number) => void;
+  /** Processing phases, not estimates of elapsed time or percent complete. */
+  onPhase?: (phase: "processing" | "finalizing") => void;
   onLog?: (line: string) => void;
   /** Lets the user cancel a long conversion. */
   signal?: AbortSignal;
@@ -395,12 +397,15 @@ export async function convertVideo(
       pass.map((arg) => (arg === options.inputName ? mountedPath : arg)),
     );
     throwIfAborted();
+    options.onPhase?.("processing");
     for (const pass of passes) {
       const code = await Promise.race([ffmpeg.exec(pass), cancelled]);
       throwIfAborted();
       if (code !== 0) throw new Error(`__ffmpeg_failed__ exit ${code}`);
     }
 
+    // Reading a large output from the worker can take substantial time and memory.
+    options.onPhase?.("finalizing");
     // The output is written to MEMFS (a Blob-backed workdir can't create files).
     const data: Uint8Array | string | null = await Promise.race([
       ffmpeg.readFile(options.outputName).catch(() => null), cancelled,
