@@ -48,6 +48,24 @@ export function isVideoError(value: unknown): value is VideoError {
   return typeof value === "object" && value !== null && "error" in value;
 }
 
+/** A small early probe catches unreadable Android picker/cloud references before processing.
+ * It does not guarantee every later byte remains readable and never copies the entire file. */
+export async function probeVideoFile(file: File): Promise<VideoError | null> {
+  if (!file.size) return { error: "این فایل خالی است." };
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    const read = Promise.all([file.slice(0, 16).arrayBuffer(), file.slice(Math.max(0, file.size - 16)).arrayBuffer()]);
+    const timeout = new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new Error("probe-timeout")), 10000); });
+    await Promise.race([read, timeout]);
+    return null;
+  } catch (cause) {
+    if (cause instanceof Error && cause.message === "probe-timeout") {
+      return { error: "خواندن فایل طول کشید. اگر ویدیو در فضای ابری است ابتدا آن را روی دستگاه ذخیره کنید و از «انتخاب از فایل‌های دستگاه» دوباره انتخاب کنید." };
+    }
+    return { error: "مرورگر نتوانست فایل انتخاب‌شده را بخواند. ویدیو را روی دستگاه ذخیره کنید و از «انتخاب از فایل‌های دستگاه» دوباره انتخاب کنید." };
+  } finally { if (timer) clearTimeout(timer); }
+}
+
 /** Read duration and dimensions in the browser (fast, no ffmpeg needed). */
 export async function inspectVideo(file: File): Promise<VideoInfo | VideoError> {
   const looksLikeVideo =
@@ -68,14 +86,17 @@ export async function inspectVideo(file: File): Promise<VideoInfo | VideoError> 
         const video = document.createElement("video");
         video.preload = "metadata";
         video.muted = true;
+        const timer = setTimeout(() => { cleanup(); reject(new Error("metadata-timeout")); }, 10000);
+        function cleanup() { clearTimeout(timer); video.onloadedmetadata = null; video.onerror = null; }
         video.onloadedmetadata = () => {
-          resolve({
+          const metadata = {
             duration: Number.isFinite(video.duration) ? video.duration : 0,
             width: video.videoWidth,
             height: video.videoHeight,
-          });
+          };
+          cleanup(); resolve(metadata);
         };
-        video.onerror = () => reject(new Error("metadata"));
+        video.onerror = () => { cleanup(); reject(new Error("metadata")); };
         video.src = url;
       },
     );
@@ -450,6 +471,9 @@ export async function convertVideo(
 
     if (options.signal?.aborted || message.startsWith("__aborted__")) {
       throw new Error("پردازش لغو شد.");
+    }
+    if (/NotReadableError|readAsArrayBuffer.*could not be read|requested file could not be read/i.test(message)) {
+      throw new Error("مرورگر دسترسی خواندن این فایل را ندارد. ویدیو را روی دستگاه ذخیره کنید و با «انتخاب از فایل‌های دستگاه» دوباره انتخاب کنید. اگر مشکل ادامه داشت، مجوز دسترسی فایل و سلامت آن را بررسی کنید.");
     }
     if (/does not contain any stream|Output file #0 does not contain/i.test(log)) {
       throw new Error("فایل خروجی جریان قابل استفاده‌ای ندارد؛ فایل دیگری را امتحان کنید یا گزارش فنی را بررسی کنید.");

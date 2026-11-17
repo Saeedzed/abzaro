@@ -23,6 +23,7 @@ export function UploadZone({
   children,
   disabled = false,
   sampleSkipConfirmation = false,
+  offerFileBrowser = false,
 }: {
   title: string;
   hint: string;
@@ -37,6 +38,8 @@ export function UploadZone({
   disabled?: boolean;
   /** Use when the receiver performs its own replacement confirmation. */
   sampleSkipConfirmation?: boolean;
+  /** Offer an unfiltered system file chooser as an alternative to the media picker. */
+  offerFileBrowser?: boolean;
 }) {
   const [dragging, setDragging] = useState(false);
   const [sampleError, setSampleError] = useState<string | null>(null);
@@ -112,13 +115,22 @@ export function UploadZone({
         <p className="mt-1 text-sm text-ink-500">{hint}</p>
         <button
           type="button"
-          onClick={() => inputRef.current?.click()}
+          onClick={() => {
+            if (inputRef.current) { inputRef.current.accept = accept; inputRef.current.click(); }
+          }}
           disabled={disabled}
           data-testid={testId ? `${testId}-button` : undefined}
           className="mt-4 inline-flex items-center gap-2 rounded-lg bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-700"
         >
           {buttonLabel}
         </button>
+        {offerFileBrowser && (
+          <button type="button" disabled={disabled} data-testid={testId ? `${testId}-files-button` : undefined}
+            onClick={() => { if (inputRef.current) { inputRef.current.removeAttribute("accept"); inputRef.current.click(); } }}
+            className="mx-2 mt-4 inline-flex min-h-11 items-center rounded-lg border border-brand-300 px-4 py-2 text-sm font-semibold text-brand-700 hover:bg-brand-50 disabled:opacity-50">
+            انتخاب از فایل‌های دستگاه
+          </button>
+        )}
         {sampleType && (
           <button type="button" disabled={disabled || sampleBusy} onClick={() => void loadSample()}
             data-testid={testId ? `${testId}-sample` : undefined}
@@ -133,7 +145,12 @@ export function UploadZone({
           disabled={disabled}
           accept={accept}
           multiple={multiple}
-          onChange={(event) => handle(event.target.files)}
+          onChange={(event) => {
+            const files = Array.from(event.currentTarget.files ?? []);
+            event.currentTarget.value = ""; // allow retrying the same file
+            event.currentTarget.accept = accept;
+            if (files.length) onFiles(files);
+          }}
           className="sr-only"
           aria-label={title}
           data-testid={testId}

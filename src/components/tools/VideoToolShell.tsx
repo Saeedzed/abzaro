@@ -8,6 +8,7 @@ import {
   convertVideo,
   formatDuration,
   inspectVideo,
+  probeVideoFile,
   isVideoError,
   LARGE_VIDEO_BYTES,
   VIDEO_MEMORY_HINT_BYTES,
@@ -58,6 +59,8 @@ export function VideoToolShell({ id, title, hint, children, run, canRun = true, 
   const [file, setFile] = useState<File | null>(null);
   const [info, setInfo] = useState<VideoInfo | null>(null);
   const [busy, setBusy] = useState(false);
+  const [checkingFile, setCheckingFile] = useState(false);
+  const selectionRef = useRef(0);
   const [progress, setProgress] = useState(0);
   const [processingStartedAt, setProcessingStartedAt] = useState<number | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
@@ -99,23 +102,27 @@ export function VideoToolShell({ id, title, hint, children, run, canRun = true, 
 
   async function handleFiles(files: File[]) {
     const next = files[0];
-    if (!next) return;
-    setError(null);
-    setResult(null);
-    setProgress(0);
-    setStage("");
-    const inspected = await inspectVideo(next);
-    if (isVideoError(inspected)) {
-      setError(inspected.error);
-      setFile(null);
-      setInfo(null);
-      return;
+    if (!next || busy) return;
+    const selection = ++selectionRef.current;
+    setCheckingFile(true);
+    setError(null); setResult(null); setProgress(0); setStage("");
+    setFile(null); setInfo(null);
+    try {
+      const probeError = await probeVideoFile(next);
+      if (selection !== selectionRef.current) return;
+      if (probeError) { setError(probeError.error); return; }
+      const inspected = await inspectVideo(next);
+      if (selection !== selectionRef.current) return;
+      if (isVideoError(inspected)) { setError(inspected.error); return; }
+      setFile(next); setInfo(inspected);
+    } catch {
+      if (selection === selectionRef.current) setError("بررسی فایل انجام نشد. ویدیو را از فایل‌های دستگاه دوباره انتخاب کنید.");
+    } finally {
+      if (selection === selectionRef.current) setCheckingFile(false);
     }
-    setFile(next);
-    setInfo(inspected);
   }
 
-  useEffect(() => () => abortRef.current?.abort(), []);
+  useEffect(() => () => { selectionRef.current += 1; abortRef.current?.abort(); }, []);
 
   function cancel() {
     abortRef.current?.abort();
@@ -189,7 +196,8 @@ export function VideoToolShell({ id, title, hint, children, run, canRun = true, 
   return (
     <div className="space-y-4">
       <UploadZone
-        disabled={busy}
+        disabled={busy || checkingFile}
+        offerFileBrowser
         accept="video/*,.mp4,.mov,.mkv,.webm,.avi,.m4v,.3gp"
         title={title}
         hint={hint}
@@ -197,6 +205,9 @@ export function VideoToolShell({ id, title, hint, children, run, canRun = true, 
         testId={`${id}-input`}
         onFiles={(files) => void handleFiles(files)}
       />
+
+      {checkingFile && <p role="status" className="text-sm text-ink-600">در حال بررسی دسترسی به فایل…</p>}
+      {error && !file && <p role="alert" data-testid={`${id}-error`} className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</p>}
 
       {file && info && (
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
