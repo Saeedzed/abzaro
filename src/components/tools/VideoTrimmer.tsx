@@ -38,6 +38,7 @@ export function VideoTrimmer() {
                 ...(from > 0 ? ["-ss", String(from)] : []),
                 "-i", inputName,
                 ...(duration ? ["-t", String(duration)] : []),
+                "-map", "0:v:0", "-map", "0:a:0?",
                 "-c:v", "libx264", "-preset", "ultrafast", "-crf", "24",
                 "-c:a", "aac", "-b:a", "128k",
                 "-movflags", "+faststart",
@@ -47,6 +48,7 @@ export function VideoTrimmer() {
                 ...(from > 0 ? ["-ss", String(from)] : []),
                 "-i", inputName,
                 ...(duration ? ["-t", String(duration)] : []),
+                "-map", "0:v:0", "-map", "0:a:0?",
                 "-c", "copy",
                 "-avoid_negative_ts", "make_zero",
                 outputName,
@@ -107,13 +109,13 @@ export function VideoTrimmer() {
             />
             <span>
               <strong className="text-ink-800">برش دقیق (کندتر)</strong> — ویدیو دوباره
-              کدگذاری می‌شود و برش ممکناست چند ده ثانیه طول بکشد. بدون این گزینه، برش
+              کدگذاری می‌شود و برش ممکن است چند ده ثانیه طول بکشد. بدون این گزینه، برش
               سریع است ولی ممکن است تا نزدیک‌ترین کلید فریم جابه‌جا شود.
             </span>
           </label>
 
           <p className="rounded-xl bg-ink-50 px-3 py-2 text-[11px] leading-6 text-ink-500">
-            خروجی MP4 با همان کیفیت تصویر است. اگر زمان پایان را خالی بگذارید،
+            برش سریع تصویر را دوباره کدگذاری نمی‌کند؛ برش دقیق ممکن است کیفیت را تغییر دهد. اگر زمان پایان را خالی بگذارید،
             ویدیو تا آخر بریده می‌شود.
           </p>
         </div>

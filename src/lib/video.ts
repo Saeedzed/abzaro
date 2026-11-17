@@ -153,9 +153,9 @@ const FFMPEG_WASM_GZ_URL = "/ffmpeg/ffmpeg-core.wasm.gz";
 const FFMPEG_WASM_URL = "/ffmpeg/ffmpeg-core.wasm";
 
 /** Fetch the gzipped core and inflate it into a Blob URL. Null if unavailable. */
-async function gzippedCoreUrl(): Promise<string | null> {
+async function gzippedCoreUrl(signal?: AbortSignal): Promise<string | null> {
   try {
-    const response = await fetch(FFMPEG_WASM_GZ_URL);
+    const response = await fetch(FFMPEG_WASM_GZ_URL, { signal });
     if (!response.ok || !response.body) return null;
     // `fetch` already undoes any transport Content-Encoding (Cloudflare may
     // gzip/br this response), so `response.body` is always the .gz file itself.
@@ -180,7 +180,8 @@ async function gzippedCoreUrl(): Promise<string | null> {
     // ffmpeg.wasm's core fetches `wasmURL` itself, so the bytes must be
     // addressable as a URL rather than passed as an ArrayBuffer.
     return URL.createObjectURL(blob);
-  } catch {
+  } catch (error) {
+    if (signal?.aborted) throw error;
     return null;
   }
 }
@@ -218,6 +219,20 @@ interface LoadedFFmpeg {
 }
 
 let ffmpegPromise: Promise<LoadedFFmpeg> | null = null;
+let activeFFmpeg: FFmpegInstance | null = null;
+let loadController: AbortController | null = null;
+let engineGeneration = 0;
+let conversionActive = false;
+
+function terminateEngine() {
+  engineGeneration += 1;
+  loadController?.abort();
+  loadController = null;
+  const instance = activeFFmpeg;
+  activeFFmpeg = null;
+  ffmpegPromise = null;
+  instance?.terminate();
+}
 
 /**
  * Load ffmpeg once and reuse it for every conversion in the session. The worker
@@ -228,34 +243,46 @@ let ffmpegPromise: Promise<LoadedFFmpeg> | null = null;
 export function loadFFmpeg(onLog?: (line: string) => void): Promise<LoadedFFmpeg> {
   if (ffmpegPromise) return ffmpegPromise;
 
-  ffmpegPromise = (async () => {
+  const generation = engineGeneration;
+  const localLoadController = new AbortController();
+  loadController = localLoadController;
+  const promise = (async () => {
     if (typeof window === "undefined") throw new Error("client-only");
     const namespace = await loadFFmpegScript();
+    if (generation !== engineGeneration) throw new Error("__aborted__");
     const ffmpeg = new namespace.FFmpeg();
+    activeFFmpeg = ffmpeg;
 
     if (onLog) ffmpeg.on("log", ({ message }) => onLog(message));
 
-    const wasmURL = (await gzippedCoreUrl()) ?? FFMPEG_WASM_URL;
+    const wasmURL = (await gzippedCoreUrl(localLoadController.signal)) ?? FFMPEG_WASM_URL;
 
     try {
+      if (generation !== engineGeneration) throw new Error("__aborted__");
       await ffmpeg.load({ coreURL: FFMPEG_CORE_URL, wasmURL });
     } catch (error) {
+      if (generation !== engineGeneration) throw new Error("__aborted__");
+      ffmpeg.terminate();
+      activeFFmpeg = null;
       console.error("[ffmpeg] engine load failed", error);
       throw new Error("موتور ویدیو بارگذاری نشد. اتصال اینترنت، فضای خالی و مرورگر به‌روز را بررسی کنید؛ اگر مشکل ادامه دارد عکس خطا و مدل گوشی را بفرستید.");
     } finally {
       if (wasmURL.startsWith("blob:")) URL.revokeObjectURL(wasmURL);
     }
 
+    if (loadController === localLoadController) loadController = null;
     return { ffmpeg };
   })().catch((error: unknown) => {
-    ffmpegPromise = null; // allow a retry on the next click
+    if (ffmpegPromise === promise) ffmpegPromise = null; // do not clear a newer load
+    if (loadController === localLoadController) loadController = null;
     if (error instanceof Error && /ffmpeg-wasm-(failed|missing)/.test(error.message)) {
       throw new Error("موتور ویدیو دانلود نشد. اتصال اینترنت را بررسی کنید و دوباره تلاش کنید.");
     }
     throw error;
   });
 
-  return ffmpegPromise;
+  ffmpegPromise = promise;
+  return promise;
 }
 
 export interface ConvertOptions {
@@ -310,7 +337,25 @@ export async function convertVideo(
   file: File,
   options: ConvertOptions,
 ): Promise<ConvertResult> {
-  const { ffmpeg } = await loadFFmpeg();
+  if (conversionActive) throw new Error("پردازش دیگری در حال انجام است؛ ابتدا آن را تمام یا لغو کنید.");
+  if (options.signal?.aborted) throw new Error("پردازش لغو شد.");
+  conversionActive = true;
+  let cancelReject: ((reason: Error) => void) | undefined;
+  const cancelled = new Promise<never>((_, reject) => { cancelReject = reject; });
+  const abort = () => {
+    terminateEngine();
+    cancelReject?.(new Error("__aborted__"));
+  };
+  options.signal?.addEventListener("abort", abort, { once: true });
+  let ffmpeg: FFmpegInstance;
+  try {
+    ({ ffmpeg } = await Promise.race([loadFFmpeg(), cancelled]));
+  } catch (error) {
+    options.signal?.removeEventListener("abort", abort);
+    conversionActive = false;
+    if (options.signal?.aborted) throw new Error("پردازش لغو شد.");
+    throw error;
+  }
   const logLines: string[] = [];
   let progressFromEvents = 0;
   let progressFromLog = 0;
@@ -339,9 +384,9 @@ export async function convertVideo(
 
   try {
     throwIfAborted();
-    await ffmpeg.createDir("/input").catch(() => undefined);
+    await Promise.race([ffmpeg.createDir("/input").catch(() => undefined), cancelled]);
     // Mount under /input so ffmpeg streams the file instead of copying it.
-    await ffmpeg.mount("WORKERFS", { files: [file] }, "/input");
+    await Promise.race([ffmpeg.mount("WORKERFS", { files: [file] }, "/input"), cancelled]);
 
     // WORKERFS exposes the file under its real name, so map our logical
     // `input.<ext>` name onto the mounted path.
@@ -351,14 +396,15 @@ export async function convertVideo(
     );
     throwIfAborted();
     for (const pass of passes) {
-      await ffmpeg.exec(pass);
+      const code = await Promise.race([ffmpeg.exec(pass), cancelled]);
       throwIfAborted();
+      if (code !== 0) throw new Error(`__ffmpeg_failed__ exit ${code}`);
     }
 
     // The output is written to MEMFS (a Blob-backed workdir can't create files).
-    const data: Uint8Array | string | null = await ffmpeg
-      .readFile(options.outputName)
-      .catch(() => null);
+    const data: Uint8Array | string | null = await Promise.race([
+      ffmpeg.readFile(options.outputName).catch(() => null), cancelled,
+    ]);
 
     const bytes =
       data === null
@@ -381,12 +427,15 @@ export async function convertVideo(
 
     return { blob, bytes: blob.size, log };
   } catch (error) {
-    await ffmpeg.unmount("/input").catch(() => undefined);
+    if (!options.signal?.aborted) {
+      await ffmpeg.deleteFile(options.outputName).catch(() => undefined);
+      await ffmpeg.unmount("/input").catch(() => undefined);
+    }
 
     const message = error instanceof Error ? error.message : "";
     const log = logLines.join("\n");
 
-    if (message.startsWith("__aborted__")) {
+    if (options.signal?.aborted || message.startsWith("__aborted__")) {
       throw new Error("پردازش لغو شد.");
     }
     if (/does not contain any stream|Output file #0 does not contain/i.test(log)) {
@@ -402,17 +451,26 @@ export async function convertVideo(
         "حافظهٔ این دستگاه برای این فایل کافی نبود. رزولوشن یا طول ویدیو را کمتر کنید یا با کامپیوتر امتحان کنید.",
       );
     }
+    if (/could not find tag for codec|not currently supported in container|codec not supported/i.test(log)) {
+      throw new Error("کدک این فایل با خروجی انتخاب‌شده سازگار نیست. در ابزار برش گزینهٔ «برش دقیق» را امتحان کنید یا فرمت خروجی دیگری انتخاب کنید.");
+    }
     // Keep the technical reason in the console only; users see Persian text.
     console.error("[ffmpeg]", message, log.split("\n").slice(-25).join("\n"));
-    throw new Error("پردازش ویدیو انجام نشد. قالب فایل یا تنظیمات را تغییر دهید.");
+    throw new Error("پردازش فایل انجام نشد. فایل ممکن است ناسازگار باشد یا حافظه کافی نباشد؛ برای برش، گزینهٔ «برش دقیق» را هم امتحان کنید.");
   } finally {
     ffmpeg.off("log", logHandler);
     ffmpeg.off("progress", progressHandler);
+    options.signal?.removeEventListener("abort", abort);
+    conversionActive = false;
   }
 }
 
 function outputMime(name: string): string {
   if (name.endsWith(".mp3")) return "audio/mpeg";
+  if (name.endsWith(".wav")) return "audio/wav";
+  if (name.endsWith(".m4a")) return "audio/mp4";
+  if (name.endsWith(".ogg")) return "audio/ogg";
+  if (name.endsWith(".flac")) return "audio/flac";
   if (name.endsWith(".gif")) return "image/gif";
   if (name.endsWith(".webm")) return "video/webm";
   if (name.endsWith(".jpg")) return "image/jpeg";

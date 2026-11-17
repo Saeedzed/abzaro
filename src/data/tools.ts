@@ -1009,6 +1009,25 @@ export const tools: Tool[] = [
   /*  Phase 6 — video tools (category «ویدیو و صدا»)                  */
   /* ---------------------------------------------------------------- */
   {
+    id: "audio-converter",
+    slug: "audio-converter",
+    title: "تبدیل فرمت صدا",
+    description: "فایل صوتی خود را به MP3، M4A یا WAV تبدیل کنید؛ پردازش در مرورگر انجام می‌شود.",
+    steps: [
+      "یک فایل صوتی پشتیبانی‌شده انتخاب کنید.",
+      "فرمت خروجی MP3، M4A یا WAV را انتخاب و تبدیل را شروع کنید.",
+      "پس از تبدیل، فایل خروجی را دانلود کنید و کیفیت آن را بررسی کنید.",
+    ],
+    category: "video",
+    icon: AudioLines,
+    seoTitle: "تبدیل فرمت صدا به MP3، M4A و WAV",
+    seoDescription: "تبدیل فایل صوتی به MP3، M4A یا WAV در مرورگر، بدون ارسال فایل به سرور.",
+    keywords: ["تبدیل فرمت صدا", "تبدیل صوت", "تبدیل mp3", "تبدیل wav", "audio converter"],
+    status: "live",
+    popular: false,
+    addedAt: "2026-11-14",
+  },
+  {
     id: "video-compressor",
     slug: "video-compressor",
     title: "فشرده‌سازی ویدیو",

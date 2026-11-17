@@ -6,7 +6,6 @@ import { Breadcrumbs } from "@/components/seo/Breadcrumbs";
 import { RelatedTools } from "@/components/tools/RelatedTools";
 import { ToolFaq } from "@/components/tools/ToolFaq";
 import { SiblingTabs } from "@/components/tools/SiblingTabs";
-import { RecentToolsTracker } from "@/components/tools/RecentToolsTracker";
 import { ToolSlot } from "@/components/tools/ToolSlot";
 import { toPersianDigits } from "@/lib/persian";
 import { getCategory } from "@/data/categories";
@@ -87,7 +86,6 @@ export default async function ToolPage({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      <RecentToolsTracker slug={tool.slug} />
 
       <Breadcrumbs
         items={[

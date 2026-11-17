@@ -86,6 +86,7 @@ const Impl_heictojpg = dynamic(() => import("@/components/tools/impl/heic-to-jpg
 const Impl_pdfsplit = dynamic(() => import("@/components/tools/impl/pdf-split"), { loading });
 const Impl_jwtdecoder = dynamic(() => import("@/components/tools/impl/jwt-decoder"), { loading });
 const Impl_hashgenerator = dynamic(() => import("@/components/tools/impl/hash-generator"), { loading });
+const Impl_audioconverter = dynamic(() => import("@/components/tools/impl/audio-converter"), { loading });
 const Impl_videocompressor = dynamic(() => import("@/components/tools/impl/video-compressor"), { loading });
 const Impl_videotogif = dynamic(() => import("@/components/tools/impl/video-to-gif"), { loading });
 const Impl_videotoaudio = dynamic(() => import("@/components/tools/impl/video-to-audio"), { loading });
@@ -228,6 +229,8 @@ export function getToolComponent(slug: string): ComponentType | null {
       return Impl_jwtdecoder;
     case "hash-generator":
       return Impl_hashgenerator;
+    case "audio-converter":
+      return Impl_audioconverter;
     case "video-compressor":
       return Impl_videocompressor;
     case "video-to-gif":

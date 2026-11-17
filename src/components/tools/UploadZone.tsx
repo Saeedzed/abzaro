@@ -42,7 +42,8 @@ export function UploadZone({
 
   // Only offer samples whose real file type is accepted by this specific tool.
   // HEIC and password-protected PDF need different fixtures and are excluded.
-  const sampleType = testId?.startsWith("video-") ? "video"
+  const sampleType = testId === "audio-converter-input" ? "audio"
+    : testId?.startsWith("video-") ? "video"
     : ["format-input", "base64-input", "profile-input"].includes(testId ?? "") ? "image"
     : ["pdf-compress-input", "pdf-merge-input", "pdf-reorder-input", "pdf-split-input", "pdf-watermark-input"].includes(testId ?? "") ? "pdf"
     : null;
@@ -52,7 +53,9 @@ export function UploadZone({
     if (!window.confirm("فایل نمونه انتخاب شود؟ اگر فایلی انتخاب کرده‌اید ممکن است جایگزین شود.")) return;
     setSampleError(null); setSampleBusy(true);
     try {
-      const specs = sampleType === "video"
+      const specs = sampleType === "audio"
+        ? [["/samples/sample.wav", "sample.wav", "audio/wav"]]
+        : sampleType === "video"
         ? [["/samples/sample.mp4", "sample.mp4", "video/mp4"]]
         : sampleType === "image"
           ? [["/samples/sample.png", "sample.png", "image/png"]]

@@ -53,7 +53,7 @@ export default function CategoriesPage() {
         </p>
       </header>
 
-      <div className="mt-5 grid grid-cols-2 gap-3 sm:mt-8 sm:gap-5 lg:grid-cols-4" data-testid="category-grid">
+      <div className="mt-5 grid grid-cols-4 gap-1.5 sm:mt-8 sm:gap-5" data-testid="category-grid">
         {categories.map((category) => (
           <CategoryCard key={category.slug} category={category} />
         ))}

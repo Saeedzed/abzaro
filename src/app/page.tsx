@@ -10,7 +10,6 @@ import {
 import { Container } from "@/components/layout/Container";
 import { Hero } from "@/components/home/Hero";
 import { PopularQuestions } from "@/components/home/PopularQuestions";
-import { RecentTools } from "@/components/tools/RecentTools";
 import { ToolGrid } from "@/components/tools/ToolGrid";
 import { CategoryCard } from "@/components/categories/CategoryCard";
 import { categories } from "@/data/categories";
@@ -93,11 +92,6 @@ export default function HomePage() {
     <>
       <Hero />
 
-      {/* Recently used — client-only, hidden until localStorage has entries */}
-      <Container>
-        <RecentTools />
-      </Container>
-
       {/* Categories */}
       <section className="bg-ink-50 py-10 sm:py-16" aria-labelledby="categories-heading">
         <Container>
@@ -107,7 +101,7 @@ export default function HomePage() {
             href="/categories"
             linkLabel="همه دسته‌بندی‌ها"
           />
-          <div className="mt-5 grid grid-cols-2 gap-3 sm:mt-8 sm:gap-5 lg:grid-cols-4" data-testid="category-grid">
+          <div className="mt-5 grid grid-cols-4 gap-1.5 sm:mt-8 sm:gap-5" data-testid="category-grid">
             {categories.map((category) => (
               <CategoryCard key={category.slug} category={category} />
             ))}

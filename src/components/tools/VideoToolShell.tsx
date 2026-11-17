@@ -113,6 +113,8 @@ export function VideoToolShell({ id, title, hint, children, run, canRun = true }
     setInfo(inspected);
   }
 
+  useEffect(() => () => abortRef.current?.abort(), []);
+
   function cancel() {
     abortRef.current?.abort();
     setStage("در حال لغو…");
@@ -144,6 +146,7 @@ export function VideoToolShell({ id, title, hint, children, run, canRun = true }
         },
       });
 
+      if (controller.signal.aborted) throw new Error("پردازش لغو شد.");
       const converted = await convertVideo(file, {
         args: recipe.args,
         passes: recipe.passes,
@@ -161,6 +164,7 @@ export function VideoToolShell({ id, title, hint, children, run, canRun = true }
         },
       });
 
+      if (controller.signal.aborted) throw new Error("پردازش لغو شد.");
       setResult({
         blob: converted.blob,
         name: `${recipe.outputName}`,
@@ -275,6 +279,14 @@ export function VideoToolShell({ id, title, hint, children, run, canRun = true }
                 <TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                 {error}
               </p>
+            )}
+
+            {error && error !== "پردازش لغو شد." && logRef.current && (
+              <details className="mt-3 rounded-xl border border-ink-200 p-3 text-xs text-ink-600">
+                <summary className="cursor-pointer font-semibold">جزئیات فنی خطا</summary>
+                <p className="mt-2">این گزارش ممکن است نام فایل شما را داشته باشد؛ پیش از ارسال آن را بررسی کنید.</p>
+                <pre dir="ltr" className="mt-2 max-h-48 overflow-auto whitespace-pre-wrap break-all text-left">{logRef.current.split("\n").slice(-30).join("\n")}</pre>
+              </details>
             )}
 
             {result && (

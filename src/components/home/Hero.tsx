@@ -2,7 +2,6 @@ import Link from "next/link";
 import { Lock, ShieldCheck, Zap } from "lucide-react";
 import { Container } from "@/components/layout/Container";
 import { SearchBox } from "@/components/search/SearchBox";
-import { popularTools } from "@/data/tools";
 import { heroIntents, intentPrompt } from "@/data/intents";
 import { siteConfig } from "@/config/site";
 
@@ -42,9 +41,6 @@ export function Hero() {
             placeholder="ابزار موردنظرت را جستجو کن…"
             className="mx-auto mt-5 max-w-2xl text-start sm:mt-9"
           />
-          <p className="mt-3 text-xs text-ink-500">
-            بدون نصب و بدون ثبت‌نام · همهٔ پردازش‌ها در مرورگر شما انجام می‌شود
-          </p>
 
           {/*
             Intent-first entry points. Phones get a 3-column icon grid (thumb
@@ -98,20 +94,7 @@ export function Hero() {
             </ul>
           </div>
 
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
-            <span className="text-xs font-medium text-ink-500">
-              پرطرفدارها:
-            </span>
-            {popularTools.slice(0, 4).map((tool) => (
-              <Link
-                key={tool.id}
-                href={`/tools/${tool.slug}`}
-                className="flex min-h-9 items-center rounded-full border border-ink-200 bg-white px-3.5 py-1.5 text-xs font-medium text-ink-700 shadow-card transition hover:border-brand-300 hover:text-brand-700"
-              >
-                {tool.title}
-              </Link>
-            ))}
-          </div>
+
         </div>
 
         <div className="mx-auto mt-6 grid max-w-3xl grid-cols-3 gap-2 sm:mt-12 sm:gap-4">

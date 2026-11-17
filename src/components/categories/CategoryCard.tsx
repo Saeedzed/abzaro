@@ -46,23 +46,23 @@ export function CategoryCard({ category, variant = "full" }: CategoryCardProps) 
   return (
     <Link
       href={`/categories/${category.slug}`}
-      className="group flex h-full flex-col overflow-hidden rounded-2xl border border-ink-200 bg-white shadow-card transition duration-200 ease-out hover:-translate-y-1 hover:border-brand-300 hover:shadow-card-hover"
+      className="group flex min-h-11 min-w-0 h-full flex-col overflow-hidden rounded-xl sm:rounded-2xl border border-ink-200 bg-white shadow-card transition duration-200 ease-out hover:-translate-y-1 hover:border-brand-300 hover:shadow-card-hover"
     >
       {/* Illustration cover */}
-      <div className="border-b border-ink-100 bg-gradient-to-br from-brand-50 via-brand-50/60 to-white px-3 text-brand-600">
-        <CategoryArt slug={category.slug} className="h-16 w-full sm:h-24" />
+      <div className="border-b border-ink-100 bg-gradient-to-br from-brand-50 via-brand-50/60 to-white px-1 text-brand-600 sm:px-3">
+        <CategoryArt slug={category.slug} className="h-10 w-full sm:h-24" />
       </div>
 
-      <div className="flex min-w-0 flex-1 flex-col p-3 sm:p-5">
-        <div className="flex items-center gap-2 sm:gap-3">
-          <IconTile icon={Icon} size="sm" solid />
-          <h3 className="min-w-0 text-[13px] font-bold leading-5 text-ink-900 sm:text-base sm:leading-7">{category.title}</h3>
+      <div className="flex min-w-0 flex-1 flex-col px-1 py-2 text-center sm:p-5 sm:text-start">
+        <div className="flex min-w-0 items-center justify-center sm:justify-start sm:gap-3">
+          <span className="hidden sm:block"><IconTile icon={Icon} size="sm" solid /></span>
+          <h3 className="min-w-0 break-words text-[10px] font-bold leading-4 text-ink-900 sm:text-base sm:leading-7">{category.title}</h3>
         </div>
         <p className="mt-2 hidden flex-1 text-sm leading-6 text-ink-600 sm:line-clamp-2">
           {category.description}
         </p>
-        <div className="mt-3 flex flex-wrap items-center justify-between gap-1 sm:mt-4">
-          <span className="text-xs font-medium text-ink-500">
+        <div className="mt-1 flex flex-wrap items-center justify-center gap-1 sm:mt-4 sm:justify-between">
+          <span className="text-[10px] font-medium text-ink-500 sm:text-xs">
             {toPersianDigits(count)} ابزار
           </span>
           <span className="hidden items-center gap-1 text-xs font-semibold text-brand-600 sm:flex">

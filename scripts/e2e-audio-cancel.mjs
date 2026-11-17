@@ -1,0 +1,52 @@
+import { chromium } from 'playwright-core';
+import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
+const base = process.env.BASE_URL || 'http://127.0.0.1:4175';
+const browser = await chromium.launch({headless:true,args:['--no-sandbox']});
+const page = await browser.newPage({acceptDownloads:true, serviceWorkers:'block'});
+page.setDefaultTimeout(120000);
+await page.route('https://static.cloudflareinsights.com/**', r => r.abort());
+try {
+  await page.goto(base+'/tools/audio-converter/');
+  await page.locator('input[type=file]').setInputFiles('/tmp/sample.wav');
+  for (const format of ['mp3','m4a','wav']) {
+    await page.getByTestId('audio-converter-format').selectOption(format);
+    await page.getByTestId('audio-converter-run').click();
+    const downloadButton=page.getByTestId('audio-converter-download');
+    await downloadButton.waitFor();
+    const pending=page.waitForEvent('download'); await downloadButton.click();
+    const download=await pending; const path=`/tmp/audio-test.${format}`; await download.saveAs(path);
+    const codec = execFileSync('ffprobe',['-v','error','-select_streams','a:0','-show_entries','stream=codec_name','-of','default=nw=1:nk=1',path],{encoding:'utf8'}).trim();
+    assert.equal(codec, {mp3:'mp3',m4a:'aac',wav:'pcm_s16le'}[format]);
+    console.log('PASS audio',format,codec,readFileSync(path).length);
+  }
+  await page.goto(base+'/tools/video-trimmer/'); await page.waitForTimeout(800);
+  await page.locator('input[type=file]').setInputFiles('/tmp/audio.mp4');
+  await page.getByTestId('video-trimmer-start').fill('0.2');
+  await page.getByTestId('video-trimmer-end').fill('1.5');
+  await page.getByTestId('video-trimmer-run').click();
+  await page.getByTestId('video-trimmer-result').waitFor();
+  console.log('PASS trim real video');
+  await page.goto(base+'/tools/video-compressor/'); await page.waitForTimeout(800);
+  await page.locator('input[type=file]').setInputFiles('/tmp/audio.mp4');
+  await page.getByTestId('video-compressor-run').click();
+  await page.getByTestId('video-compressor-cancel').click();
+  await page.getByTestId('video-compressor-error').waitFor();
+  assert.match(await page.getByTestId('video-compressor-error').textContent(), /لغو شد/);
+  await page.getByTestId('video-compressor-run').click();
+  await page.getByTestId('video-compressor-result').waitFor();
+  console.log('PASS cancel and retry compression');
+  await page.locator('input[type=file]').setInputFiles('/tmp/cancel-test.mp4');
+  await page.getByTestId('video-compressor-run').click();
+  await page.waitForFunction(() => document.querySelector('[data-testid="video-compressor-progress"]')?.textContent?.includes('در حال پردازش…'));
+  const started = Date.now();
+  await page.getByTestId('video-compressor-cancel').click();
+  await page.getByTestId('video-compressor-error').waitFor();
+  assert.match(await page.getByTestId('video-compressor-error').textContent(), /لغو شد/);
+  assert.ok(Date.now() - started < 5000, 'active conversion should stop promptly');
+  await page.locator('input[type=file]').setInputFiles('/tmp/audio.mp4');
+  await page.getByTestId('video-compressor-run').click();
+  await page.getByTestId('video-compressor-result').waitFor();
+  console.log('PASS cancel during actual encoding and retry');
+} finally { await browser.close(); }
