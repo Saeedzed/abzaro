@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Download, Loader2, Play, TriangleAlert, Video, X } from "lucide-react";
 import { downloadBlob, formatBytes } from "@/lib/image";
 import { toPersianDigits } from "@/lib/persian";
+import { hasUsedVideoEngine } from "@/lib/video-engine-notice";
 import {
   convertVideo,
   formatDuration,
@@ -42,6 +43,7 @@ interface VideoToolShellProps {
     label: string;
     /** Extra ffmpeg passes (GIF palette): `args` runs first, then these. */
     passes?: string[][];
+    audioFallbackArgs?: string[];
   }>;
   /** Clip-copy progress events do not represent reliable percentage. */
   indeterminateProgress?: boolean;
@@ -59,9 +61,10 @@ export function VideoToolShell({ id, title, hint, children, run, canRun = true, 
   const [file, setFile] = useState<File | null>(null);
   const [info, setInfo] = useState<VideoInfo | null>(null);
   const [busy, setBusy] = useState(false);
+  const [showFirstRunNotice, setShowFirstRunNotice] = useState(false);
   const [checkingFile, setCheckingFile] = useState(false);
   const selectionRef = useRef(0);
-  const [progress, setProgress] = useState(0);
+  const [progress, setProgress] = useState<number | null>(null);
   const [processingStartedAt, setProcessingStartedAt] = useState<number | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [stage, setStage] = useState("");
@@ -71,6 +74,8 @@ export function VideoToolShell({ id, title, hint, children, run, canRun = true, 
   const [resultUrl, setResultUrl] = useState<string | null>(null);
   const logRef = useRef("");
   const abortRef = useRef<AbortController | null>(null);
+
+  useEffect(() => { setShowFirstRunNotice(!hasUsedVideoEngine()); }, []);
 
   useEffect(() => {
     if (!busy || processingStartedAt === null) return;
@@ -105,7 +110,7 @@ export function VideoToolShell({ id, title, hint, children, run, canRun = true, 
     if (!next || busy) return;
     const selection = ++selectionRef.current;
     setCheckingFile(true);
-    setError(null); setResult(null); setProgress(0); setStage("");
+    setError(null); setResult(null); setProgress(null); setStage("");
     setFile(null); setInfo(null);
     try {
       const probeError = await probeVideoFile(next);
@@ -134,9 +139,10 @@ export function VideoToolShell({ id, title, hint, children, run, canRun = true, 
     const controller = new AbortController();
     abortRef.current = controller;
     setBusy(true);
+    setShowFirstRunNotice(!hasUsedVideoEngine());
     setError(null);
     setResult(null);
-    setProgress(0);
+    setProgress(null);
     setProcessingStartedAt(null);
     setElapsedSeconds(0);
     setStage("در حال آماده‌سازی موتور ویدیو…");
@@ -147,7 +153,7 @@ export function VideoToolShell({ id, title, hint, children, run, canRun = true, 
         info,
         onProgress: (ratio) => {
           setStage("در حال پردازش…");
-          if (ratio > 0) setProcessingStartedAt((started) => started ?? Date.now());
+          if (ratio !== null && ratio > 0) setProcessingStartedAt((started) => started ?? Date.now());
           setProgress(ratio);
         },
         onLog: (line) => {
@@ -159,16 +165,21 @@ export function VideoToolShell({ id, title, hint, children, run, canRun = true, 
       const converted = await convertVideo(file, {
         args: recipe.args,
         passes: recipe.passes,
+        audioFallbackArgs: recipe.audioFallbackArgs,
         inputName: recipe.inputName,
         outputName: recipe.outputName,
-        durationSeconds: info?.durationSeconds ?? null,
+        durationSeconds: indeterminateProgress ? null : info?.durationSeconds ?? null,
         signal: controller.signal,
+        onEngineReady: () => setShowFirstRunNotice(false),
         onPhase: (phase) => {
-          if (!controller.signal.aborted) setStage(phase === "processing" ? "در حال پردازش…" : "در حال آماده‌سازی فایل خروجی…");
+          if (!controller.signal.aborted) {
+            if (phase !== "processing") setProgress(null);
+            setStage(phase === "processing" ? "در حال پردازش…" : phase === "retry-audio" ? "در حال تبدیل صدای ناسازگار…" : "در حال آماده‌سازی فایل خروجی…");
+          }
         },
         onProgress: (ratio) => {
           if (controller.signal.aborted) return;
-          if (ratio > 0) setProcessingStartedAt((started) => started ?? Date.now());
+          if (ratio !== null && ratio > 0) setProcessingStartedAt((started) => started ?? Date.now());
           setProgress(ratio);
         },
         onLog: (line) => {
@@ -180,7 +191,7 @@ export function VideoToolShell({ id, title, hint, children, run, canRun = true, 
       setResult({
         blob: converted.blob,
         name: `${recipe.outputName}`,
-        info: recipe.label,
+        info: converted.audioConverted ? `${recipe.label} · صدا به AAC تبدیل شد` : recipe.label,
       });
       setProgress(1);
       setStage("");
@@ -258,27 +269,32 @@ export function VideoToolShell({ id, title, hint, children, run, canRun = true, 
               <div className="mt-3 rounded-xl border border-ink-200 bg-ink-50 px-4 py-3" data-testid={`${id}-progress`}>
                 <div className="flex items-center justify-between gap-2 text-[11px] font-medium text-ink-600">
                   <span>{stage || "در حال پردازش…"}</span>
-                  {!indeterminateProgress && <span className="tabular-nums">{toPersianDigits(Math.round(progress * 100))}٪</span>}
+                  {!indeterminateProgress && progress !== null && <span className="tabular-nums">حدود {toPersianDigits(Math.round(progress * 100))}٪ از مدت ویدیو</span>}
                 </div>
-                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-ink-200">
+                <div role="progressbar" aria-label="پیشرفت پردازش" aria-valuemin={0} aria-valuemax={100} aria-valuenow={!indeterminateProgress && progress !== null ? Math.round(progress * 100) : undefined} className="mt-2 h-1.5 overflow-hidden rounded-full bg-ink-200">
                   <div
-                    className={cn("h-full rounded-full bg-brand-500 transition-[width] duration-300", (indeterminateProgress || progress === 0) && "animate-pulse")}
-                    style={{ width: indeterminateProgress ? "35%" : `${Math.max(4, progress * 100)}%` }}
+                    className={cn("h-full rounded-full bg-brand-500 transition-[width] duration-300", (indeterminateProgress || progress === null) && "animate-pulse")}
+                    style={{ width: indeterminateProgress || progress === null ? "35%" : `${Math.max(4, progress * 100)}%` }}
                   />
                 </div>
                 {indeterminateProgress && <p className="mt-2 text-xs leading-6 text-ink-600">درصد دقیق این عملیات قابل محاسبه نیست. تا نمایش دکمهٔ دانلود منتظر بمانید؛ آماده‌سازی فایل‌های بزرگ ممکن است زمان ببرد.</p>}
+                {!indeterminateProgress && progress === null && stage === "در حال پردازش…" && <p className="mt-2 text-xs leading-6 text-ink-600">درصد پردازش فعلاً قابل تخمین نیست.</p>}
                 {id === "video-compressor" && (
                   <p className="mt-2 text-xs leading-6 text-ink-600" data-testid={`${id}-eta`} aria-live="polite">
-                    {processingStartedAt === null || elapsedSeconds < 5 || progress < 0.02
-                      ? "زمان باقی‌مانده پس از شروع پردازش تخمین زده می‌شود."
+                    {stage === "در حال آماده‌سازی فایل خروجی…"
+                      ? "در حال آماده‌سازی فایل؛ زمان باقی‌مانده نامشخص است."
+                      : progress === null || processingStartedAt === null || elapsedSeconds < 5 || progress < 0.02
+                        ? "زمان باقی‌مانده هنوز قابل تخمین نیست."
                       : progress >= 0.98
                         ? "در حال تکمیل فایل؛ زمان باقی‌مانده نامشخص است."
                         : `زمان تقریبی باقی‌مانده: ${formatDuration(Math.max(1, Math.round(elapsedSeconds * (1 - progress) / progress)))} (ممکن است تغییر کند)`}
                   </p>
                 )}
-                <p className="mt-2 text-[11px] leading-6 text-ink-500">
-                  در استفادهٔ اول، موتور ویدیو حدود ۱۰ مگابایت دانلود می‌شود و سپس پردازش داخل مرورگر انجام می‌شود.
-                </p>
+                {showFirstRunNotice && (
+                  <p className="mt-2 text-[11px] leading-6 text-ink-500" data-testid={`${id}-first-run-notice`}>
+                    در استفادهٔ اول، ممکن است موتور ویدیو حدود ۱۰ مگابایت دانلود شود و سپس پردازش داخل مرورگر انجام می‌شود.
+                  </p>
+                )}
                 <button
                   type="button"
                   onClick={cancel}

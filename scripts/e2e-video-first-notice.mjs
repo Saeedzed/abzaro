@@ -1,0 +1,33 @@
+import {chromium} from 'playwright-core';
+import assert from 'node:assert/strict';
+const base=process.env.BASE_URL||'http://127.0.0.1:4175';
+const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+try {
+ const context=await browser.newContext({viewport:{width:390,height:844},serviceWorkers:'block'});
+ const p=await context.newPage(); await p.route('https://static.cloudflareinsights.com/**',r=>r.abort());
+ let release; const gate=new Promise(resolve=>{release=resolve});
+ await p.route('**/ffmpeg/ffmpeg-core.wasm.gz',async route=>{await gate;await route.continue().catch(()=>{});});
+ await p.goto(base+'/tools/video-compressor/',{waitUntil:'networkidle'});
+ await p.locator('input[type=file]').setInputFiles('/tmp/audio.mp4');
+ await p.getByTestId('video-compressor-run').click();
+ await p.getByTestId('video-compressor-first-run-notice').waitFor();
+ assert.equal(await p.evaluate(()=>localStorage.getItem('abzaro-video-engine-ready')),null);
+ await p.getByTestId('video-compressor-cancel').click();
+ await p.getByTestId('video-compressor-error').waitFor();
+ assert.equal(await p.evaluate(()=>localStorage.getItem('abzaro-video-engine-ready')),null);
+ await p.getByTestId('video-compressor-run').click();
+ await p.getByTestId('video-compressor-first-run-notice').waitFor();
+ release();
+ await p.getByTestId('video-compressor-result').waitFor({timeout:120000});
+ assert.equal(await p.evaluate(()=>localStorage.getItem('abzaro-video-engine-ready')),'1');
+ assert.equal(await p.getByTestId('video-compressor-first-run-notice').count(),0);
+ console.log('PASS first run, cancel, retry and mark successful load');
+ await p.goto(base+'/tools/video-trimmer/',{waitUntil:'networkidle'});
+ await p.locator('input[type=file]').setInputFiles('/tmp/pcm-video.mp4');
+ await p.getByTestId('video-trimmer-start').fill('1');await p.getByTestId('video-trimmer-end').fill('6');
+ await p.getByTestId('video-trimmer-run').click();
+ assert.equal(await p.getByTestId('video-trimmer-first-run-notice').count(),0);
+ await p.getByTestId('video-trimmer-result').waitFor({timeout:120000});
+ console.log('PASS no notice on subsequent tool/reload, PCM fallback works');
+ await context.close();
+} finally {await browser.close()}

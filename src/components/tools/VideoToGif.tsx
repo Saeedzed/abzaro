@@ -33,6 +33,7 @@ export function VideoToGif() {
   return (
     <VideoToolShell
       id="video-to-gif"
+      indeterminateProgress
       title="ویدیو را برای تبدیل به GIF انتخاب کنید"
       hint="بهتر است ویدیوی کوتاه (کمتر از ۳۰ ثانیه) باشد"
       canRun={startValid && endValid}

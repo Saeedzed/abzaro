@@ -16,7 +16,6 @@ export default function AudioConverter() {
   const [file, setFile] = useState<File | null>(null);
   const [format, setFormat] = useState<Format>("mp3");
   const [busy, setBusy] = useState(false);
-  const [progress, setProgress] = useState(0);
   const [error, setError] = useState("");
   const [result, setResult] = useState<{ blob: Blob; name: string } | null>(null);
   const controller = useRef<AbortController | null>(null);
@@ -33,14 +32,13 @@ export default function AudioConverter() {
   async function start() {
     if (!file || busy) return;
     const abort = new AbortController(); controller.current = abort;
-    setBusy(true); setError(""); setResult(null); setProgress(0);
+    setBusy(true); setError(""); setResult(null);
     const inputName = `input.${extensionOf(file.name)}`;
     const outputName = `${baseNameOf(file.name)}-converted.${format}`;
     try {
       const output = await convertVideo(file, {
         inputName, outputName, signal: abort.signal,
         args: ["-i", inputName, "-map", "0:a:0", "-vn", ...formats[format].args, outputName],
-        onProgress: setProgress,
       });
       setResult({ blob: output.blob, name: outputName });
     } catch (cause) { setError(cause instanceof Error ? cause.message : "تبدیل انجام نشد."); }
@@ -56,7 +54,7 @@ export default function AudioConverter() {
         </select>
       </label>
       <p className="text-xs leading-6 text-ink-500">پردازش فایل داخل مرورگر انجام می‌شود. MP3 و AAC فشرده‌سازی با افت کیفیت دارند؛ WAV ممکن است حجم زیادی داشته باشد. موتور تبدیل در اولین استفاده دانلود می‌شود.</p>
-      <button type="button" onClick={() => void start()} disabled={busy} data-testid="audio-converter-run" className="min-h-11 w-full rounded-xl bg-brand-600 px-4 py-3 text-sm font-bold text-white disabled:opacity-50">{busy ? `در حال تبدیل (${Math.round(progress * 100)}٪)` : "شروع تبدیل"}</button>
+      <button type="button" onClick={() => void start()} disabled={busy} data-testid="audio-converter-run" className="min-h-11 w-full rounded-xl bg-brand-600 px-4 py-3 text-sm font-bold text-white disabled:opacity-50">{busy ? "در حال تبدیل…" : "شروع تبدیل"}</button>
       {busy && <button type="button" onClick={() => controller.current?.abort()} data-testid="audio-converter-cancel" className="min-h-11 rounded-lg border border-ink-300 px-4 text-sm">لغو پردازش</button>}
       {result && <button type="button" onClick={() => downloadBlob(result.blob, result.name)} data-testid="audio-converter-download" className="min-h-11 w-full rounded-xl border border-brand-400 px-4 py-2 text-sm font-bold text-brand-700">دانلود {formats[format].label} · {formatBytes(result.blob.size)}</button>}
     </section>}

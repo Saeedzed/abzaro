@@ -13,6 +13,9 @@
  * 2 GB source works as long as the device has room. We do warn (not block) for
  * very large files, because decoding still needs memory.
  */
+import { rememberVideoEngineReady } from "@/lib/video-engine-notice";
+import { createVideoProgress, parseVideoProgressSeconds } from "@/lib/video-progress";
+
 export const LARGE_VIDEO_BYTES = 2 * 1024 * 1024 * 1024; // 2 GB
 /**
  * Above this we show a soft "this may be slow on a phone" hint. It is only
@@ -292,6 +295,7 @@ export function loadFFmpeg(onLog?: (line: string) => void): Promise<LoadedFFmpeg
     }
 
     if (loadController === localLoadController) loadController = null;
+    rememberVideoEngineReady();
     return { ffmpeg };
   })().catch((error: unknown) => {
     if (ffmpegPromise === promise) ffmpegPromise = null; // do not clear a newer load
@@ -316,11 +320,15 @@ export interface ConvertOptions {
    * palette generation: pass 1 writes the palette, pass 2 consumes it).
    */
   passes?: string[][];
+  /** Retry an MP4 stream-copy operation with re-encoded audio only when its audio codec cannot be muxed. */
+  audioFallbackArgs?: string[];
   /** Clip length in seconds — lets us turn ffmpeg's time= output into progress. */
   durationSeconds?: number | null;
-  onProgress?: (ratio: number) => void;
+  onProgress?: (ratio: number | null) => void;
+  /** Called once the engine is ready, including when an existing instance is reused. */
+  onEngineReady?: () => void;
   /** Processing phases, not estimates of elapsed time or percent complete. */
-  onPhase?: (phase: "processing" | "finalizing") => void;
+  onPhase?: (phase: "processing" | "finalizing" | "retry-audio") => void;
   onLog?: (line: string) => void;
   /** Lets the user cancel a long conversion. */
   signal?: AbortSignal;
@@ -330,19 +338,7 @@ export interface ConvertResult {
   blob: Blob;
   bytes: number;
   log: string;
-}
-
-/** Read ffmpeg's `time=00:00:12.34` progress lines. */
-function parseProgressSeconds(line: string): number | null {
-  const match = /time=(\d+):(\d{2}):(\d{2})\.(\d+)/.exec(line);
-  if (!match) return null;
-  const [, hours, minutes, seconds, fraction] = match;
-  return (
-    Number(hours) * 3600 +
-    Number(minutes) * 60 +
-    Number(seconds) +
-    Number(`0.${fraction ?? 0}`)
-  );
+  audioConverted: boolean;
 }
 
 /**
@@ -379,29 +375,23 @@ export async function convertVideo(
     if (options.signal?.aborted) throw new Error("پردازش لغو شد.");
     throw error;
   }
+  options.onEngineReady?.();
   const logLines: string[] = [];
-  let progressFromEvents = 0;
-  let progressFromLog = 0;
+  const estimateProgress = createVideoProgress(options.durationSeconds);
   let phase = "prepare-input";
   let mounted = false;
+  let audioConverted = false;
 
   const logHandler = ({ message }: { message: string }) => {
     logLines.push(message);
     options.onLog?.(message);
-    const seconds = parseProgressSeconds(message);
-    if (seconds !== null && options.durationSeconds) {
-      progressFromLog = Math.max(progressFromLog, seconds / options.durationSeconds);
-      options.onProgress?.(Math.min(0.99, Math.max(progressFromLog, progressFromEvents)));
+    if (phase === "ffmpeg-exec" && options.durationSeconds) {
+      const seconds = parseVideoProgressSeconds(message);
+      if (seconds !== null && seconds > 0) options.onProgress?.(estimateProgress(seconds));
     }
-  };
-  const progressHandler = ({ progress }: { progress: number }) => {
-    if (!Number.isFinite(progress)) return;
-    progressFromEvents = Math.max(progressFromEvents, Math.max(0, Math.min(1, progress)));
-    options.onProgress?.(Math.min(0.99, Math.max(progressFromLog, progressFromEvents)));
   };
 
   ffmpeg.on("log", logHandler);
-  ffmpeg.on("progress", progressHandler);
 
   const throwIfAborted = () => {
     if (options.signal?.aborted) throw new Error("__aborted__");
@@ -424,9 +414,23 @@ export async function convertVideo(
     throwIfAborted();
     options.onPhase?.("processing");
     phase = "ffmpeg-exec";
-    for (const pass of passes) {
-      const code = await Promise.race([ffmpeg.exec(pass), cancelled]);
+    for (const [index, pass] of passes.entries()) {
+      let code = await Promise.race([ffmpeg.exec(pass), cancelled]);
       throwIfAborted();
+      const firstLog = logLines.join("\n");
+      // In the trimmer's stream-copy mapping, output stream #1 is audio.
+      // Do not retry a video-codec problem or an unrelated execution failure.
+      const audioIncompatible = /could not find tag for codec [^\n]* in stream #1[^\n]*codec not currently supported in container/i.test(firstLog);
+      if (index === 0 && options.audioFallbackArgs && code !== 0 && audioIncompatible) {
+        options.onPhase?.("retry-audio");
+        await Promise.race([ffmpeg.deleteFile(options.outputName).catch(() => undefined), cancelled]);
+        throwIfAborted();
+        logLines.length = 0;
+        const fallback = options.audioFallbackArgs.map(arg => arg === options.inputName ? mountedPath : arg);
+        code = await Promise.race([ffmpeg.exec(fallback), cancelled]);
+        throwIfAborted();
+        if (code === 0) audioConverted = true;
+      }
       if (code !== 0) throw new Error(`__ffmpeg_failed__ exit ${code}`);
     }
 
@@ -456,7 +460,7 @@ export async function convertVideo(
     await ffmpeg.unmount("/input").catch(() => undefined);
     mounted = false;
 
-    return { blob, bytes: blob.size, log };
+    return { blob, bytes: blob.size, log, audioConverted };
   } catch (error) {
     if (!options.signal?.aborted) {
       await ffmpeg.deleteFile(options.outputName).catch(() => undefined);
@@ -497,7 +501,6 @@ export async function convertVideo(
     throw new Error("پردازش فایل انجام نشد. برای بررسی علت، جزئیات فنی را باز کنید و چند خط آخر گزارش را ارسال کنید.");
   } finally {
     ffmpeg.off("log", logHandler);
-    ffmpeg.off("progress", progressHandler);
     options.signal?.removeEventListener("abort", abort);
     conversionActive = false;
   }

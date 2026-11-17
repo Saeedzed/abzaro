@@ -54,6 +54,14 @@ export function VideoTrimmer() {
                 "-avoid_negative_ts", "make_zero",
                 outputName,
               ],
+          audioFallbackArgs: precise ? undefined : [
+            ...(from > 0 ? ["-ss", String(from)] : []),
+            "-i", inputName,
+            ...(duration ? ["-t", String(duration)] : []),
+            "-map", "0:v:0", "-map", "0:a:0?",
+            "-c:v", "copy", "-c:a", "aac", "-b:a", "192k",
+            "-avoid_negative_ts", "make_zero", outputName,
+          ],
           inputName,
           outputName,
           label: duration
@@ -116,7 +124,7 @@ export function VideoTrimmer() {
           </label>
 
           <p className="rounded-xl bg-ink-50 px-3 py-2 text-[11px] leading-6 text-ink-500">
-            برش سریع تصویر را دوباره کدگذاری نمی‌کند؛ برش دقیق ممکن است کیفیت را تغییر دهد. اگر زمان پایان را خالی بگذارید،
+            برش سریع تصویر را دوباره کدگذاری نمی‌کند؛ اگر صدای فایل با MP4 سازگار نباشد، صدا به AAC تبدیل می‌شود و ممکن است کیفیت آن تغییر کند. برش دقیق نیز کیفیت را تغییر می‌دهد. اگر زمان پایان را خالی بگذارید،
             ویدیو تا آخر بریده می‌شود.
           </p>
         </div>

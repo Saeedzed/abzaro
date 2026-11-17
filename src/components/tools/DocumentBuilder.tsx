@@ -148,6 +148,7 @@ export default function DocumentBuilder({ kind }: { kind: DocKind }) {
   const [items, setItems] = useState<Item[]>([{ name: "", qty: "1", price: "" }]);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [photo, setPhoto] = useState<File | null>(null);
 
   const set = (id: string, value: string) => setValues((prev) => ({ ...prev, [id]: value }));
 
@@ -190,6 +191,21 @@ export default function DocumentBuilder({ kind }: { kind: DocKind }) {
     setError(null);
     try {
       const spec = buildSpec(kind, values, totals, money);
+      if (kind === "resume" && photo) {
+        if (photo.size > 10 * 1024 * 1024) throw new Error("حجم عکس باید کمتر از ۱۰ مگابایت باشد.");
+        const bitmap = await createImageBitmap(photo);
+        try {
+          const canvas = document.createElement("canvas"); canvas.width = 320; canvas.height = 320;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) throw new Error("پردازش عکس ممکن نیست.");
+          ctx.beginPath(); ctx.arc(160, 160, 160, 0, Math.PI * 2); ctx.clip();
+          const side = Math.min(bitmap.width, bitmap.height);
+          ctx.drawImage(bitmap, (bitmap.width - side) / 2, (bitmap.height - side) / 2, side, side, 0, 0, 320, 320);
+          const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, "image/png"));
+          if (!blob) throw new Error("پردازش عکس ممکن نیست.");
+          spec.photo = new Uint8Array(await blob.arrayBuffer());
+        } finally { bitmap.close(); }
+      }
       const bytes = await buildPdf(spec);
       downloadPdf(bytes, `${kind}-${Date.now()}.pdf`);
     } catch (cause) {
@@ -197,7 +213,7 @@ export default function DocumentBuilder({ kind }: { kind: DocKind }) {
     } finally {
       setBusy(false);
     }
-  }, [config.fields, kind, items, money, totals, values]);
+  }, [config.fields, kind, items, money, totals, values, photo]);
 
   return (
     <div className="space-y-6">
@@ -239,6 +255,11 @@ export default function DocumentBuilder({ kind }: { kind: DocKind }) {
             </label>
           ))}
         </div>
+
+        {kind === "resume" && <label className="mt-4 block text-sm text-slate-700 dark:text-slate-300">عکس رزومه (اختیاری، حداکثر ۱۰ مگابایت)
+          <input data-testid="doc-photo" type="file" accept="image/*" className="mt-2 block min-h-11 w-full text-sm" onChange={event => setPhoto(event.target.files?.[0] ?? null)} />
+          <span className="text-xs">عکس فقط در مرورگر شما پردازش می‌شود و به شکل دایره برش می‌خورد.</span>
+        </label>}
 
         {config.items ? (
           <div className="mt-5">
@@ -401,7 +422,11 @@ function buildSpec(
     return {
       title: v("name"),
       variant: "resume",
-      subtitle: [v("role"), v("phone"), v("email"), v("city"), v("links")].filter(Boolean).join("  ·  "),
+      subtitle: v("role"),
+      sidebar: [
+        { heading: "اطلاعات تماس", lines: [v("phone"), v("email"), v("city"), v("links")].filter(Boolean).map(text => ({ text })) },
+        ...(v("skills") ? [{ heading: "مهارت‌ها", lines: [{ text: v("skills") }] }] : []),
+      ],
       sections: [
         ...(v("summary") ? [{ heading: "خلاصهٔ حرفه‌ای", lines: [{ text: v("summary") }] }] : []),
         ...(v("experience")
@@ -410,7 +435,6 @@ function buildSpec(
         ...(v("education")
           ? [{ heading: "تحصیلات", lines: v("education").split("\n").map((line) => ({ text: line })) }]
           : []),
-        ...(v("skills") ? [{ heading: "مهارت‌ها", lines: [{ text: v("skills") }] }] : []),
       ],
       footer: "ساخته‌شده با ابزارو — ابزار آنلاین رایگان",
     };
@@ -420,21 +444,8 @@ function buildSpec(
     return {
       title: v("subject") || "نامهٔ اداری",
       variant: "letter",
-      subtitle: [
-        v("number") && `شماره: ${v("number")}`,
-        v("date") && `تاریخ: ${v("date")}`,
-        v("attachment") && `پیوست: ${v("attachment")}`,
-      ]
-        .filter(Boolean)
-        .join("  ·  "),
-      sections: [
-        { heading: "فرستنده", lines: [{ text: v("from") }] },
-        { heading: "گیرنده", lines: [{ text: v("to") }] },
-        { lines: [{ text: v("body") }] },
-        ...(v("signer")
-          ? [{ lines: [{ text: "", spaceBefore: 2 }, { text: `با احترام، ${v("signer")}`, bold: true }] }]
-          : []),
-      ],
+      letterInfo: { from: v("from"), to: v("to"), number: v("number"), date: v("date"), attachment: v("attachment"), signer: v("signer") },
+      sections: [{ lines: [{ text: v("body") }] }],
       footer: "این نامه با ابزارو ساخته شده است.",
     };
   }

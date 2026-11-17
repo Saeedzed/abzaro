@@ -105,6 +105,9 @@ export interface DocTable {
 export interface DocSpec {
   title: string;
   subtitle?: string;
+  photo?: Uint8Array;
+  sidebar?: DocSection[];
+  letterInfo?: { from: string; to: string; number: string; date: string; attachment: string; signer: string };
   sections: DocSection[];
   tables?: DocTable[];
   footer?: string;
@@ -246,10 +249,92 @@ export async function buildPdf(spec: DocSpec): Promise<Uint8Array> {
     start: { x: MARGIN, y: at }, end: { x: rightEdge, y: at }, thickness, color,
   });
 
+  if (spec.variant === "resume") {
+    const sidebarWidth = 180;
+    const mainRight = rightEdge;
+    const mainWidth = contentWidth - sidebarWidth - 24;
+    const sideRight = MARGIN + sidebarWidth - 14;
+    const pages: PDFPage[] = [page];
+    const getPage = (index: number) => {
+      while (pages.length <= index) pages.push(doc.addPage([pageWidth, pageHeight]));
+      return pages[index]!;
+    };
+    // Each column paginates independently; continuation pages keep the same grid.
+    const renderColumn = (sections: DocSection[], right: number, width: number, startY: number) => {
+      let index = 0, cursor = startY;
+      const ensure = (height: number) => { if (cursor - height < MARGIN + 25) { index++; cursor = pageHeight - MARGIN; } };
+      for (const section of sections) {
+        if (section.heading) {
+          const headingLines = breakLines(section.heading, 12, width, fontBold);
+          for (const line of headingLines) { ensure(40); drawLine(getPage(index), fontBold, line, right, cursor - 12, 12, blue); cursor -= 22; }
+          getPage(index).drawLine({ start: { x: right - width, y: cursor + 3 }, end: { x: right, y: cursor + 3 }, thickness: 0.5, color: border });
+          cursor -= 7;
+        }
+        for (const item of section.lines) {
+          const size = 10.5 * (item.scale ?? 1), font = item.bold ? fontBold : fontRegular;
+          for (const line of breakLines(item.text, size, width, font)) {
+            ensure(19); drawLine(getPage(index), font, line, right, cursor - size, size, navy); cursor -= 19;
+          }
+        }
+        cursor -= 15;
+      }
+    };
+    let headerY = pageHeight - 58;
+    const photo = spec.photo ? await doc.embedPng(spec.photo) : null;
+    if (photo) page.drawImage(photo, { x: MARGIN + 36, y: pageHeight - 150, width: 100, height: 100 });
+    for (const line of breakLines(spec.title, 22, mainWidth, fontBold)) { if (headerY < pageHeight - 145) break; drawLine(page, fontBold, line, mainRight, headerY - 22, 22, navy); headerY -= 32; }
+    for (const line of breakLines(spec.subtitle ?? "", 11, mainWidth, fontRegular)) { if (headerY < pageHeight - 145) break; drawLine(page, fontRegular, line, mainRight, headerY - 11, 11, muted); headerY -= 20; }
+    // Extremely long names and titles are rendered in full in the main column.
+    const titleLines = breakLines(spec.title, 22, mainWidth, fontBold);
+    const subtitleLines = breakLines(spec.subtitle ?? "", 11, mainWidth, fontRegular);
+    const overflow: DocSection[] = [];
+    if (titleLines.length > 3 || subtitleLines.length > Math.max(0, Math.floor((87 - titleLines.length * 32) / 20) + 1)) overflow.push({ heading: "مشخصات", lines: [{ text: spec.title }, ...(spec.subtitle ? [{ text: spec.subtitle }] : [])] });
+    const start = pageHeight - 180;
+    renderColumn(spec.sidebar ?? [], sideRight, sidebarWidth - 28, start);
+    renderColumn([...overflow, ...spec.sections], mainRight, mainWidth, start);
+    for (const p of pages) {
+      p.drawLine({ start: { x: MARGIN + sidebarWidth, y: MARGIN }, end: { x: MARGIN + sidebarWidth, y: pageHeight - 170 }, thickness: 0.7, color: border });
+      if (spec.footer) for (const [i, line] of breakLines(spec.footer, 8, contentWidth, fontRegular).slice(0, 2).entries()) drawLine(p, fontRegular, line, rightEdge, 25 - i * 10, 8, muted);
+    }
+    doc.setTitle(spec.title); doc.setProducer("ابزارو — ابزار آنلاین");
+    return doc.save({ useObjectStreams: false });
+  }
+
+  if (spec.variant === "letter" && spec.letterInfo) {
+    const info = spec.letterInfo;
+    const decorate = (p: PDFPage) => {
+      p.drawRectangle({ x: MARGIN - 15, y: MARGIN, width: 3, height: pageHeight - MARGIN * 2, color: blue });
+    };
+    decorate(page);
+    const write = (text: string, right: number, width: number, size = 11, bold = false) => {
+      const font = bold ? fontBold : fontRegular;
+      for (const line of breakLines(text, size, width, font)) {
+        if (y - 22 < MARGIN + 25) { page = doc.addPage([pageWidth, pageHeight]); decorate(page); y = pageHeight - 170; }
+        drawLine(page, font, line, right, y - size, size, navy); y -= 21;
+      }
+    };
+    // Header columns have independent text wrapping, without truncating long values.
+    y = pageHeight - 55;
+    write(info.from, rightEdge, contentWidth * 0.52, 15, true);
+    for (const text of [`شماره: ${info.number || "—"}`, `تاریخ: ${info.date || "—"}`, `پیوست: ${info.attachment || "—"}`]) write(text, MARGIN + contentWidth * 0.43, contentWidth * 0.43, 10);
+    page.drawLine({ start: { x: MARGIN, y: y - 5 }, end: { x: rightEdge, y: y - 5 }, thickness: 1, color: blue });
+    y -= 30;
+    write(`گیرنده: ${info.to}`, rightEdge, contentWidth, 11, true);
+    write(`موضوع: ${spec.title}`, rightEdge, contentWidth, 11, true);
+    y -= 16;
+    for (const section of spec.sections) for (const item of section.lines) write(item.text, rightEdge, contentWidth);
+    y -= 24;
+    write("با احترام", rightEdge - contentWidth * 0.55, contentWidth * 0.45, 11, true);
+    if (info.signer) write(info.signer, rightEdge - contentWidth * 0.55, contentWidth * 0.45, 11, true);
+    write("محل امضا", rightEdge - contentWidth * 0.55, contentWidth * 0.45, 10);
+    doc.setTitle(spec.title); doc.setProducer("ابزارو — ابزار آنلاین");
+    return doc.save({ useObjectStreams: false });
+  }
+
   // An understated ink-saving identity: one accent bar, clear typography and
   // plenty of white space. No stock logos, fake signatures or certificates.
   page.drawRectangle({ x: MARGIN, y: pageHeight - 29, width: contentWidth, height: 3, color: blue });
-  const titleSize = spec.variant === "resume" ? 23 : 20;
+  const titleSize = 20;
   for (const line of breakLines(spec.title, titleSize, contentWidth, fontBold)) {
     newPageIfNeeded(titleSize * 1.5);
     drawLine(page, fontBold, line, rightEdge, y - titleSize, titleSize, navy);
