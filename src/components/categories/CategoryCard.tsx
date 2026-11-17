@@ -50,7 +50,7 @@ export function CategoryCard({ category, variant = "full" }: CategoryCardProps) 
     >
       {/* Illustration cover */}
       <div className="border-b border-ink-100 bg-gradient-to-br from-brand-50 via-brand-50/60 to-white px-1 text-brand-600 sm:px-3">
-        <CategoryArt slug={category.slug} className="h-10 w-full sm:h-24" />
+        <CategoryArt slug={category.slug} className="motion-art h-10 w-full sm:h-24" />
       </div>
 
       <div className="flex min-w-0 flex-1 flex-col px-1 py-2 text-center sm:p-5 sm:text-start">

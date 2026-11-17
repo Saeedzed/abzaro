@@ -270,3 +270,18 @@ input[inputmode="decimal"] {
   label:has(> input[type="radio"]) { min-height: 44px; }
   main { min-width: 0; }
 }
+
+/* Small, opt-in motion; controls remain usable without animation. */
+@media (prefers-reduced-motion: no-preference) {
+  .motion-enter:not([hidden]) {
+    animation: rise-in 240ms var(--ease-out-soft) both;
+  }
+  .motion-press {
+    transition: transform 160ms var(--ease-out-soft), background-color 160ms ease, box-shadow 160ms ease;
+  }
+  .motion-press:not(:disabled):active { transform: scale(0.985); }
+  .motion-art { transition: transform 220ms var(--ease-out-soft); transform-origin: center; }
+  @media (hover: hover) {
+    .group:hover .motion-art { transform: translateY(-2px) scale(1.035); }
+  }
+}

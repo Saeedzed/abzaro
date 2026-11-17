@@ -237,7 +237,7 @@ export function VideoToolShell({ id, title, hint, children, run, canRun = true, 
               onClick={() => void start()}
               disabled={busy || !canRun}
               data-testid={`${id}-run`}
-              className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
+              className="motion-press mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-brand-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {busy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Play className="h-4 w-4" aria-hidden="true" />}
               {busy ? "در حال پردازش…" : "شروع پردازش"}
@@ -296,7 +296,7 @@ export function VideoToolShell({ id, title, hint, children, run, canRun = true, 
             )}
 
             {result && (
-              <div className="mt-3 rounded-xl border border-brand-200 bg-brand-50 px-4 py-3" data-testid={`${id}-result`}>
+              <div className="motion-enter mt-3 rounded-xl border border-brand-200 bg-brand-50 px-4 py-3" data-testid={`${id}-result`}>
                 <p className="text-center text-sm font-bold text-brand-900">فایل آماده است</p>
                 <p className="mt-0.5 text-center text-[11px] text-brand-700">
                   {result.info} · {formatBytes(result.blob.size)}

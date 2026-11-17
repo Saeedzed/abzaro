@@ -112,7 +112,7 @@ export function Header() {
       <div
         id="mobile-navigation-panel"
         hidden={!mobileOpen}
-        className="max-h-[calc(100dvh-4rem)] overflow-y-auto border-t border-ink-200/70 lg:hidden"
+        className="motion-enter max-h-[calc(100dvh-4rem)] overflow-y-auto border-t border-ink-200/70 lg:hidden"
       >
         <Container className="space-y-4 py-4">
           <div className="flex items-center gap-2">
