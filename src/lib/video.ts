@@ -361,6 +361,8 @@ export async function convertVideo(
   const logLines: string[] = [];
   let progressFromEvents = 0;
   let progressFromLog = 0;
+  let phase = "prepare-input";
+  let mounted = false;
 
   const logHandler = ({ message }: { message: string }) => {
     logLines.push(message);
@@ -388,7 +390,9 @@ export async function convertVideo(
     throwIfAborted();
     await Promise.race([ffmpeg.createDir("/input").catch(() => undefined), cancelled]);
     // Mount under /input so ffmpeg streams the file instead of copying it.
-    await Promise.race([ffmpeg.mount("WORKERFS", { files: [file] }, "/input"), cancelled]);
+    phase = "mount-input";
+    mounted = await Promise.race([ffmpeg.mount("WORKERFS", { files: [file] }, "/input"), cancelled]);
+    if (!mounted) throw new Error("WORKERFS unavailable in this FFmpeg build");
 
     // WORKERFS exposes the file under its real name, so map our logical
     // `input.<ext>` name onto the mounted path.
@@ -398,6 +402,7 @@ export async function convertVideo(
     );
     throwIfAborted();
     options.onPhase?.("processing");
+    phase = "ffmpeg-exec";
     for (const pass of passes) {
       const code = await Promise.race([ffmpeg.exec(pass), cancelled]);
       throwIfAborted();
@@ -406,17 +411,16 @@ export async function convertVideo(
 
     // Reading a large output from the worker can take substantial time and memory.
     options.onPhase?.("finalizing");
+    phase = "read-output";
     // The output is written to MEMFS (a Blob-backed workdir can't create files).
-    const data: Uint8Array | string | null = await Promise.race([
-      ffmpeg.readFile(options.outputName).catch(() => null), cancelled,
+    const data: Uint8Array | string = await Promise.race([
+      ffmpeg.readFile(options.outputName), cancelled,
     ]);
 
     const bytes =
-      data === null
-        ? new Uint8Array()
-        : data instanceof Uint8Array
-          ? data
-          : new TextEncoder().encode(String(data));
+      data instanceof Uint8Array
+        ? data
+        : new TextEncoder().encode(String(data));
 
     const log = logLines.join("\n");
     if (bytes.length === 0 || /Output file #0 does not contain any stream|Conversion failed/i.test(log)) {
@@ -429,24 +433,26 @@ export async function convertVideo(
 
     await ffmpeg.deleteFile(options.outputName).catch(() => undefined);
     await ffmpeg.unmount("/input").catch(() => undefined);
+    mounted = false;
 
     return { blob, bytes: blob.size, log };
   } catch (error) {
     if (!options.signal?.aborted) {
       await ffmpeg.deleteFile(options.outputName).catch(() => undefined);
-      await ffmpeg.unmount("/input").catch(() => undefined);
+      if (mounted) await ffmpeg.unmount("/input").catch(() => undefined);
     }
 
-    const message = error instanceof Error ? error.message : "";
+    // The ffmpeg worker rejects with a string, not necessarily an Error object.
+    const message = error instanceof Error ? error.message : String(error ?? "unknown error");
+    const technical = message.startsWith("__ffmpeg_failed__\n") ? "FFmpeg returned no usable output" : message;
+    options.onLog?.(`\n[${phase}] ${technical.slice(0, 1500)}`);
     const log = logLines.join("\n");
 
     if (options.signal?.aborted || message.startsWith("__aborted__")) {
       throw new Error("پردازش لغو شد.");
     }
     if (/does not contain any stream|Output file #0 does not contain/i.test(log)) {
-      throw new Error(
-        "این ویدیو صدای جدا ندارد؛ برای همین فایل صوتی ساخته نشد. ویدیویی با صدا انتخاب کنید.",
-      );
+      throw new Error("فایل خروجی جریان قابل استفاده‌ای ندارد؛ فایل دیگری را امتحان کنید یا گزارش فنی را بررسی کنید.");
     }
     if (/Invalid data found|moov atom not found|could not find codec parameters/i.test(log)) {
       throw new Error("فایل ویدیو خوانده نشد؛ ممکن است ناقص یا خراب باشد.");
@@ -456,12 +462,15 @@ export async function convertVideo(
         "حافظهٔ این دستگاه برای این فایل کافی نبود. رزولوشن یا طول ویدیو را کمتر کنید یا با کامپیوتر امتحان کنید.",
       );
     }
+    if (/WORKERFS unavailable/i.test(message)) {
+      throw new Error("موتور پردازش نتوانست فایل را باز کند؛ جزئیات فنی را برای بررسی ارسال کنید.");
+    }
     if (/could not find tag for codec|not currently supported in container|codec not supported/i.test(log)) {
-      throw new Error("کدک این فایل با خروجی انتخاب‌شده سازگار نیست. در ابزار برش گزینهٔ «برش دقیق» را امتحان کنید یا فرمت خروجی دیگری انتخاب کنید.");
+      throw new Error("کدک فایل با فرمت خروجی سازگار نیست؛ یک فرمت دیگر را امتحان کنید.");
     }
     // Keep the technical reason in the console only; users see Persian text.
     console.error("[ffmpeg]", message, log.split("\n").slice(-25).join("\n"));
-    throw new Error("پردازش فایل انجام نشد. فایل ممکن است ناسازگار باشد یا حافظه کافی نباشد؛ برای برش، گزینهٔ «برش دقیق» را هم امتحان کنید.");
+    throw new Error("پردازش فایل انجام نشد. برای بررسی علت، جزئیات فنی را باز کنید و چند خط آخر گزارش را ارسال کنید.");
   } finally {
     ffmpeg.off("log", logHandler);
     ffmpeg.off("progress", progressHandler);

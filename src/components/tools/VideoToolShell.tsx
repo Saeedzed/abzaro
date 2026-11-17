@@ -291,6 +291,12 @@ export function VideoToolShell({ id, title, hint, children, run, canRun = true, 
               <details className="mt-3 rounded-xl border border-ink-200 p-3 text-xs text-ink-600">
                 <summary className="cursor-pointer font-semibold">جزئیات فنی خطا</summary>
                 <p className="mt-2">این گزارش ممکن است نام فایل شما را داشته باشد؛ پیش از ارسال آن را بررسی کنید.</p>
+                {logRef.current.split("\n").some((line) => /^\[(prepare-input|mount-input|ffmpeg-exec|read-output)\]/.test(line)) && (
+                  <div className="mt-2 rounded-lg bg-ink-100 p-2">
+                    <span className="font-bold">مرحله و علت فنی:</span>
+                    <pre dir="ltr" data-testid={`${id}-technical-error`} className="mt-1 whitespace-pre-wrap break-all text-left">{logRef.current.split("\n").slice().reverse().find((line) => /^\[(prepare-input|mount-input|ffmpeg-exec|read-output)\]/.test(line))}</pre>
+                  </div>
+                )}
                 <pre dir="ltr" className="mt-2 max-h-48 overflow-auto whitespace-pre-wrap break-all text-left">{logRef.current.split("\n").slice(-30).join("\n")}</pre>
               </details>
             )}
