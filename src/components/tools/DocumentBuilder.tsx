@@ -151,6 +151,20 @@ export default function DocumentBuilder({ kind }: { kind: DocKind }) {
 
   const set = (id: string, value: string) => setValues((prev) => ({ ...prev, [id]: value }));
 
+  function fillSample() {
+    if (!window.confirm("اطلاعات فعلی فرم با اطلاعات ساختگی نمونه جایگزین شود؟")) return;
+    const samples: Record<DocKind, Record<string, string>> = {
+      invoice: { seller: "فروشگاه نمونه", sellerInfo: "تهران، خیابان بهار — ۰۲۱۱۲۳۴۵۶۷۸", buyer: "شرکت نمونه", buyerInfo: "تهران، میدان آزادی", number: "۱۴۰۵-۰۰۱", date: todayJalaliString(), discount: "50000", tax: "10", notes: "پرداخت تا پایان هفته انجام شود." },
+      resume: { name: "نگار محمدی", role: "کارشناس طراحی محصول", phone: "۰۹۱۲۰۰۰۰۰۰۰", email: "example@example.com", city: "تهران", summary: "طراح محصول با تجربه در پژوهش و طراحی تجربهٔ کاربری.", experience: "۱۴۰۲ تا اکنون — طراح محصول، شرکت نمونه\n۱۳۹۹ تا ۱۴۰۲ — کارشناس طراحی، شرکت آفتاب", education: "کارشناسی طراحی، دانشگاه نمونه", skills: "پژوهش کاربر، طراحی رابط و کار تیمی" },
+      letter: { from: "شرکت نمونه", to: "مدیریت محترم", subject: "درخواست همکاری", number: "۱۰۰۱", date: todayJalaliString(), attachment: "ندارد", body: "با سلام و احترام،\nخواهشمند است درخواست همکاری این مجموعه را بررسی فرمایید.\nبا سپاس", signer: "مدیر شرکت" },
+      lease: { landlord: "رضا رضایی", tenant: "مریم احمدی", property: "تهران، خیابان نمونه، پلاک ۱۲", area: "85", rooms: "2", rent: "12000000", deposit: "350000000", start: todayJalaliString(), months: "12", extra: "طرفین پس از بررسی مفاد قرارداد، آن را امضا می‌کنند." },
+      experience: { company: "شرکت فناوری نمونه", companyInfo: "تهران، خیابان نمونه", name: "مریم احمدی", nationalId: "۰۰۱۰۰۰۰۰۰۰", role: "کارشناس مالی", department: "مالی", start: "۱۴۰۰/۰۱/۰۱", end: todayJalaliString(), purpose: "بانک نمونه", signer: "مدیر منابع انسانی" },
+    };
+    setValues(samples[kind]);
+    if (kind === "invoice") setItems([{ name: "خدمات نمونه", qty: "2", price: "500000" }]);
+    setError(null);
+  }
+
   const totals = useMemo(() => {
     const rows = items.map((item) => ({
       ...item,
@@ -190,6 +204,10 @@ export default function DocumentBuilder({ kind }: { kind: DocKind }) {
       <section className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-900">
         <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">{config.title}</h3>
         <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{config.subtitle}</p>
+        <button type="button" onClick={fillSample} disabled={busy} data-testid="doc-sample"
+          className="mt-3 inline-flex min-h-11 items-center rounded-lg border border-brand-300 px-3 py-2 text-sm font-semibold text-brand-700 hover:bg-brand-50 disabled:opacity-50">
+          درج اطلاعات نمونه
+        </button>
 
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           {config.fields.map((field) => (

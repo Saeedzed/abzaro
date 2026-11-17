@@ -67,6 +67,12 @@ export function WordCounter() {
           className="w-full resize-y rounded-xl border border-ink-200 bg-ink-50/50 p-4 text-base leading-8 text-ink-900 outline-none transition placeholder:text-ink-400 focus:border-brand-400 focus:bg-white focus:ring-4 focus:ring-brand-100"
         />
         <div className="mt-3 flex flex-wrap items-center gap-2">
+          <button type="button" data-testid="text-sample" onClick={() => {
+            if (text && !window.confirm("متن فعلی با متن نمونه جایگزین شود؟")) return;
+            setText("ابزارو به شما کمک می‌کند متن‌های فارسی را سریع و آسان بررسی کنید. این یک متن نمونه برای آزمایش ابزار است.");
+          }} className="inline-flex min-h-11 items-center rounded-lg border border-brand-300 px-4 py-2 text-sm font-semibold text-brand-700 hover:bg-brand-50">
+            درج متن نمونه
+          </button>
           <button
             type="button"
             onClick={handleCopy}

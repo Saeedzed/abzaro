@@ -92,6 +92,18 @@ export function CategoryArt({
         </svg>
       );
 
+    /* سئو — search result with a rising indicator */
+    case "seo":
+      return (
+        <svg {...common}>
+          <rect x="13" y="10" width="74" height="44" rx="8" fill="currentColor" opacity="0.14" />
+          <rect x="24" y="22" width="35" height="5" rx="2.5" fill="currentColor" opacity="0.5" />
+          <rect x="24" y="33" width="49" height="4" rx="2" fill="currentColor" opacity="0.25" />
+          <circle cx="91" cy="38" r="13" fill="currentColor" opacity="0.18" />
+          <path d="M86 40l5-5 4 4 5-7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none" opacity="0.8" />
+        </svg>
+      );
+
     /* برنامه‌نویسی و وب — code brackets in a browser window */
     case "dev":
       return (

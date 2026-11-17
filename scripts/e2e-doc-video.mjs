@@ -28,20 +28,14 @@ for(const [kind,fields] of Object.entries(samples)){
 await p.goto(`${BASE}/tools/doc-invoice/`,{waitUntil:'networkidle'});await p.getByTestId('doc-seller').fill('فروشنده');await p.getByTestId('doc-buyer').fill('خریدار');
 for(let i=0;i<32;i++){if(i) await p.getByTestId('doc-add-item').click();await p.getByTestId(`doc-item-name-${i}`).fill(`ردیف شماره ${i+1}: محصول یا خدمت دارای توضیح بلند برای آزمون شکستن متن ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZ`);await p.getByTestId(`doc-item-price-${i}`).fill('123456');}
 await download('invoice-long');console.log('PASS PDF invoice long');
-// Exercise both modes against real FFmpeg, and wait for a numeric estimate.
-for (const mode of ['superfast', 'veryfast']) {
- await p.goto(`${BASE}/tools/video-compressor/`,{waitUntil:'networkidle'});
- await p.locator('input[type=file]').setInputFiles(VIDEO);
- await p.getByTestId(`video-speed-${mode}`).click();
- assert.equal(await p.getByTestId(`video-speed-${mode}`).getAttribute('aria-pressed'),'true');
- await p.getByTestId('video-compressor-run').click();
- await p.getByTestId('video-compressor-progress').waitFor({state:'visible'});
- console.log('ETA initial:',await p.getByTestId('video-compressor-eta').innerText());
- if (mode === 'superfast') {
-   await p.waitForFunction(() => document.querySelector('[data-testid="video-compressor-eta"]')?.textContent?.includes('زمان تقریبی باقی‌مانده:'),null,{timeout:30000});
-   console.log('ETA observed:',await p.getByTestId('video-compressor-eta').innerText());
- }
- await p.getByTestId('video-compressor-result').waitFor({state:'visible',timeout:180000});
- console.log(`PASS ${mode} video:`,(await p.getByTestId('video-compressor-result').innerText()).replace(/\n/g,' '));
-}
+// Exercise the size slider against real FFmpeg in the browser.
+await p.goto(`${BASE}/tools/video-compressor/`,{waitUntil:'networkidle'});
+await p.locator('input[type=file]').setInputFiles(VIDEO);
+await p.getByTestId('video-target-slider').fill('50');
+assert.equal(await p.getByTestId('video-target-slider').inputValue(),'50');
+await p.getByTestId('video-compressor-run').click();
+await p.getByTestId('video-compressor-progress').waitFor({state:'visible'});
+console.log('ETA initial:',await p.getByTestId('video-compressor-eta').innerText());
+await p.getByTestId('video-compressor-result').waitFor({state:'visible',timeout:180000});
+console.log('PASS target-size video:',(await p.getByTestId('video-compressor-result').innerText()).replace(/\n/g,' '));
 await b.close();

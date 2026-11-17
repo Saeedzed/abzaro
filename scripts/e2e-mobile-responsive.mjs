@@ -11,8 +11,8 @@ for(const width of [320,360,375,390,430,768,1024,1440]){
    await page.keyboard.press('Escape'); assert.equal(await toggle.getAttribute('aria-expanded'),'false');
  }
  if(width<640){
-   const rail=page.getByRole('navigation',{name:'دسته‌بندی‌ها'}).first();
-   let first=rail.locator('a').first(); assert.match(await first.getAttribute('href'),/^\/categories\//);
+   const grid=page.getByTestId('category-grid');
+   let first=grid.locator('a').first(); assert.match(await first.getAttribute('href'),/^\/categories\//);
    await first.click(); await page.waitForURL('**/categories/**');
  }
  await page.goto(base+'/tools/doc-invoice/',{waitUntil:'networkidle'});

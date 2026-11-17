@@ -21,6 +21,7 @@ export function UploadZone({
   error,
   testId,
   children,
+  disabled = false,
 }: {
   title: string;
   hint: string;
@@ -32,9 +33,42 @@ export function UploadZone({
   error?: string | null;
   testId?: string;
   children?: ReactNode;
+  disabled?: boolean;
 }) {
   const [dragging, setDragging] = useState(false);
+  const [sampleError, setSampleError] = useState<string | null>(null);
+  const [sampleBusy, setSampleBusy] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Only offer samples whose real file type is accepted by this specific tool.
+  // HEIC and password-protected PDF need different fixtures and are excluded.
+  const sampleType = testId?.startsWith("video-") ? "video"
+    : ["format-input", "base64-input", "profile-input"].includes(testId ?? "") ? "image"
+    : ["pdf-compress-input", "pdf-merge-input", "pdf-reorder-input", "pdf-split-input", "pdf-watermark-input"].includes(testId ?? "") ? "pdf"
+    : null;
+
+  async function loadSample() {
+    if (!sampleType || disabled || sampleBusy) return;
+    if (!window.confirm("فایل نمونه انتخاب شود؟ اگر فایلی انتخاب کرده‌اید ممکن است جایگزین شود.")) return;
+    setSampleError(null); setSampleBusy(true);
+    try {
+      const specs = sampleType === "video"
+        ? [["/samples/sample.mp4", "sample.mp4", "video/mp4"]]
+        : sampleType === "image"
+          ? [["/samples/sample.png", "sample.png", "image/png"]]
+          : multiple
+            ? [["/samples/sample.pdf", "sample.pdf", "application/pdf"], ["/samples/sample-2.pdf", "sample-2.pdf", "application/pdf"]]
+            : [["/samples/sample.pdf", "sample.pdf", "application/pdf"]];
+      const files = await Promise.all(specs.map(async ([url, name, type]) => {
+        const response = await fetch(url!);
+        if (!response.ok) throw new Error("sample unavailable");
+        return new File([await response.blob()], name!, { type: type! });
+      }));
+      onFiles(files);
+    } catch {
+      setSampleError("فایل نمونه دریافت نشد. اتصال اینترنت را بررسی کنید و دوباره تلاش کنید.");
+    } finally { setSampleBusy(false); }
+  }
 
   function handle(list: FileList | null) {
     if (!list || list.length === 0) return;
@@ -46,13 +80,13 @@ export function UploadZone({
       <div
         onDragOver={(event) => {
           event.preventDefault();
-          setDragging(true);
+          if (!disabled) setDragging(true);
         }}
         onDragLeave={() => setDragging(false)}
         onDrop={(event) => {
           event.preventDefault();
           setDragging(false);
-          handle(event.dataTransfer.files);
+          if (!disabled) handle(event.dataTransfer.files);
         }}
         data-dragging={dragging ? "true" : "false"}
         className={cn(
@@ -70,14 +104,24 @@ export function UploadZone({
         <button
           type="button"
           onClick={() => inputRef.current?.click()}
+          disabled={disabled}
           data-testid={testId ? `${testId}-button` : undefined}
           className="mt-4 inline-flex items-center gap-2 rounded-lg bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-700"
         >
           {buttonLabel}
         </button>
+        {sampleType && (
+          <button type="button" disabled={disabled || sampleBusy} onClick={() => void loadSample()}
+            data-testid={testId ? `${testId}-sample` : undefined}
+            className="mx-2 mt-4 inline-flex min-h-11 items-center rounded-lg border border-brand-300 px-4 py-2 text-sm font-semibold text-brand-700 hover:bg-brand-50 disabled:opacity-50">
+            {sampleBusy ? "در حال آماده‌سازی…" : "استفاده از فایل نمونه"}
+          </button>
+        )}
+        {sampleError && <p role="alert" className="mt-2 text-xs text-red-600">{sampleError}</p>}
         <input
           ref={inputRef}
           type="file"
+          disabled={disabled}
           accept={accept}
           multiple={multiple}
           onChange={(event) => handle(event.target.files)}

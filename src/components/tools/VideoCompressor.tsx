@@ -1,122 +1,81 @@
 "use client";
 
 import { useState } from "react";
-import { COMPRESSION_PRESETS, RESOLUTIONS, baseNameOf, extensionOf, type CompressionPreset } from "@/lib/video";
+import { baseNameOf, extensionOf } from "@/lib/video";
+import { formatBytes } from "@/lib/image";
 import { toPersianDigits } from "@/lib/persian";
-import { cn } from "@/lib/utils";
+import { videoBitrateBudget } from "@/lib/video-target";
 import { VideoToolShell } from "./VideoToolShell";
 
-/**
- * Video → smaller MP4 (H.264 + AAC), the format WhatsApp and Telegram accept.
- * Presets map to a resolution cap plus a CRF value, so the user picks a
- * trade-off instead of a number they would have to look up.
- */
+/** Single-pass bitrate targeting: fast and local, but not an exact size guarantee. */
 export function VideoCompressor() {
-  const [preset, setPreset] = useState<CompressionPreset>(COMPRESSION_PRESETS[1]!);
-  const [resolution, setResolution] = useState<string>("source");
-  const [speed, setSpeed] = useState<"veryfast" | "superfast">("veryfast");
+  const [percentage, setPercentage] = useState(50);
 
   return (
     <VideoToolShell
       id="video-compressor"
       title="ویدیو را انتخاب کنید"
-      hint="MP4، MOV، MKV یا WebM — تا ۲ گیگابایت"
-      run={async (file) => {
+      hint="MP4، MOV، MKV یا WebM — پردازش در مرورگر"
+      run={async (file, { info }) => {
         const inputName = `input.${extensionOf(file.name)}`;
         const outputName = `${baseNameOf(file.name)}-compressed.mp4`;
-
-        const selected = RESOLUTIONS.find((item) => item.id === resolution);
-        const height = selected?.height ?? preset.height;
-
+        const duration = info?.durationSeconds;
+        const budget = duration ? videoBitrateBudget(file.size, duration, percentage) : null;
         const args = ["-i", inputName];
-        if (height) {
-          // -2 keeps the aspect ratio and rounds to an even number (H.264 needs even)
+        // Cap large inputs at 720p without enlarging smaller clips.
+        if (info?.height) {
+          const height = Math.max(2, Math.floor(Math.min(info.height, 720) / 2) * 2);
           args.push("-vf", `scale=-2:${height}`);
         }
-        args.push(
-          "-c:v", "libx264",
-          "-crf", String(preset.crf),
-          "-preset", speed,
-          "-c:a", "aac",
-          "-b:a", "128k",
-          "-movflags", "+faststart",
-          outputName,
-        );
-
+        args.push("-c:v", "libx264", "-preset", "superfast");
+        if (budget) args.push("-b:v", `${budget.videoKbps}k`);
+        else args.push("-crf", "30");
+        args.push("-c:a", "aac", "-b:a", `${budget?.audioKbps ?? 96}k`, "-movflags", "+faststart", outputName);
         return {
-          args,
-          inputName,
-          outputName,
-          label: `${preset.label}${height ? ` · ${toPersianDigits(height)}p` : ""}`,
+          args, inputName, outputName,
+          label: budget ? `حجم هدف تقریبی ${formatBytes(budget.targetBytes)}` : "حجم هدف نامشخص؛ فشرده‌سازی خودکار",
         };
       }}
     >
-      {({ busy }) => (
-        <div className="space-y-4">
-          <div>
-            <p className="mb-2 text-xs font-semibold text-ink-700">سطح فشرده‌سازی</p>
-            <div className="grid gap-2 sm:grid-cols-3">
-              {COMPRESSION_PRESETS.map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => setPreset(item)}
-                  aria-pressed={preset.id === item.id}
-                  data-testid={`video-preset-${item.id}`}
-                  className={cn(
-                    "rounded-xl border px-3 py-2.5 text-start transition",
-                    preset.id === item.id
-                      ? "border-brand-500 bg-brand-50"
-                      : "border-ink-200 bg-white hover:border-brand-300",
-                  )}
-                >
-                  <span className="block text-xs font-bold text-ink-900">{item.label}</span>
-                  <span className="mt-0.5 block text-[11px] leading-5 text-ink-500">{item.hint}</span>
-                </button>
-              ))}
+      {({ file, info, busy }) => {
+        const target = file.size * percentage / 100;
+        const budget = info.durationSeconds ? videoBitrateBudget(file.size, info.durationSeconds, percentage) : null;
+        return (
+          <div className="space-y-4">
+            <div className="rounded-2xl border border-ink-200 bg-ink-50/60 p-4">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <label htmlFor="video-target-size" className="text-sm font-bold text-ink-900">حجم خروجی دلخواه</label>
+                <strong className="text-base text-brand-700" data-testid="video-target-size">{formatBytes(target)}</strong>
+              </div>
+              <p className="mt-1 text-xs leading-6 text-ink-600">
+                حدود {toPersianDigits(percentage)}٪ از حجم اصلی ({formatBytes(file.size)})
+              </p>
+              <input id="video-target-size" data-testid="video-target-slider" type="range" min="5" max="95" step="1"
+                dir="ltr" value={percentage} disabled={busy} onChange={(event) => setPercentage(Number(event.target.value))}
+                aria-valuetext={`${toPersianDigits(percentage)} درصد، ${formatBytes(target)}`}
+                className="mt-3 min-h-11 w-full cursor-pointer accent-brand-600" />
+              <div className="flex justify-between text-[11px] text-ink-500" dir="ltr"><span>حجم کمتر</span><span>کیفیت بیشتر</span></div>
             </div>
+            <p className="text-xs leading-6 text-ink-600">
+              حجم انتخابی تقریبی است، نه تضمینی. کاهش بیشتر حجم می‌تواند کیفیت را کم کند و بعضی فایل‌ها ممکن است از اندازهٔ انتخابی بزرگ‌تر شوند. برای سرعت، ارتفاع ویدیو حداکثر ۷۲۰ پیکسل می‌شود.
+            </p>
+            {!durationKnown(info.durationSeconds) && (
+              <p role="status" className="rounded-xl bg-amber-50 p-3 text-xs leading-6 text-amber-900">
+                مرورگر مدت این ویدیو را تشخیص نداد؛ در این حالت فشرده‌سازی خودکار انجام می‌شود و اندازهٔ انتخابی قابل تخمین نیست. برای انتخاب حجم، فایل MP4 سازگار امتحان کنید.
+              </p>
+            )}
+            {budget?.belowMinimum && (
+              <p role="status" className="rounded-xl bg-amber-50 p-3 text-xs leading-6 text-amber-900">
+                اندازهٔ انتخابی برای مدت ویدیو بسیار کم است؛ خروجی احتمالاً بزرگ‌تر از مقدار انتخابی خواهد بود.
+              </p>
+            )}
           </div>
-
-          <fieldset>
-            <legend className="mb-2 text-xs font-semibold text-ink-700">سرعت پردازش</legend>
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-              {([
-                { id: "veryfast", label: "حجم کمتر", hint: "پیشنهادی؛ پردازش بیشتر، فایل معمولاً کوچک‌تر" },
-                { id: "superfast", label: "سریع‌تر", hint: "زمان پردازش کمتر؛ حجم خروجی ممکن است بیشتر شود" },
-              ] as const).map((option) => (
-                <button key={option.id} type="button" disabled={busy} aria-pressed={speed === option.id}
-                  data-testid={`video-speed-${option.id}`} onClick={() => setSpeed(option.id)}
-                  className={cn("min-h-11 rounded-xl border px-3 py-2.5 text-start transition disabled:opacity-60",
-                    speed === option.id ? "border-brand-500 bg-brand-50" : "border-ink-200 bg-white hover:border-brand-300")}>
-                  <span className="block text-xs font-bold text-ink-900">{option.label}</span>
-                  <span className="mt-0.5 block text-[11px] leading-5 text-ink-500">{option.hint}</span>
-                </button>
-              ))}
-            </div>
-          </fieldset>
-
-          <label className="flex flex-wrap items-center gap-2 text-xs font-semibold text-ink-700">
-            حداکثر رزولوشن
-            <select
-              value={resolution}
-              onChange={(event) => setResolution(event.target.value)}
-              data-testid="video-resolution"
-              className="rounded-lg border border-ink-200 bg-white px-2 py-1.5 text-xs font-normal outline-none focus:border-brand-400"
-            >
-              {RESOLUTIONS.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.label}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <p className="rounded-xl bg-ink-50 px-3 py-2 text-[11px] leading-6 text-ink-500">
-            خروجی MP4 با کدک H.264 است تا در واتساپ، تلگرام و اینستاگرام بدون مشکل پخش شود.
-            رزولوشن انتخابی، سقف ارتفاع است؛ نسبت تصویر حفظ می‌شود.
-          </p>
-        </div>
-      )}
+        );
+      }}
     </VideoToolShell>
   );
+}
+
+function durationKnown(duration: number | null): boolean {
+  return duration !== null && Number.isFinite(duration) && duration > 0;
 }

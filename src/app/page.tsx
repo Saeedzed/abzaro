@@ -13,9 +13,8 @@ import { PopularQuestions } from "@/components/home/PopularQuestions";
 import { RecentTools } from "@/components/tools/RecentTools";
 import { ToolGrid } from "@/components/tools/ToolGrid";
 import { CategoryCard } from "@/components/categories/CategoryCard";
-import { CategoryRail } from "@/components/categories/CategoryRail";
 import { categories } from "@/data/categories";
-import { popularTools, recentTools } from "@/data/tools";
+import { popularTools } from "@/data/tools";
 import { siteConfig } from "@/config/site";
 
 export const metadata: Metadata = {
@@ -105,14 +104,10 @@ export default function HomePage() {
           <SectionHeading
             id="categories-heading"
             title="دسته‌بندی ابزارها"
-            description="ابزارها بر اساس نوع کار دسته‌بندی شده‌اند تا سریع‌تر به ابزار موردنظرتان برسید."
             href="/categories"
             linkLabel="همه دسته‌بندی‌ها"
           />
-          {/* Phones: swipeable chips, no giant stacked cards */}
-          <CategoryRail className="mt-5 sm:hidden" linkToPages />
-
-          <div className="mt-8 hidden grid-cols-2 gap-5 sm:grid lg:grid-cols-3">
+          <div className="mt-5 grid grid-cols-2 gap-3 sm:mt-8 sm:gap-5 lg:grid-cols-4" data-testid="category-grid">
             {categories.map((category) => (
               <CategoryCard key={category.slug} category={category} />
             ))}
@@ -137,20 +132,6 @@ export default function HomePage() {
       {/* Real questions → one-click tools */}
       <section className="pb-10 pt-2 sm:pb-12" aria-labelledby="popular-questions-heading">
         <PopularQuestions />
-      </section>
-
-      {/* Recently added */}
-      <section className="py-10 sm:py-16" aria-labelledby="recent-tools-heading">
-        <Container>
-          <SectionHeading
-            id="recent-tools-heading"
-            title="ابزارهای تازه"
-            description="جدیدترین ابزارهایی که به مجموعهٔ ابزارو اضافه شده‌اند."
-            href="/tools"
-            linkLabel="همه ابزارها"
-          />
-          <ToolGrid tools={recentTools.slice(0, 6)} className="mt-8" />
-        </Container>
       </section>
 
       {/* About Abzaro */}

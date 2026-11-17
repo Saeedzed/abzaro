@@ -33,6 +33,7 @@ interface VideoToolShellProps {
   run: (file: File, hooks: {
     onProgress: (ratio: number) => void;
     onLog: (line: string) => void;
+    info: VideoInfo | null;
   }) => Promise<{
     args: string[];
     inputName: string;
@@ -132,6 +133,7 @@ export function VideoToolShell({ id, title, hint, children, run, canRun = true }
 
     try {
       const recipe = await run(file, {
+        info,
         onProgress: (ratio) => {
           setStage("در حال پردازش…");
           if (ratio > 0) setProcessingStartedAt((started) => started ?? Date.now());
@@ -178,6 +180,7 @@ export function VideoToolShell({ id, title, hint, children, run, canRun = true }
   return (
     <div className="space-y-4">
       <UploadZone
+        disabled={busy}
         accept="video/*,.mp4,.mov,.mkv,.webm,.avi,.m4v,.3gp"
         title={title}
         hint={hint}

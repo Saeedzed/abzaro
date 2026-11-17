@@ -50,22 +50,22 @@ export function CategoryCard({ category, variant = "full" }: CategoryCardProps) 
     >
       {/* Illustration cover */}
       <div className="border-b border-ink-100 bg-gradient-to-br from-brand-50 via-brand-50/60 to-white px-3 text-brand-600">
-        <CategoryArt slug={category.slug} className="h-24 w-full" />
+        <CategoryArt slug={category.slug} className="h-16 w-full sm:h-24" />
       </div>
 
-      <div className="flex flex-1 flex-col p-5">
-        <div className="flex items-center gap-3">
+      <div className="flex min-w-0 flex-1 flex-col p-3 sm:p-5">
+        <div className="flex items-center gap-2 sm:gap-3">
           <IconTile icon={Icon} size="sm" solid />
-          <h3 className="text-base font-bold text-ink-900">{category.title}</h3>
+          <h3 className="min-w-0 text-[13px] font-bold leading-5 text-ink-900 sm:text-base sm:leading-7">{category.title}</h3>
         </div>
-        <p className="mt-2 line-clamp-2 flex-1 text-sm leading-6 text-ink-600">
+        <p className="mt-2 hidden flex-1 text-sm leading-6 text-ink-600 sm:line-clamp-2">
           {category.description}
         </p>
-        <div className="mt-4 flex items-center justify-between">
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-1 sm:mt-4">
           <span className="text-xs font-medium text-ink-500">
             {toPersianDigits(count)} ابزار
           </span>
-          <span className="flex items-center gap-1 text-xs font-semibold text-brand-600">
+          <span className="hidden items-center gap-1 text-xs font-semibold text-brand-600 sm:flex">
             مشاهده ابزارها
             <ArrowLeft
               className="h-3.5 w-3.5 transition-transform group-hover:-translate-x-0.5"

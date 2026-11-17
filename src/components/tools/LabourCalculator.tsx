@@ -118,6 +118,15 @@ export default function LabourCalculator({ kind }: { kind: LabourKind }) {
   const [delayDays, setDelayDays] = useState("90");
   const [lateRate, setLateRate] = useState(String(DEFAULT_LATE_RATE * 100));
 
+  function fillSample() {
+    if (!window.confirm("مقادیر فعلی با مقادیر آزمایشی جایگزین شوند؟")) return;
+    setSalary("20000000"); setHours("10"); setNightHours("0"); setDays("5");
+    setUsedSoFar("0"); setNominal("1000000000"); setCoinPrice("50000000");
+    setGoldGram("0"); setAmount("1000000"); setMode("add"); setCost("700000");
+    setPrice("1000000"); setTargetMargin("30"); setDelayDays("90");
+    setLateRate(String(DEFAULT_LATE_RATE * 100));
+  }
+
   const data = getPayrollYear(year);
 
   const body = useMemo((): { rows: Array<[string, string]>; highlight: [string, string]; note: string } => {
@@ -269,6 +278,7 @@ export default function LabourCalculator({ kind }: { kind: LabourKind }) {
     <div className="space-y-6">
       <section className="rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-900">
         <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">{TITLES[kind]}</h3>
+        <button type="button" onClick={fillSample} data-testid="labour-sample" className="mt-3 inline-flex min-h-11 items-center rounded-lg border border-brand-300 px-3 py-2 text-sm font-semibold text-brand-700 hover:bg-brand-50">درج مقادیر نمونه</button>
 
         {YEAR_AWARE.includes(kind) ? (
           <div className="mt-4">

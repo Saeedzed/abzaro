@@ -154,16 +154,23 @@ const FFMPEG_WASM_URL = "/ffmpeg/ffmpeg-core.wasm";
 
 /** Fetch the gzipped core and inflate it into a Blob URL. Null if unavailable. */
 async function gzippedCoreUrl(): Promise<string | null> {
-  if (typeof DecompressionStream === "undefined") return null; // Safari < 16.4
   try {
     const response = await fetch(FFMPEG_WASM_GZ_URL);
     if (!response.ok || !response.body) return null;
     // `fetch` already undoes any transport Content-Encoding (Cloudflare may
     // gzip/br this response), so `response.body` is always the .gz file itself.
-    const inflated = response.body.pipeThrough(new DecompressionStream("gzip"));
-    const blob = await new Response(inflated, {
-      headers: { "Content-Type": "application/wasm" },
-    }).blob();
+    let blob: Blob;
+    if (typeof DecompressionStream !== "undefined") {
+      const inflated = response.body.pipeThrough(new DecompressionStream("gzip"));
+      blob = await new Response(inflated, { headers: { "Content-Type": "application/wasm" } }).blob();
+    } else {
+      // Older Safari lacks DecompressionStream. fflate provides an in-browser
+      // fallback; it is loaded only when needed and never sends video anywhere.
+      const { gunzipSync } = await import("fflate");
+      const compressed = new Uint8Array(await response.arrayBuffer());
+      const inflated = gunzipSync(compressed);
+      blob = new Blob([new Uint8Array(inflated)], { type: "application/wasm" });
+    }
     // Guard against a host that 200s an HTML error page instead of the file:
     // a real wasm module starts with 0x00 0x61 0x73 0x6d ("\0asm").
     const magic = new Uint8Array(await blob.slice(0, 4).arrayBuffer());
@@ -230,14 +237,21 @@ export function loadFFmpeg(onLog?: (line: string) => void): Promise<LoadedFFmpeg
 
     const wasmURL = (await gzippedCoreUrl()) ?? FFMPEG_WASM_URL;
 
-    await ffmpeg.load({
-      coreURL: FFMPEG_CORE_URL,
-      wasmURL,
-    });
+    try {
+      await ffmpeg.load({ coreURL: FFMPEG_CORE_URL, wasmURL });
+    } catch (error) {
+      console.error("[ffmpeg] engine load failed", error);
+      throw new Error("موتور ویدیو بارگذاری نشد. اتصال اینترنت، فضای خالی و مرورگر به‌روز را بررسی کنید؛ اگر مشکل ادامه دارد عکس خطا و مدل گوشی را بفرستید.");
+    } finally {
+      if (wasmURL.startsWith("blob:")) URL.revokeObjectURL(wasmURL);
+    }
 
     return { ffmpeg };
   })().catch((error: unknown) => {
     ffmpegPromise = null; // allow a retry on the next click
+    if (error instanceof Error && /ffmpeg-wasm-(failed|missing)/.test(error.message)) {
+      throw new Error("موتور ویدیو دانلود نشد. اتصال اینترنت را بررسی کنید و دوباره تلاش کنید.");
+    }
     throw error;
   });
 
