@@ -60,9 +60,9 @@ export async function probeVideoFile(file: File): Promise<VideoError | null> {
     return null;
   } catch (cause) {
     if (cause instanceof Error && cause.message === "probe-timeout") {
-      return { error: "خواندن فایل طول کشید. اگر ویدیو در فضای ابری است ابتدا آن را روی دستگاه ذخیره کنید و از «انتخاب از فایل‌های دستگاه» دوباره انتخاب کنید." };
+      return { error: "خواندن فایل طول کشید. اگر ویدیو در فضای ابری است ابتدا آن را روی دستگاه ذخیره کنید و از «انتخاب ویدیو از دستگاه» دوباره انتخاب کنید." };
     }
-    return { error: "مرورگر نتوانست فایل انتخاب‌شده را بخواند. ویدیو را روی دستگاه ذخیره کنید و از «انتخاب از فایل‌های دستگاه» دوباره انتخاب کنید." };
+    return { error: "مرورگر نتوانست فایل انتخاب‌شده را بخواند. ویدیو را روی دستگاه ذخیره کنید و از «انتخاب ویدیو از دستگاه» دوباره انتخاب کنید." };
   } finally { if (timer) clearTimeout(timer); }
 }
 
@@ -473,7 +473,7 @@ export async function convertVideo(
       throw new Error("پردازش لغو شد.");
     }
     if (/NotReadableError|readAsArrayBuffer.*could not be read|requested file could not be read/i.test(message)) {
-      throw new Error("مرورگر دسترسی خواندن این فایل را ندارد. ویدیو را روی دستگاه ذخیره کنید و با «انتخاب از فایل‌های دستگاه» دوباره انتخاب کنید. اگر مشکل ادامه داشت، مجوز دسترسی فایل و سلامت آن را بررسی کنید.");
+      throw new Error("مرورگر دسترسی خواندن این فایل را ندارد. ویدیو را روی دستگاه ذخیره کنید و با «انتخاب ویدیو از دستگاه» دوباره انتخاب کنید. اگر مشکل ادامه داشت، مجوز دسترسی فایل و سلامت آن را بررسی کنید.");
     }
     if (/does not contain any stream|Output file #0 does not contain/i.test(log)) {
       throw new Error("فایل خروجی جریان قابل استفاده‌ای ندارد؛ فایل دیگری را امتحان کنید یا گزارش فنی را بررسی کنید.");
@@ -511,6 +511,8 @@ function outputMime(name: string): string {
   if (name.endsWith(".flac")) return "audio/flac";
   if (name.endsWith(".gif")) return "image/gif";
   if (name.endsWith(".webm")) return "video/webm";
+  if (name.endsWith(".mov")) return "video/quicktime";
+  if (name.endsWith(".mkv")) return "video/x-matroska";
   if (name.endsWith(".jpg")) return "image/jpeg";
   if (name.endsWith(".png")) return "image/png";
   return "video/mp4";

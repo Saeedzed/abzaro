@@ -197,11 +197,11 @@ export function VideoToolShell({ id, title, hint, children, run, canRun = true, 
     <div className="space-y-4">
       <UploadZone
         disabled={busy || checkingFile}
-        offerFileBrowser
+        useFileBrowser
         accept="video/*,.mp4,.mov,.mkv,.webm,.avi,.m4v,.3gp"
         title={title}
         hint={hint}
-        buttonLabel="انتخاب ویدیو"
+        buttonLabel="انتخاب ویدیو از دستگاه"
         testId={`${id}-input`}
         onFiles={(files) => void handleFiles(files)}
       />

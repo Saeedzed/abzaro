@@ -8,7 +8,7 @@ const page = await browser.newPage({acceptDownloads:true, serviceWorkers:'block'
 page.setDefaultTimeout(120000);
 await page.route('https://static.cloudflareinsights.com/**', r => r.abort());
 try {
-  await page.goto(base+'/tools/audio-converter/');
+  await page.goto(base+'/tools/audio-converter/',{waitUntil:'networkidle'});
   await page.locator('input[type=file]').setInputFiles('/tmp/sample.wav');
   for (const format of ['mp3','m4a','wav']) {
     await page.getByTestId('audio-converter-format').selectOption(format);
