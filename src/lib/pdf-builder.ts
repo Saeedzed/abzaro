@@ -84,6 +84,8 @@ export interface DocLine {
   text: string;
   /** 0.6 = small print, 1 = normal, 1.6 = title. */
   scale?: number;
+  /** Optional explicitly supplied skill level (0–5). */
+  rating?: number;
   bold?: boolean;
   /** Extra vertical space before this line, in multiples of the font size. */
   spaceBefore?: number;
@@ -250,52 +252,87 @@ export async function buildPdf(spec: DocSpec): Promise<Uint8Array> {
   });
 
   if (spec.variant === "resume") {
-    const sidebarWidth = 180;
-    const mainRight = rightEdge;
-    const mainWidth = contentWidth - sidebarWidth - 24;
-    const sideRight = MARGIN + sidebarWidth - 14;
+    // The reference uses a narrow right-hand contact column and a wide left
+    // timeline, with the portrait aligned over the contact column.
+    const ink = rgb(0.24, 0.24, 0.25), light = rgb(0.83, 0.83, 0.83);
+    const sideWidth = 145, gap = 34, mainWidth = contentWidth - sideWidth - gap;
+    const mainRight = MARGIN + mainWidth, sideRight = rightEdge;
     const pages: PDFPage[] = [page];
     const getPage = (index: number) => {
       while (pages.length <= index) pages.push(doc.addPage([pageWidth, pageHeight]));
       return pages[index]!;
     };
-    // Each column paginates independently; continuation pages keep the same grid.
-    const renderColumn = (sections: DocSection[], right: number, width: number, startY: number) => {
-      let index = 0, cursor = startY;
-      const ensure = (height: number) => { if (cursor - height < MARGIN + 25) { index++; cursor = pageHeight - MARGIN; } };
+    page.drawRectangle({ x: 0, y: pageHeight - 15, width: pageWidth, height: 15, color: light });
+    const photoSize = 128, px = rightEdge - photoSize, py = pageHeight - 164;
+    if (spec.photo) {
+      const photo = await doc.embedPng(spec.photo);
+      page.drawCircle({ x: px + photoSize / 2, y: py + photoSize / 2, size: photoSize / 2 + 3, color: ink });
+      page.drawCircle({ x: px + photoSize / 2, y: py + photoSize / 2, size: photoSize / 2 + 1, color: rgb(1, 1, 1) });
+      page.drawImage(photo, { x: px, y: py, width: photoSize, height: photoSize });
+    }
+    let headerY = pageHeight - 42;
+    const headerBottom = pageHeight - 265;
+    const overflow: DocSection[] = [];
+    const writeHeader = (text: string, size: number, font: PDFFont, step: number, heading: string) => {
+      const lines = breakLines(text, size, mainWidth, font);
+      const rest: string[] = [];
+      for (const line of lines) {
+        if (headerY - step < headerBottom) { rest.push(line); continue; }
+        drawLine(page, font, line, mainRight, headerY - size, size, ink); headerY -= step;
+      }
+      if (rest.length) overflow.push({ heading, lines: rest.map(text => ({ text })) });
+    };
+    writeHeader(spec.title, 25, fontBold, 34, "نام");
+    if (spec.subtitle) writeHeader(spec.subtitle, 14, fontRegular, 23, "عنوان شغلی");
+    const summary = spec.sections.find(section => section.heading === "خلاصهٔ حرفه‌ای");
+    if (summary) {
+      headerY -= 7;
+      writeHeader("دربارهٔ من", 11, fontBold, 21, "دربارهٔ من");
+      for (const line of summary.lines) writeHeader(line.text, 9.5, fontRegular, 17, "دربارهٔ من (ادامه)");
+    }
+    const start = Math.min(pageHeight - 194, headerY - 24);
+    page.drawLine({ start: { x: MARGIN, y: start + 14 }, end: { x: rightEdge, y: start + 14 }, thickness: 1, color: light });
+    const renderColumn = (sections: DocSection[], right: number, width: number, timeline: boolean) => {
+      let index = 0, cursor = start;
+      const ensure = (height: number) => { if (cursor - height < MARGIN + 22) { index++; cursor = pageHeight - 46; } };
       for (const section of sections) {
         if (section.heading) {
-          const headingLines = breakLines(section.heading, 12, width, fontBold);
-          for (const line of headingLines) { ensure(40); drawLine(getPage(index), fontBold, line, right, cursor - 12, 12, blue); cursor -= 22; }
-          getPage(index).drawLine({ start: { x: right - width, y: cursor + 3 }, end: { x: right, y: cursor + 3 }, thickness: 0.5, color: border });
-          cursor -= 7;
+          for (const title of breakLines(section.heading, 10.5, width - 36, fontBold)) {
+            ensure(49);
+            const p = getPage(index);
+            p.drawRectangle({ x: right - width, y: cursor - 23, width, height: 23, color: ink });
+            p.drawCircle({ x: right - 12, y: cursor - 11.5, size: 8, color: rgb(1, 1, 1) });
+            p.drawCircle({ x: right - 12, y: cursor - 11.5, size: 3, color: ink });
+            drawLine(p, fontBold, title, right - 26, cursor - 17, 10.5, rgb(1, 1, 1));
+            cursor -= 32;
+          }
         }
         for (const item of section.lines) {
-          const size = 10.5 * (item.scale ?? 1), font = item.bold ? fontBold : fontRegular;
-          for (const line of breakLines(item.text, size, width, font)) {
-            ensure(19); drawLine(getPage(index), font, line, right, cursor - size, size, navy); cursor -= 19;
+          const size = 10, font = item.bold ? fontBold : fontRegular;
+          const hasRating = !timeline && item.rating !== undefined;
+          const lines = breakLines(item.text, size, width - (timeline ? 20 : hasRating ? 64 : 10), font);
+          for (const [n, line] of lines.entries()) {
+            ensure(19); const p = getPage(index);
+            if (timeline) {
+              p.drawLine({ start: { x: right - 5, y: cursor + 4 }, end: { x: right - 5, y: cursor - 16 }, thickness: 0.8, color: ink });
+              if (n === 0) p.drawCircle({ x: right - 5, y: cursor - 3, size: 2.3, color: ink });
+            }
+            if (hasRating && n === 0) {
+              for (let star = 0; star < 5; star++) {
+                p.drawCircle({ x: right - width + 6 + star * 10, y: cursor - 5, size: 2.5,
+                  color: star < item.rating! ? ink : light });
+              }
+            }
+            drawLine(p, font, line, right - (timeline ? 16 : 5), cursor - size, size, ink); cursor -= 18;
           }
+          if (timeline) cursor -= 7;
         }
         cursor -= 15;
       }
     };
-    let headerY = pageHeight - 58;
-    const photo = spec.photo ? await doc.embedPng(spec.photo) : null;
-    if (photo) page.drawImage(photo, { x: MARGIN + 36, y: pageHeight - 150, width: 100, height: 100 });
-    for (const line of breakLines(spec.title, 22, mainWidth, fontBold)) { if (headerY < pageHeight - 145) break; drawLine(page, fontBold, line, mainRight, headerY - 22, 22, navy); headerY -= 32; }
-    for (const line of breakLines(spec.subtitle ?? "", 11, mainWidth, fontRegular)) { if (headerY < pageHeight - 145) break; drawLine(page, fontRegular, line, mainRight, headerY - 11, 11, muted); headerY -= 20; }
-    // Extremely long names and titles are rendered in full in the main column.
-    const titleLines = breakLines(spec.title, 22, mainWidth, fontBold);
-    const subtitleLines = breakLines(spec.subtitle ?? "", 11, mainWidth, fontRegular);
-    const overflow: DocSection[] = [];
-    if (titleLines.length > 3 || subtitleLines.length > Math.max(0, Math.floor((87 - titleLines.length * 32) / 20) + 1)) overflow.push({ heading: "مشخصات", lines: [{ text: spec.title }, ...(spec.subtitle ? [{ text: spec.subtitle }] : [])] });
-    const start = pageHeight - 180;
-    renderColumn(spec.sidebar ?? [], sideRight, sidebarWidth - 28, start);
-    renderColumn([...overflow, ...spec.sections], mainRight, mainWidth, start);
-    for (const p of pages) {
-      p.drawLine({ start: { x: MARGIN + sidebarWidth, y: MARGIN }, end: { x: MARGIN + sidebarWidth, y: pageHeight - 170 }, thickness: 0.7, color: border });
-      if (spec.footer) for (const [i, line] of breakLines(spec.footer, 8, contentWidth, fontRegular).slice(0, 2).entries()) drawLine(p, fontRegular, line, rightEdge, 25 - i * 10, 8, muted);
-    }
+    renderColumn(spec.sidebar ?? [], sideRight, sideWidth, false);
+    renderColumn([...overflow, ...spec.sections.filter(section => section !== summary)], mainRight, mainWidth, true);
+    for (const p of pages) p.drawRectangle({ x: 0, y: 0, width: pageWidth, height: 14, color: light });
     doc.setTitle(spec.title); doc.setProducer("ابزارو — ابزار آنلاین");
     return doc.save({ useObjectStreams: false });
   }

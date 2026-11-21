@@ -1,0 +1,43 @@
+name: Build Windows desktop trial
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows-installer:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    env:
+      ABZARO_EXPORT: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install website dependencies
+        run: npm ci
+      - name: Prepare local media engine
+        run: node scripts/copy-ffmpeg.mjs
+      - name: Build offline website
+        run: npx next build
+      - name: Prune uncompressed engine
+        run: node scripts/prune-static.mjs
+      - name: Install desktop build dependencies
+        working-directory: desktop
+        run: npm ci
+      - name: Download and verify LibreOffice
+        working-directory: desktop
+        run: node scripts/fetch-office.mjs
+      - name: Build Windows x64 installer
+        working-directory: desktop
+        run: npm run dist:win
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: Abzaro-Desktop-Windows-x64
+          path: desktop/release/Abzaro-Desktop-Setup-0.1.0.exe
+          if-no-files-found: error
+          retention-days: 1

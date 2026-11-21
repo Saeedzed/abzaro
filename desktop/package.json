@@ -1,0 +1,18 @@
+{
+  "name": "abzaro-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Abzaro desktop trial",
+  "main": "main.cjs",
+  "scripts": { "dist:win": "electron-builder --win nsis --x64" },
+  "devDependencies": { "electron": "^35.7.5", "electron-builder": "^26.0.12" },
+  "build": {
+    "appId": "ir.abzaro.desktop",
+    "productName": "Abzaro Desktop",
+    "directories": { "output": "release" },
+    "files": ["main.cjs", "preload.cjs", "converter.cjs", "package.json"],
+    "extraResources": [ {"from": "../out", "to": "site"}, {"from": "runtime/LibreOffice.msi", "to": "LibreOffice.msi"} ],
+    "win": { "target": "nsis", "signAndEditExecutable": false },
+    "nsis": { "oneClick": false, "allowToChangeInstallationDirectory": true, "perMachine": true, "include": "installer.nsh", "artifactName": "Abzaro-Desktop-Setup-${version}.${ext}" }
+  }
+}

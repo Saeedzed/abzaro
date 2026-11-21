@@ -38,3 +38,7 @@ public/ffmpeg/814.ffmpeg.js
 # Tooling caches
 .cache
 .turbo
+
+# Desktop installer artifacts and third-party installer, regenerated separately
+desktop/runtime/
+desktop/release/

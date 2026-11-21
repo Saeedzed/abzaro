@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { todayJalali } from "@/lib/jalali";
 import { buildPdf, downloadPdf, type DocSpec } from "@/lib/pdf-builder";
@@ -64,7 +64,7 @@ export const CONFIGS: Record<DocKind, BuilderConfig> = {
   },
   resume: {
     title: "سازندهٔ رزومه",
-    subtitle: "رزومهٔ فارسی تمیز در یک صفحه — بدون ثبت‌نام، خروجی PDF",
+    subtitle: "رزومهٔ فارسی با قالب حرفه‌ای دوستونه — بدون ثبت‌نام، خروجی PDF",
     fields: [
       { id: "name", label: "نام و نام خانوادگی", required: true },
       { id: "role", label: "عنوان شغلی", placeholder: "کارشناس بازاریابی دیجیتال" },
@@ -75,7 +75,9 @@ export const CONFIGS: Record<DocKind, BuilderConfig> = {
       { id: "summary", label: "خلاصهٔ حرفه‌ای", type: "textarea", rows: 3, span: 2 },
       { id: "experience", label: "سوابق شغلی", type: "textarea", rows: 5, span: 2, placeholder: "۱۴۰۲–اکنون — کارشناس بازاریابی، شرکت الف\n۱۴۰۰–۱۴۰۲ — کارآموز، شرکت ب" },
       { id: "education", label: "تحصیلات", type: "textarea", rows: 3, span: 2, placeholder: "کارشناسی مدیریت بازرگانی، دانشگاه تهران، ۱۴۰۰" },
-      { id: "skills", label: "مهارت‌ها", type: "textarea", rows: 2, span: 2, placeholder: "تحلیل داده، سئو، اکسل، نوشتن محتوا" },
+      { id: "skills", label: "مهارت‌ها", type: "textarea", rows: 2, span: 2, placeholder: "هر مهارت در یک خط؛ سطح اختیاری: طراحی | ۴" },
+      { id: "software", label: "نرم‌افزارها", type: "textarea", rows: 2, span: 2, placeholder: "هر نرم‌افزار در یک خط؛ سطح اختیاری: فتوشاپ | ۵" },
+      { id: "languages", label: "زبان‌ها", type: "textarea", rows: 2, span: 2, placeholder: "هر زبان و سطح آن در یک خط" },
     ],
   },
   letter: {
@@ -138,6 +140,22 @@ interface Item {
   price: string;
 }
 
+async function drawPhoto(file: File, canvas: HTMLCanvasElement, zoom: number, x: number, y: number) {
+  const bitmap = await createImageBitmap(file);
+  try {
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("پردازش عکس ممکن نیست.");
+    canvas.width = 320; canvas.height = 320;
+    ctx.clearRect(0, 0, 320, 320);
+    ctx.save(); ctx.beginPath(); ctx.arc(160, 160, 160, 0, Math.PI * 2); ctx.clip();
+    const side = Math.min(bitmap.width, bitmap.height) / zoom;
+    const sx = (bitmap.width - side) * x / 100;
+    const sy = (bitmap.height - side) * y / 100;
+    ctx.drawImage(bitmap, sx, sy, side, side, 0, 0, 320, 320);
+    ctx.restore();
+  } finally { bitmap.close(); }
+}
+
 export default function DocumentBuilder({ kind }: { kind: DocKind }) {
   const config = CONFIGS[kind];
   const [values, setValues] = useState<Record<string, string>>(() => {
@@ -149,6 +167,23 @@ export default function DocumentBuilder({ kind }: { kind: DocKind }) {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [photo, setPhoto] = useState<File | null>(null);
+  const [zoom, setZoom] = useState(1);
+  const [cropX, setCropX] = useState(50);
+  const [cropY, setCropY] = useState(50);
+  const [photoError, setPhotoError] = useState("");
+  const previewRef = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    if (!photo || !previewRef.current) return;
+    let cancelled = false;
+    const canvas = document.createElement("canvas");
+    if (photo.size > 10 * 1024 * 1024) { setPhotoError("حجم عکس باید کمتر از ۱۰ مگابایت باشد."); return; }
+    drawPhoto(photo, canvas, zoom, cropX, cropY).then(() => {
+      if (cancelled || !previewRef.current) return;
+      const target = previewRef.current; target.width = 320; target.height = 320;
+      target.getContext("2d")?.drawImage(canvas, 0, 0); setPhotoError("");
+    }).catch(() => { if (!cancelled) setPhotoError("عکس قابل خواندن نیست؛ عکس دیگری انتخاب کنید."); });
+    return () => { cancelled = true; };
+  }, [photo, zoom, cropX, cropY]);
 
   const set = (id: string, value: string) => setValues((prev) => ({ ...prev, [id]: value }));
 
@@ -193,18 +228,11 @@ export default function DocumentBuilder({ kind }: { kind: DocKind }) {
       const spec = buildSpec(kind, values, totals, money);
       if (kind === "resume" && photo) {
         if (photo.size > 10 * 1024 * 1024) throw new Error("حجم عکس باید کمتر از ۱۰ مگابایت باشد.");
-        const bitmap = await createImageBitmap(photo);
-        try {
-          const canvas = document.createElement("canvas"); canvas.width = 320; canvas.height = 320;
-          const ctx = canvas.getContext("2d");
-          if (!ctx) throw new Error("پردازش عکس ممکن نیست.");
-          ctx.beginPath(); ctx.arc(160, 160, 160, 0, Math.PI * 2); ctx.clip();
-          const side = Math.min(bitmap.width, bitmap.height);
-          ctx.drawImage(bitmap, (bitmap.width - side) / 2, (bitmap.height - side) / 2, side, side, 0, 0, 320, 320);
-          const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, "image/png"));
-          if (!blob) throw new Error("پردازش عکس ممکن نیست.");
-          spec.photo = new Uint8Array(await blob.arrayBuffer());
-        } finally { bitmap.close(); }
+        const canvas = document.createElement("canvas");
+        await drawPhoto(photo, canvas, zoom, cropX, cropY);
+        const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, "image/png"));
+        if (!blob) throw new Error("پردازش عکس ممکن نیست.");
+        spec.photo = new Uint8Array(await blob.arrayBuffer());
       }
       const bytes = await buildPdf(spec);
       downloadPdf(bytes, `${kind}-${Date.now()}.pdf`);
@@ -213,7 +241,7 @@ export default function DocumentBuilder({ kind }: { kind: DocKind }) {
     } finally {
       setBusy(false);
     }
-  }, [config.fields, kind, items, money, totals, values, photo]);
+  }, [config.fields, kind, items, money, totals, values, photo, zoom, cropX, cropY]);
 
   return (
     <div className="space-y-6">
@@ -256,10 +284,19 @@ export default function DocumentBuilder({ kind }: { kind: DocKind }) {
           ))}
         </div>
 
-        {kind === "resume" && <label className="mt-4 block text-sm text-slate-700 dark:text-slate-300">عکس رزومه (اختیاری، حداکثر ۱۰ مگابایت)
-          <input data-testid="doc-photo" type="file" accept="image/*" className="mt-2 block min-h-11 w-full text-sm" onChange={event => setPhoto(event.target.files?.[0] ?? null)} />
-          <span className="text-xs">عکس فقط در مرورگر شما پردازش می‌شود و به شکل دایره برش می‌خورد.</span>
-        </label>}
+        {kind === "resume" && <div className="mt-5 rounded-xl border border-slate-200 p-4 dark:border-slate-700">
+          <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300">عکس رزومه (اختیاری، حداکثر ۱۰ مگابایت)
+            <input data-testid="doc-photo" type="file" accept="image/*" className="mt-2 block min-h-11 w-full text-sm" onChange={event => { setPhoto(event.target.files?.[0] ?? null); setZoom(1); setCropX(50); setCropY(50); setPhotoError(""); }} />
+          </label>
+          {photo && <div className="mt-3 flex flex-wrap items-center gap-5">
+            <div className="shrink-0 text-center"><canvas ref={previewRef} data-testid="photo-preview" width={320} height={320} className="h-32 w-32 rounded-full border-4 border-slate-700 bg-slate-100 p-0.5" /><p className="mt-1 text-xs">پیش‌نمایش برش در رزومه</p></div>
+            <div className="min-w-[180px] flex-1 space-y-3">
+              {[["بزرگ‌نمایی", zoom, setZoom, 1, 3, 0.05, "zoom"], ["موقعیت افقی", cropX, setCropX, 0, 100, 1, "x"], ["موقعیت عمودی", cropY, setCropY, 0, 100, 1, "y"]].map(([label, value, setter, min, max, step, id]) => <label key={id as string} className="block text-xs font-medium">{label as string}<input data-testid={`photo-${id}`} aria-label={label as string} className="block h-11 w-full" type="range" min={min as number} max={max as number} step={step as number} value={value as number} onChange={e => (setter as (n: number) => void)(Number(e.target.value))} /></label>)}
+              <p className="text-xs text-slate-500">عکس و تنظیمات آن فقط در مرورگر شما پردازش می‌شود.</p>
+            </div>
+          </div>}
+          {photoError && <p role="alert" className="mt-2 text-sm text-rose-700">{photoError}</p>}
+        </div>}
 
         {config.items ? (
           <div className="mt-5">
@@ -377,6 +414,13 @@ function buildSpec(
   money: (value: number) => string,
 ): DocSpec {
   const v = (id: string) => values[id]?.trim() ?? "";
+  const ratedLines = (text: string) => text.split(/[\n،]+/).filter(Boolean).map(raw => {
+    const parts = raw.trim().match(/^(.*?)\s*\|\s*([0-5۰-۵٠-٥])$/);
+    if (!parts || !parts[1]?.trim()) return { text: raw.trim() };
+    const digit = parts[2]!.charCodeAt(0);
+    const rating = digit >= 0x6f0 ? digit - 0x6f0 : digit >= 0x660 ? digit - 0x660 : digit - 48;
+    return { text: parts[1].trim(), rating };
+  });
 
   if (kind === "invoice") {
     return {
@@ -425,16 +469,16 @@ function buildSpec(
       subtitle: v("role"),
       sidebar: [
         { heading: "اطلاعات تماس", lines: [v("phone"), v("email"), v("city"), v("links")].filter(Boolean).map(text => ({ text })) },
-        ...(v("skills") ? [{ heading: "مهارت‌ها", lines: [{ text: v("skills") }] }] : []),
+        ...(v("skills") ? [{ heading: "مهارت‌ها", lines: ratedLines(v("skills")) }] : []),
+        ...(v("software") ? [{ heading: "نرم‌افزارها", lines: ratedLines(v("software")) }] : []),
+        ...(v("languages") ? [{ heading: "زبان‌ها", lines: v("languages").split(/[\n،]+/).filter(Boolean).map(text => ({ text: text.trim() })) }] : []),
       ],
       sections: [
         ...(v("summary") ? [{ heading: "خلاصهٔ حرفه‌ای", lines: [{ text: v("summary") }] }] : []),
-        ...(v("experience")
-          ? [{ heading: "سوابق شغلی", lines: v("experience").split("\n").map((line) => ({ text: line })) }]
-          : []),
         ...(v("education")
-          ? [{ heading: "تحصیلات", lines: v("education").split("\n").map((line) => ({ text: line })) }]
+          ? [{ heading: "سوابق تحصیلی", lines: v("education").split("\n").map((line) => ({ text: line })) }]
           : []),
+        ...(v("experience") ? [{ heading: "سوابق شغلی", lines: v("experience").split("\n").map((line) => ({ text: line })) }] : []),
       ],
       footer: "ساخته‌شده با ابزارو — ابزار آنلاین رایگان",
     };

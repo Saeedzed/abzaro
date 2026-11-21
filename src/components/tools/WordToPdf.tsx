@@ -5,6 +5,10 @@ import { FileText, Printer } from "lucide-react";
 import { UploadZone } from "./UploadZone";
 
 const MAX_BYTES = 10 * 1024 * 1024;
+type DesktopBridge = { convertDocx: (bytes: Uint8Array, name: string) => Promise<{ canceled: boolean }> };
+function desktopBridge(): DesktopBridge | undefined {
+  return (window as Window & { abzaroDesktop?: DesktopBridge }).abzaroDesktop;
+}
 const PRINT_STYLE = `
 @page { size: A4; margin: 18mm; }
 * { box-sizing: border-box; }
@@ -18,6 +22,10 @@ tr,img { break-inside: avoid; } img { max-width: 100%; height: auto; }
 
 export default function WordToPdf() {
   const [html, setHtml] = useState("");
+  const [desktopFile, setDesktopFile] = useState<File | null>(null);
+  const [desktop, setDesktop] = useState(false);
+  const [desktopMessage, setDesktopMessage] = useState("");
+  useEffect(() => { setDesktop(!!desktopBridge()); }, []);
   const [name, setName] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -29,10 +37,11 @@ export default function WordToPdf() {
   async function choose(files: File[]) {
     const file = files[0];
     if (!file || busy) return;
-    if (html && !window.confirm("سند فعلی با سند انتخاب‌شده جایگزین شود؟")) return;
-    setError(""); setHtml(""); setName("");
+    if ((html || desktopFile) && !window.confirm("سند فعلی با سند انتخاب‌شده جایگزین شود؟")) return;
+    setError(""); setHtml(""); setName(""); setDesktopFile(null); setDesktopMessage("");
     if (!/\.docx$/i.test(file.name)) { setError("فقط فایل DOCX پشتیبانی می‌شود؛ فایل قدیمی DOC را ابتدا به DOCX تبدیل کنید."); return; }
-    if (!file.size || file.size > MAX_BYTES) { setError("فایل باید غیرخالی و حداکثر ۱۰ مگابایت باشد."); return; }
+    if (!file.size || file.size > (desktop ? 20 * 1024 * 1024 : MAX_BYTES)) { setError(desktop ? "فایل باید غیرخالی و حداکثر ۲۰ مگابایت باشد." : "فایل باید غیرخالی و حداکثر ۱۰ مگابایت باشد."); return; }
+    if (desktop && desktopBridge()) { setDesktopFile(file); setName(file.name); return; }
     setBusy(true);
     try {
       const [{ default: mammoth }, { default: DOMPurify }] = await Promise.all([import("mammoth/mammoth.browser"), import("dompurify")]);
@@ -62,6 +71,18 @@ export default function WordToPdf() {
     } finally { setBusy(false); }
   }
 
+  async function convertDesktop() {
+    if (!desktopFile || busy) return;
+    setBusy(true); setError(""); setDesktopMessage("");
+    try {
+      const bridge = desktopBridge();
+      if (!bridge) throw new Error("برنامهٔ تبدیل در دسترس نیست.");
+      const result = await bridge.convertDocx(new Uint8Array(await desktopFile.arrayBuffer()), desktopFile.name);
+      if (!result.canceled) setDesktopMessage("فایل PDF با موفقیت ذخیره شد.");
+    } catch (cause) { setError(cause instanceof Error ? cause.message : "تبدیل انجام نشد."); }
+    finally { setBusy(false); }
+  }
+
   async function printPdf() {
     if (!html || printing) return;
     setPrinting(true); setError("");
@@ -82,9 +103,15 @@ export default function WordToPdf() {
   }
 
   return <div className="space-y-4">
-    <UploadZone title="فایل Word را انتخاب کنید" hint="فقط DOCX بدون رمز؛ حداکثر ۱۰ مگابایت" buttonLabel="انتخاب فایل DOCX" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onFiles={files => void choose(files)} sampleSkipConfirmation icon={<FileText className="h-7 w-7" aria-hidden="true" />} disabled={busy || printing} testId="word-to-pdf-input" />
-    {busy && <p role="status" className="text-sm text-ink-600">در حال خواندن سند…</p>}
+    <UploadZone title="فایل Word را انتخاب کنید" hint={desktop ? "فقط DOCX بدون رمز؛ حداکثر ۲۰ مگابایت" : "فقط DOCX بدون رمز؛ حداکثر ۱۰ مگابایت"} buttonLabel="انتخاب فایل DOCX" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onFiles={files => void choose(files)} sampleSkipConfirmation icon={<FileText className="h-7 w-7" aria-hidden="true" />} disabled={busy || printing} testId="word-to-pdf-input" />
+    {busy && <p role="status" className="text-sm text-ink-600">{desktop ? "در حال تبدیل روی کامپیوتر…" : "در حال خواندن سند…"}</p>}
     {error && <p role="alert" data-testid="word-to-pdf-error" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</p>}
+    {desktopFile && <section className="space-y-4 rounded-2xl border border-ink-200 bg-white p-4 sm:p-5" data-testid="desktop-word-result">
+      <p className="break-all text-sm font-semibold">{name}</p>
+      <p className="text-sm leading-7 text-ink-600">تبدیل با LibreOffice روی همین کامپیوتر انجام می‌شود؛ فایل به سرور ارسال نمی‌شود. پس از انتخاب محل ذخیره منتظر پایان تبدیل بمانید.</p>
+      <button type="button" disabled={busy} onClick={() => void convertDesktop()} data-testid="desktop-word-convert" className="min-h-11 w-full rounded-xl bg-brand-600 px-4 py-3 text-sm font-bold text-white disabled:opacity-50">تبدیل و ذخیرهٔ PDF</button>
+      {desktopMessage && <p role="status" className="text-sm text-green-700">{desktopMessage}</p>}
+    </section>}
     {html && <section className="motion-enter space-y-4 rounded-2xl border border-ink-200 bg-white p-4 sm:p-5" data-testid="word-to-pdf-result">
       <p className="break-all text-sm font-semibold text-ink-900">{name}</p>
       <label className="block text-sm font-semibold">جهت متن
